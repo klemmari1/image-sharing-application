@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/grayBackgroud" >
+    android:background="@color/qrBackground" >
 
     <ImageView
         android:id="@+id/qr_image"
@@ -25,5 +25,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/qr_image" />
+        app:layout_constraintTop_toBottomOf="@+id/qr_image"
+        android:textColor="@color/qrText" />
 </android.support.constraint.ConstraintLayout>
