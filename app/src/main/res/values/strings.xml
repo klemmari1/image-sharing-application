@@ -1,3 +1,10 @@
 <resources>
-    <string name="app_name">mcc-2017-g19</string>
+    <string name="app_name">PhotoOrganizer</string>
+    <string name="view_group_info">Group Information</string>
+    <string name="view_group_name">Name</string>
+    <string name="view_group_expiration">Expiration</string>
+    <string name="view_group_members">Members</string>
+    <string name="view_group_add">ADD</string>
+    <string name="scan_to_join">Scan to join!</string>
+
 </resources>
