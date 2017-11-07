@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">mcc-2017-g19</string>
+    <string name="text_new_group">NEW GROUP</string>
+    <string name="text_group_name">Group name:</string>
+    <string name="text_group_duration">Group duration:</string>
+    <string name="text_minutes">minutes</string>
+    <string name="button_create">CREATE</string>
 </resources>
