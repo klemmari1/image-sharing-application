@@ -7,5 +7,9 @@
     <string name="view_group_add">ADD</string>
     <string name="scan_to_join">Scan to join!</string>
     <string name="leave_button">Leave</string>
-
+    <string name="text_new_group">NEW GROUP</string>
+    <string name="text_group_name">Group name:</string>
+    <string name="text_group_duration">Group duration:</string>
+    <string name="text_minutes">minutes</string>
+    <string name="button_create">CREATE</string>
 </resources>
