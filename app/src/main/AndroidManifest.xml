@@ -24,6 +24,7 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".MemberActivity" />
         </activity>
+        <activity android:name=".SignUpActivity"></activity>
     </application>
 
 </manifest>
