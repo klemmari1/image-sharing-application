@@ -6,5 +6,6 @@
     <string name="view_group_members">Members</string>
     <string name="view_group_add">ADD</string>
     <string name="scan_to_join">Scan to join!</string>
+    <string name="leave_button">Leave</string>
 
 </resources>
