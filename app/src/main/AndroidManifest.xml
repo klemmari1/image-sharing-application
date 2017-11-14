@@ -26,6 +26,7 @@
         <activity android:name=".SignUpActivity"></activity>
         <activity android:name=".AlbumsActivity" />
         <activity android:name=".CustomAdapter"></activity>
+        <activity android:name=".GroupManagementActivity" />
     </application>
 
 </manifest>

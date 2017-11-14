@@ -9,6 +9,7 @@ import android.widget.ImageView;
 public class MainActivity extends AppCompatActivity {
 
     ImageView gallery;
+    ImageView groupManagement;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -20,6 +21,16 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(MainActivity.this, AlbumsActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        groupManagement = (ImageView)findViewById(R.id.group);
+        groupManagement.setClickable(true);
+        groupManagement.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this, GroupManagementActivity.class);
                 startActivity(intent);
             }
         });
