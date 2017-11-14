@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.chris.mcc_2017_g19">
+
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
@@ -10,23 +11,28 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".MainActivity">
+        <activity android:name=".LoginActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".MemberQRActivity"
-            android:parentActivityName=".MemberActivity" >
+        <activity
+            android:name=".MemberQRActivity"
+            android:parentActivityName=".MemberActivity">
+
             <!-- The meta-data tag is required if you support API level 15 and lower -->
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".MemberActivity" />
         </activity>
-        <activity android:name=".SignUpActivity"></activity>
+        <activity android:name=".SignupActivity" />
         <activity android:name=".AlbumsActivity" />
-        <activity android:name=".CustomAdapter"></activity>
         <activity android:name=".GroupManagementActivity" />
+        <activity android:name=".CustomAdapter" />
+        <activity android:name=".MainActivity" />
+        <activity android:name=".ResetPasswordActivity" />
     </application>
 
 </manifest>

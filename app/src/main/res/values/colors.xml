@@ -5,4 +5,8 @@
     <color name="colorAccent">#FF4081</color>
     <color name="qrBackground">#736e70</color>
     <color name="qrText">#ffffff</color>
+
+    <color name="colorPrimaryLogin">#00bcd4</color>
+    <color name="colorPrimaryDarkLogin">#0097a7</color>
+    <color name="colorAccentLogin">#f2fe71</color>
 </resources>

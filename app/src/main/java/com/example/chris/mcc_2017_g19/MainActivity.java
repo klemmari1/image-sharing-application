@@ -6,10 +6,13 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
 
+import com.google.firebase.auth.FirebaseAuth;
+
 public class MainActivity extends AppCompatActivity {
 
     ImageView gallery;
     ImageView groupManagement;
+    ImageView settings;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -34,5 +37,16 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+
+        //temporary solution for signout button (just for testing) CAN BE REMOVED
+        settings = (ImageView) findViewById(R.id.setting);
+        settings.setClickable(true);
+        settings.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                FirebaseAuth.getInstance().signOut();
+            }
+        });
+        //-----------------------------------------------------------------------
     }
 }
