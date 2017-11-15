@@ -1,16 +1,16 @@
 package com.example.chris.mcc_2017_g19;
 
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -22,15 +22,15 @@ public class GroupManagementActivity extends AppCompatActivity {
     private static final String TAG = "GroupManagementActivity";
     private DatabaseReference mDatabase;
     private Button createGroupButton;
+    private FirebaseUser user;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create_group);
 
-        //FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         mDatabase = FirebaseDatabase.getInstance().getReference();
-        mDatabase.addValueEventListener(new ValueEventListener() {
+        mDatabase.addValueEventListener(new ValueEventListener() { //TODO singleValueEvent preferred?
             @Override
             public void onDataChange(DataSnapshot snapshot) {
                 // Called any time data is added to database reference
@@ -43,8 +43,9 @@ public class GroupManagementActivity extends AppCompatActivity {
             }
         });
 
-        //Testing
-        //mDatabase
+        user = FirebaseAuth.getInstance().getCurrentUser();
+        addUser(user); //TODO Temporary, move (see addUser() below)
+
         createGroupButton = (Button)findViewById(R.id.buttonCreateGroup);
         createGroupButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -52,13 +53,11 @@ public class GroupManagementActivity extends AppCompatActivity {
                 try {
                     addGroup();
                 } catch (IllegalArgumentException e){
-                    Toast.makeText(GroupManagementActivity.this, "Give a proper group name", Toast.LENGTH_SHORT).show(); //TODO Placeholder toast, add meaningful notification
+                    Toast.makeText(GroupManagementActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show(); //TODO Placeholder toast, add meaningful notification
                     ; //TODO Toast?
                 }
             }
         });
-
-        //Check whether current user is in a group or not
     }
 
     private void addGroup() throws IllegalArgumentException {
@@ -67,7 +66,17 @@ public class GroupManagementActivity extends AppCompatActivity {
         if (nameValue.isEmpty())
             throw new IllegalArgumentException("No group name provided");
         GroupObject group = new GroupObject(nameValue);
+
+        // Completion listeners?
         mDatabase.child("groups").child(nameValue).setValue(group); //TODO Register by GroupID?
+        mDatabase.child("groups").child(nameValue).child("group_members").push().setValue(user.getUid());
+        mDatabase.child("users").child(user.getUid()).child("group").setValue(nameValue);
         Toast.makeText(GroupManagementActivity.this, "Group added to database", Toast.LENGTH_SHORT).show();
+    }
+
+    private void addUser(FirebaseUser firebaseUser) { //TODO Note: here for testing purposes, this should probably happen when signing up new user with FireAuth
+        String name = firebaseUser.getUid();
+        UserObject user = new UserObject(name);
+        mDatabase.child("users").child(name).setValue(user);
     }
 }
