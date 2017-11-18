@@ -8,6 +8,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.MediaScannerConnection;
+import android.os.AsyncTask;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
@@ -15,9 +16,12 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.SparseArray;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.Toast;
 
+import com.google.android.gms.vision.Frame;
 import com.google.firebase.auth.FirebaseAuth;
 
 import java.io.ByteArrayOutputStream;
@@ -25,6 +29,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Random;
+
+import com.google.android.gms.vision.barcode.Barcode;
+import com.google.android.gms.vision.barcode.BarcodeDetector;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -103,7 +110,9 @@ public class MainActivity extends AppCompatActivity {
             bitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
 
 
-            //TODO: It would be better to check here if permission of WRTIE_EXTERNAL_CAMERA has been given
+            //TODO: Here I need to check if the image contains sensible data
+            // If yes, store in local
+            // If no, store inside the group ... ... ...
 
             if (checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
                     != PackageManager.PERMISSION_GRANTED) {
@@ -115,7 +124,9 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
             else{
-                SaveImage(bitmap);
+
+                new SensibleDataTask().execute(bitmap);
+
             }
 
         }
@@ -128,9 +139,7 @@ public class MainActivity extends AppCompatActivity {
             case MY_PERMISSIONS_REQUEST_WRITE_EXT_STORAGE: {
                 if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 
-
-                    //File write logic here
-                    SaveImage(bitmap);
+                    new SensibleDataTask().execute(bitmap);
 
                 } else {
 
@@ -144,6 +153,64 @@ public class MainActivity extends AppCompatActivity {
             // permissions this app might request
         }
     }
+
+
+    //TODO: Check if image is sensible or not;
+
+
+    public class SensibleDataTask extends AsyncTask<Bitmap, Void, Bitmap> {
+
+        Bitmap bit;
+        Integer result = 0;
+
+        @Override
+        protected Bitmap doInBackground(Bitmap... bitmaps) {
+            this.bit = bitmaps[0];
+
+            //Create the Barcode detector and detect barcode
+            BarcodeDetector detector = new BarcodeDetector.Builder(getApplicationContext()).setBarcodeFormats(Barcode.DATA_MATRIX | Barcode.QR_CODE | Barcode.EAN_13).build();
+            Frame frame = new Frame.Builder().setBitmap(bit).build();
+            SparseArray< Barcode > barcodes = detector.detect(frame);
+
+
+            if(barcodes.size() != 1)
+            {
+                System.out.println("This is res: " + result);
+                // If the image has no sensitive data, TODO: Call method to store in Firebase + Google App Engine
+
+            }else{
+
+                result = 1;
+                // The image has one sensitive data, check here to know what is a sensitive data:
+                // https://developers.google.com/vision/android/barcodes-overview
+
+                // Call the method to store image in private folder
+                SaveImage(bit);
+            }
+
+
+
+            return bit;
+            //return Bitmap.createScaledBitmap(bit, width, height, true);
+        }
+
+        @Override protected void onPostExecute(Bitmap bit) {
+
+            Integer check = 0;
+
+            if(result == check){
+                //It is not showing the toast, I don't know why (But it is entering this :
+                Toast.makeText(MainActivity.this, "Image has been added to your shared folder!", Toast.LENGTH_LONG);
+            }else{
+                Toast.makeText(MainActivity.this, "SENSIBLE DATA! Image has been added to private folder", Toast.LENGTH_LONG);
+            }
+
+
+
+        }
+    }
+
+
 
 
 
@@ -170,10 +237,13 @@ public class MainActivity extends AppCompatActivity {
         try {
             MediaScannerConnection.scanFile(getApplicationContext(), new String[]  {file.getPath()} , new String[]{"Image/*"}, null);
             System.out.println(file);
+
+            //TODO: This part has to be solved. Images are losing quality and apparently there is no solution for it
             FileOutputStream out = new FileOutputStream(file);
             finalBitmap.compress(Bitmap.CompressFormat.JPEG,100,out);
             out.flush();
             out.close();
+
 
         } catch (Exception e) {
 
