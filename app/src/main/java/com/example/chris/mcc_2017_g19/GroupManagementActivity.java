@@ -44,7 +44,6 @@ public class GroupManagementActivity extends AppCompatActivity {
         });
 
         user = FirebaseAuth.getInstance().getCurrentUser();
-        addUser(user); //TODO Temporary, move (see addUser() below)
 
         createGroupButton = (Button)findViewById(R.id.buttonCreateGroup);
         createGroupButton.setOnClickListener(new View.OnClickListener() {
@@ -54,7 +53,6 @@ public class GroupManagementActivity extends AppCompatActivity {
                     addGroup();
                 } catch (IllegalArgumentException e){
                     Toast.makeText(GroupManagementActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show(); //TODO Placeholder toast, add meaningful notification
-                    ; //TODO Toast?
                 }
             }
         });
@@ -65,18 +63,12 @@ public class GroupManagementActivity extends AppCompatActivity {
         String nameValue = nameField.getText().toString();
         if (nameValue.isEmpty())
             throw new IllegalArgumentException("No group name provided");
-        GroupObject group = new GroupObject(nameValue);
+        GroupObject group = new GroupObject(nameValue, user.getUid());
 
         // Completion listeners?
         mDatabase.child("groups").child(nameValue).setValue(group); //TODO Register by GroupID?
         mDatabase.child("groups").child(nameValue).child("group_members").push().setValue(user.getUid());
         mDatabase.child("users").child(user.getUid()).child("group").setValue(nameValue);
         Toast.makeText(GroupManagementActivity.this, "Group added to database", Toast.LENGTH_SHORT).show();
-    }
-
-    private void addUser(FirebaseUser firebaseUser) { //TODO Note: here for testing purposes, this should probably happen when signing up new user with FireAuth
-        String name = firebaseUser.getUid();
-        UserObject user = new UserObject(name);
-        mDatabase.child("users").child(name).setValue(user);
     }
 }

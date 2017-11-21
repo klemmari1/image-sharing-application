@@ -33,6 +33,7 @@
         <activity android:name=".CustomAdapter" />
         <activity android:name=".MainActivity" />
         <activity android:name=".ResetPasswordActivity" />
+        <activity android:name=".MemberActivity" />
     </application>
 
 </manifest>

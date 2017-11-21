@@ -3,20 +3,48 @@ package com.example.chris.mcc_2017_g19;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 public class MainActivity extends AppCompatActivity {
 
     ImageView gallery;
     ImageView groupManagement;
     ImageView settings;
+    private FirebaseUser firebaseUser;
+    private DatabaseReference mDatabase;
+    private static final String TAG = "MainActivity";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        mDatabase = FirebaseDatabase.getInstance().getReference();
+        mDatabase.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
+                // Called any time data is added to database reference
+                Log.d(TAG, "Value is: " + snapshot.getValue());
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Log.w(TAG, "Failed to read value.", databaseError.toException());
+            }
+        });
+
+        firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+        //addUser(firebaseUser); //TODO Temporary, move (see addUser() below)
 
         gallery = (ImageView)findViewById(R.id.gallery);
         gallery.setClickable(true);
@@ -33,8 +61,7 @@ public class MainActivity extends AppCompatActivity {
         groupManagement.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this, GroupManagementActivity.class);
-                startActivity(intent);
+                selectGroupManagementActivity();
             }
         });
 
@@ -48,5 +75,34 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         //-----------------------------------------------------------------------
+    }
+
+    private void selectGroupManagementActivity() {
+        DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
+        mDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snapshot) { //TODO Retrieved when attached? i.e. need to have user in database, otherwise crashes due to null reference?
+                UserObject user;
+                user = snapshot.child("users").child(firebaseUser.getUid()).getValue(UserObject.class);
+                Class activityClass;
+                if (user.getGroup() == null)
+                    activityClass = GroupManagementActivity.class;
+                else
+                    activityClass = MemberActivity.class;
+                Intent intent = new Intent(MainActivity.this, activityClass);
+                startActivity(intent);
+            }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                System.out.println("The read failed: " + databaseError.getMessage());
+            }
+        });
+    }
+
+    //TODO Note: wherever this is located, how to handle situation when no "users" exists? or does always exist?
+    private void addUser(FirebaseUser user) { //TODO Note: here for testing purposes, this should probably happen when signing up new user with FireAuth
+        String name = user.getUid();
+        UserObject userObject = new UserObject(name);
+        mDatabase.child("users").child(name).setValue(userObject);
     }
 }

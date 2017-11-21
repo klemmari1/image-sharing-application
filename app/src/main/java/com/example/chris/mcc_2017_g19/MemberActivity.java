@@ -29,10 +29,10 @@ public class MemberActivity extends AppCompatActivity {
         memberList.setAdapter(memberAdapter);
 
         //To be removed
-        members.add("Lisa");
-        members.add("Mark");
-        members.add("Joe");
-        memberAdapter.notifyDataSetChanged();
+//        members.add("Lisa");
+//        members.add("Mark");
+//        members.add("Joe");
+//        memberAdapter.notifyDataSetChanged();
 
         TextView nameValue = (TextView) findViewById(R.id.group_info_name_value);
         TextView expirationValue = (TextView) findViewById(R.id.group_info_expiration_value);
