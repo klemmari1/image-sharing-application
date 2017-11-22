@@ -18,9 +18,9 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-public class GroupManagementActivity extends AppCompatActivity {
+public class GroupCreationActivity extends AppCompatActivity {
 
-    private static final String TAG = "GroupManagementActivity";
+    private static final String TAG = "GroupCreationActivity";
     private DatabaseReference mDatabase;
     private Button createGroupButton;
     private FirebaseUser user;
@@ -52,9 +52,9 @@ public class GroupManagementActivity extends AppCompatActivity {
             public void onClick(View v) {
                 try {
                     addGroup();
-                    startActivity(new Intent(GroupManagementActivity.this, MainActivity.class));
+                    startActivity(new Intent(GroupCreationActivity.this, MainActivity.class));
                 } catch (IllegalArgumentException e){
-                    Toast.makeText(GroupManagementActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(GroupCreationActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -62,15 +62,15 @@ public class GroupManagementActivity extends AppCompatActivity {
 
     private void addGroup() throws IllegalArgumentException {
         EditText nameField = (EditText) findViewById(R.id.fieldGroupName);
-        String nameValue = nameField.getText().toString();
-        if (nameValue.isEmpty())
+        String groupName = nameField.getText().toString();
+        if (groupName.isEmpty())
             throw new IllegalArgumentException("No group name provided");
-        GroupObject group = new GroupObject(nameValue, user.getUid());
+        GroupObject group = new GroupObject(groupName, user.getUid());
 
         // Completion listeners?
-        mDatabase.child("groups").child(nameValue).setValue(group); //TODO Register by Group ID?
-        mDatabase.child("groups").child(nameValue).child("group_members").push().setValue(user.getUid());
-        mDatabase.child("users").child(user.getUid()).child("group").setValue(nameValue);
-        Toast.makeText(GroupManagementActivity.this, "Group created", Toast.LENGTH_SHORT).show();
+        mDatabase.child("groups").child(groupName).setValue(group); //TODO Register by Group ID?
+        mDatabase.child("groups").child(groupName).child("group_members").push().setValue(user.getUid());
+        mDatabase.child("users").child(user.getUid()).child("group").setValue(groupName);
+        Toast.makeText(GroupCreationActivity.this, "Group created", Toast.LENGTH_SHORT).show();
     }
 }

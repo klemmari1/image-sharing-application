@@ -85,9 +85,9 @@ public class MainActivity extends AppCompatActivity {
                 user = snapshot.child("users").child(firebaseUser.getUid()).getValue(UserObject.class);
                 Class activityClass;
                 if (user.getGroup() == null)
-                    activityClass = GroupManagementActivity.class;
+                    activityClass = GroupCreationActivity.class;
                 else
-                    activityClass = MemberActivity.class;
+                    activityClass = GroupStatusActivity.class;
                 Intent intent = new Intent(MainActivity.this, activityClass);
                 startActivity(intent);
             }

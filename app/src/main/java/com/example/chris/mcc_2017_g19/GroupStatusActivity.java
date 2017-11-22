@@ -12,7 +12,7 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MemberActivity extends AppCompatActivity {
+public class GroupStatusActivity extends AppCompatActivity {
 
     private List<String> members;
     private MemberAdapter memberAdapter;
