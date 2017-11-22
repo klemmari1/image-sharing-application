@@ -14,7 +14,11 @@ public class UserObject {
         this.group = null;
     }
 
+    public String getName() {
+        return this.username;
+    }
+
     public String getGroup() {
         return this.group;
-    }
+    }   
 }

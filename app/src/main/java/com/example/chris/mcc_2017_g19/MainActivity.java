@@ -21,7 +21,7 @@ public class MainActivity extends AppCompatActivity {
     ImageView groupManagement;
     ImageView settings;
     private FirebaseUser firebaseUser;
-    private DatabaseReference mDatabase;
+    private DatabaseReference databaseReference;
     private static final String TAG = "MainActivity";
 
     @Override
@@ -29,8 +29,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mDatabase = FirebaseDatabase.getInstance().getReference();
-        mDatabase.addValueEventListener(new ValueEventListener() {
+        databaseReference = FirebaseDatabase.getInstance().getReference();
+        databaseReference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
                 // Called any time data is added to database reference
@@ -44,7 +44,6 @@ public class MainActivity extends AppCompatActivity {
         });
 
         firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
-        //addUser(firebaseUser); //TODO Temporary, move (see addUser() below)
 
         gallery = (ImageView)findViewById(R.id.gallery);
         gallery.setClickable(true);
@@ -78,8 +77,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void selectGroupManagementActivity() {
-        DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
-        mDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
+        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
+        databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) { //TODO Retrieved when attached? i.e. need to have user in database, otherwise crashes due to null reference?
                 UserObject user;
@@ -97,12 +96,5 @@ public class MainActivity extends AppCompatActivity {
                 System.out.println("The read failed: " + databaseError.getMessage());
             }
         });
-    }
-
-    //TODO Note: wherever this is located, how to handle situation when no "users" exists? or does always exist?
-    private void addUser(FirebaseUser user) { //TODO Note: here for testing purposes, this should probably happen when signing up new user with FireAuth
-        String name = user.getUid();
-        UserObject userObject = new UserObject(name);
-        mDatabase.child("users").child(name).setValue(userObject);
     }
 }
