@@ -98,15 +98,8 @@ public class SignupActivity extends AppCompatActivity {
                                             Toast.LENGTH_SHORT).show();
                                 } else {
                                     FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
-                                    Log.d("SIGNUP", "Firebaseuser id: " + firebaseUser.getUid());
                                     UserObject userObject = new UserObject(email);
-                                    Log.d("SIGNUP", "UserObject name: " + userObject.getName());
-                                    String id = firebaseUser.getUid();
-                                    database.getReference().child("users").child(id).setValue(userObject);
-                                    //test
-                                    //database.getReference().child("users").setValue("testi"); //works
-                                    //test2: child for users, set value
-                                    database.getReference().child("users").child("testi").setValue("testivalue"); //works
+                                    database.getReference().child("users").child(firebaseUser.getUid()).setValue(userObject);
 
                                     startActivity(new Intent(SignupActivity.this, MainActivity.class));
                                     finish();
@@ -122,10 +115,4 @@ public class SignupActivity extends AppCompatActivity {
         super.onResume();
         progressBar.setVisibility(View.GONE);
     }
-
-    //TODO Note: wherever this is located, how to handle situation when no "users" exists? or does always exist?
-//    private void addUserToDatabase(FirebaseUser firebaseUser, String email) {
-//        UserObject userObject = new UserObject(email);
-//        database.getReference().child("users").child(firebaseUser.getUid()).push().setValue(userObject);
-//    }
 }
