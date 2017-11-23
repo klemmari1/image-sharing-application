@@ -1,0 +1,3 @@
+-Private pictures stored locally or firebase??
+
+-Private or group single-use-token??
