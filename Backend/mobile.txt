@@ -1,0 +1,11 @@
+GROUP MANAGEMENT:
+	- Create a group:
+		- Request returns the single use token
+		- Makes a firebase entry for the group
+	- Delete or leave a group
+		- Delete the group entry from the groups table (all groups) and user: group table (which group user is in)
+	- Add member:
+		- Request for the one-use token from the cloud (Personal Token/Group Token??)
+			- Create a QR code from the token on Android (Token gets replaced if somebody joins)
+				- User joins the group and the token gets expired.
+	
