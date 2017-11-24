@@ -16,15 +16,29 @@
 import pyrebase
 import uuid
 from flask import Flask, redirect, render_template, request
-from google.cloud import vision
+# from google.cloud import vision
 
 #CLOUD_STORAGE_BUCKET = os.environ.get('CLOUD_STORAGE_BUCKET')
 
+firebaseConfig = {
+  "apiKey": "apiKey",
+  "authDomain": "mcc-fall-2017-g19.firebaseapp.com",
+  "databaseURL": "https://mcc-fall-2017-g19.firebaseio.com/",
+  "storageBucket": "gs://mcc-fall-2017-g19.appspot.com/"
+}
+
+firebase = pyrebase.initialize_app(firebaseConfig)
+#auth = firebase.auth()
+database = firebase.database()
+storage = firebase.storage()
+
+# test
+#data = {"name": "testgroup", "members": "testmember"}
+#database.child("groups").push(data)
+
 app = Flask(__name__)
 
-
 #Implement listeners
-
 @app.route('/')
 def homepage():
    return("Hello world!")
@@ -34,6 +48,8 @@ def homepage():
 def create_group():
     user_id = request.args.get('user')
     #create group
+    data = {"name": "testgroup", "members": user_id}
+    database.child("groups").push(data)
 
     #get group token
 
@@ -56,7 +72,7 @@ def verify_token():
 
     #verify token based on the group_id
 
-    if(token_valid == True)
+    if(token_valid == True):
         newtoken = uuid.uuid4()
         #put to firebase to group of group_id
 

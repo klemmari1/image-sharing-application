@@ -75,12 +75,12 @@ public class GroupStatusActivity extends AppCompatActivity {
         return members;
     }
 
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch(item.getItemId()) {
-            case(R.id.action_leave):
-                //leaveGroup(); => backend
-        }
-    }
+//    public boolean onOptionsItemSelected(MenuItem item) {
+//        switch(item.getItemId()) {
+//            case(R.id.action_leave):
+//                //leaveGroup(); => backend
+//        }
+//    }
 
     //TODO: MOVE handling to backend
 //    public void leaveGroup() {
@@ -133,10 +133,10 @@ public class GroupStatusActivity extends AppCompatActivity {
     }
 
     public void displayGroupName() {
-        databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
+        databaseReference.child("users").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                UserObject user = dataSnapshot.child("users").child(firebaseUser.getUid()).getValue(UserObject.class);
+                UserObject user = dataSnapshot.child(firebaseUser.getUid()).getValue(UserObject.class);
                 TextView groupNameField = (TextView) findViewById(R.id.group_info_name_value);
                     groupNameField.setText(user.getGroup());
             }

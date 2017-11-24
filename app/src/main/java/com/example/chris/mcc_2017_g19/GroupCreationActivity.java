@@ -21,7 +21,7 @@ import com.google.firebase.database.ValueEventListener;
 public class GroupCreationActivity extends AppCompatActivity {
 
     private static final String TAG = "GroupCreationActivity";
-    private DatabaseReference mDatabase;
+    private DatabaseReference databaseReference;
     private Button createGroupButton;
     private FirebaseUser user;
 
@@ -30,8 +30,8 @@ public class GroupCreationActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create_group);
 
-        mDatabase = FirebaseDatabase.getInstance().getReference();
-        mDatabase.addValueEventListener(new ValueEventListener() {
+        databaseReference = FirebaseDatabase.getInstance().getReference();
+        databaseReference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
                 // Called any time data is added to database reference
@@ -69,9 +69,9 @@ public class GroupCreationActivity extends AppCompatActivity {
         GroupObject group = new GroupObject(groupName, user.getUid());
 
         // Completion listeners?
-        mDatabase.child("groups").child(groupName).setValue(group); //TODO Register by Group ID?
-        mDatabase.child("groups").child(groupName).child("group_members").push().setValue(user.getUid());
-        mDatabase.child("users").child(user.getUid()).child("group").setValue(groupName);
+        databaseReference.child("groups").child(groupName).setValue(group); //TODO Register by Group ID?
+        databaseReference.child("groups").child(groupName).child("group_members").push().setValue(user.getUid());
+        databaseReference.child("users").child(user.getUid()).child("group").setValue(groupName);
         Toast.makeText(GroupCreationActivity.this, "Group created", Toast.LENGTH_SHORT).show();
     }
 }

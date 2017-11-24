@@ -77,13 +77,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void selectGroupManagementActivity() {
-        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
-        databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
+        databaseReference.child("users").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
-            public void onDataChange(DataSnapshot snapshot) { //TODO Retrieved when attached? i.e. need to have user in database, otherwise crashes due to null reference?
-                UserObject user;
-                user = snapshot.child("users").child(firebaseUser.getUid()).getValue(UserObject.class);
+            public void onDataChange(DataSnapshot snapshot) {
                 Class activityClass;
+                UserObject user = snapshot.child(firebaseUser.getUid()).getValue(UserObject.class);
                 if (user.getGroup() == null)
                     activityClass = GroupCreationActivity.class;
                 else
