@@ -32,33 +32,56 @@ firebase = pyrebase.initialize_app(firebaseConfig)
 database = firebase.database()
 storage = firebase.storage()
 
+# For testing purposes
+# database.child("users").child('testuserID').set({"name": "testusername"})
+# database.child("users").child('testuser2ID').set({"name": "testuser2name"})
+
 app = Flask(__name__)
+
 
 #Implement listeners
 @app.route('/')
 def homepage():
-    #return redirect(url_for('create_group', user_id='testuserID'))
-    return redirect(url_for('delete_group', group_id='-Kzi83kCssOg_AZ3AR5K'))
+    #return redirect(url_for('create_group', user_id='testuserID', group_name='testgroupName'))
+
+    # Testing: replace group_id with real id from db
+    # Real implementation: Group id is passed from application
+    #return redirect(url_for('delete_group', group_id='-KziglkrFvdzfQE3wHhQ'))
+
+    return redirect(url_for('join_group', user_id='testuser2ID', group_id='-KzihPzu45uBnue10kM9'))  # Similar as above
 
 
-@app.route('/create_group/<user_id>')
-def create_group(user_id):
-    group_id = "testgroupID"  # From request parameter
-
-    groupData = {"name": group_id, "members": user_id}
-    database.child("groups").push(groupData)
-
-    userGroupData = {"group": group_id}
-    database.child("users").child(user_id).set(userGroupData)
+@app.route('/create_group/<user_id>/<group_name>') # TODO Change parameters into "methods=['GET'] ..." => request.args.get('param')
+def create_group(user_id, group_name):
+    group_reference = database.child("groups").push({"name": group_name})
+    group_key = group_reference["name"]
+    database.child("groups").child(group_key).child("members").push({"user": user_id})
+    database.child("users").child(user_id).update({"group": group_key})
 
     return "GROUP ADDED"
 
-    # Response: groupID
+    # TODO Response: groupID combined with token
     # Should never fail, since group creation can only initiate if user is not in group?
+
+
+@app.route('/join_group/<user_id>/<group_id>')
+def join_group(user_id, group_id):
+    # TODO Where is QR reading implemented? outside app?
+    # (<=> need to check if user in group vs. cannot open reader if in group)
+    # Initial implementation: join every time, i.e. latter option from above
+
+    database.child("groups").child(group_id).child("members").push({"user": user_id})
+    database.child("users").child(user_id).update({"group": group_id})
+
+    return "JOINED GROUP"
 
 
 @app.route('/delete_group/<group_id>')
 def delete_group(group_id):
+    group_members = database.child("groups").child(group_id).child("members").get()
+    for member in group_members.each():
+        member_id = member.val()["user"]
+        database.child("users").child(member_id).child("group").remove()
     database.child("groups").child(group_id).remove()
 
     return "GROUP DELETED"
