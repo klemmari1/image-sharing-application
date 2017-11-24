@@ -9,7 +9,7 @@ GROUP MANAGEMENT (Cloud interaction):
 			- Create a QR code from the token on Android (Token gets replaced if somebody joins)
 				- User joins the group and the token gets expired.
 	
-GROUP MANAGEMENT (Logic): TODO => rules, deletion process etc.
+GROUP MANAGEMENT (Logic):
 	- User IS NOT in a group
 		=> Create a group:	
 			- Name does not need to be unique
@@ -22,6 +22,6 @@ GROUP MANAGEMENT (Logic): TODO => rules, deletion process etc.
 				- If token expired before reading, notification to the user with the code? (e.g. "Code expired, go back and click 'add' to refresh")
 			- Leave (user IS NOT group creator):
 				- Remove user from group, remove group field from user
-			- Destroy (user IS creator):
+			- Destroy (user IS group creator):
 				- For all members in group => remove group field
 				- Remove group as a whole from database
