@@ -15,7 +15,7 @@
 # [START app]
 import pyrebase
 import uuid
-from flask import Flask, redirect, render_template, request
+from flask import Flask, redirect, render_template, request, url_for
 # from google.cloud import vision
 
 #CLOUD_STORAGE_BUCKET = os.environ.get('CLOUD_STORAGE_BUCKET')
@@ -32,26 +32,36 @@ firebase = pyrebase.initialize_app(firebaseConfig)
 database = firebase.database()
 storage = firebase.storage()
 
-# test
-#data = {"name": "testgroup", "members": "testmember"}
-#database.child("groups").push(data)
-
 app = Flask(__name__)
 
 #Implement listeners
 @app.route('/')
 def homepage():
-   return("Hello world!")
+    #return redirect(url_for('create_group', user_id='testuserID'))
+    return redirect(url_for('delete_group', group_id='-Kzi83kCssOg_AZ3AR5K'))
 
 
-@app.route('/create_group', methods=['GET'])
-def create_group():
-    user_id = request.args.get('user')
-    #create group
-    data = {"name": "testgroup", "members": user_id}
-    database.child("groups").push(data)
+@app.route('/create_group/<user_id>')
+def create_group(user_id):
+    group_id = "testgroupID"  # From request parameter
 
-    #get group token
+    groupData = {"name": group_id, "members": user_id}
+    database.child("groups").push(groupData)
+
+    userGroupData = {"group": group_id}
+    database.child("users").child(user_id).set(userGroupData)
+
+    return "GROUP ADDED"
+
+    # Response: groupID
+    # Should never fail, since group creation can only initiate if user is not in group?
+
+
+@app.route('/delete_group/<group_id>')
+def delete_group(group_id):
+    database.child("groups").child(group_id).remove()
+
+    return "GROUP DELETED"
 
 
 @app.route('/get_token', methods=['GET'])
