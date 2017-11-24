@@ -44,6 +44,7 @@ public class GroupStatusActivity extends AppCompatActivity {
         memberAdapter = new MemberAdapter(this, members);
         memberList.setAdapter(memberAdapter);
 
+        checkIfUserIsGroupCreator();
         //To be removed
 //        members.add("Lisa");
 //        members.add("Mark");
@@ -52,7 +53,7 @@ public class GroupStatusActivity extends AppCompatActivity {
         displayGroupName();
 
         TextView expirationValue = (TextView) findViewById(R.id.group_info_expiration_value);
-        expirationValue.setText("Tue 31 Oct - 10:00pm");
+        expirationValue.setText("Tue 31 Oct - 10:00pm"); // Placeholder
     }
 
     public void onClick(View v) {
@@ -62,13 +63,10 @@ public class GroupStatusActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        //TODO Modify actionbar button title is current user is the creator
-//        super.onCreateOptionsMenu(menu);
+        //TODO Modify actionbar button title if current user is the creator
 //        checkIfUserIsGroupCreator();
 //        if (userIsGroupCreator)
-//            menu.findItem(R.menu.leave_button).setTitle("Delete group");
-//        getMenuInflater().inflate(R.menu.leave_button, menu);
-//        return true;
+//            menu.findItem(R.id.action_leave).setTitle("Delete group");
         getMenuInflater().inflate(R.menu.leave_button, menu);
         return super.onCreateOptionsMenu(menu);
     }
@@ -76,6 +74,46 @@ public class GroupStatusActivity extends AppCompatActivity {
     public List<String> getMembers() {
         return members;
     }
+
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch(item.getItemId()) {
+            case(R.id.action_leave):
+                //leaveGroup(); => backend
+        }
+    }
+
+    //TODO: MOVE handling to backend
+//    public void leaveGroup() {
+//        //TODO Add query: really wish to leave/delete group?
+//
+//        //User is not creator => remove group from user, remove user from group
+//        //User is creator => remove group from all members, all members from group
+//
+//        //TODO Note: a lot of repetition, should the listeners be located in a helper class / own data structure?
+//        databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(DataSnapshot dataSnapshot) {
+//                UserObject user = dataSnapshot.child("users").child(firebaseUser.getUid()).getValue(UserObject.class);
+//                String userGroup = user.getGroup();
+//                GroupObject group = dataSnapshot.child("groups").child(userGroup).getValue(GroupObject.class);
+//
+//                for (UserObject userObject : group.getGroupMembers()) {
+//                    //databaseReference.child("users").child(userObject.); //TODO Problem: how to remove members based on name? (fixed after username introduces?)
+//                }
+//                if (userIsGroupCreator) {
+//
+//                } else {
+//                    databaseReference.child("")
+//                }
+//            }
+//
+//            @Override
+//            public void onCancelled(DatabaseError databaseError) {
+//
+//            }
+//        });
+//
+//    }
 
     public void checkIfUserIsGroupCreator() {
         databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {

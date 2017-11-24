@@ -27,7 +27,7 @@ public class GroupObject {
         return this.creator;
     }
 
-    public List<UserObject> getGroupMambers() {
+    public List<UserObject> getGroupMembers() {
         return this.groupMembers;
     }
 }

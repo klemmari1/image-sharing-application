@@ -60,6 +60,7 @@ public class GroupCreationActivity extends AppCompatActivity {
         });
     }
 
+    //TODO: MOVE handling to backend
     private void addGroup() throws IllegalArgumentException {
         EditText nameField = (EditText) findViewById(R.id.fieldGroupName);
         String groupName = nameField.getText().toString();
