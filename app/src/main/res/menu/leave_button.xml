@@ -5,4 +5,8 @@
         android:id="@+id/action_leave"
         android:title="@string/leave_button"
         app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/action_read_qr"
+        android:title="@string/btn_read_qr"
+        app:showAsAction="never" />
 </menu>
