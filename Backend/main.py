@@ -28,13 +28,27 @@ import os
 
 #CLOUD_STORAGE_BUCKET = os.environ.get('CLOUD_STORAGE_BUCKET')
 
+serviceAcc = {
+          "type": "service_account",
+          "project_id": "mcc-fall-2017-g19",
+          "private_key_id": "key",
+          "private_key": "-----BEGIN PRIVATE KEY-----\nkey/\nIMYDVHVxNgNWsaRW1tYqQlU7Kx/4wdQ+1VhJ1PJe2UoG3QpbZoktB1ctBLHkVDRL\niuuhkDagDB5Xy2tIzTaqvH1Uqh4dX2AGfOIeaWA85BhzyRvwv2Dh9p+iQHA9EFEK\n6/Vxy7mf6Yvb7QlRyVskhSJmFTBm/JqWZ/KeEraFaGiasfJKG3uBJXQlmVmGH8Ec\n4PeDK3EOM/7ncz/lyzZDR8yU+ap8zkGnGEhekbhrtdMnEROErySxTfsrNq/BG2D8\nGqv7UTvXDkFvY9zlOzVNu2+BEASYzdv1nenfsGoFyroET8SoCR5TJd7YHShbNGIB\n+2MzOfevAgMBAAECggEADD9BoOkb+qBnUDLULeeTjJaGqBAJAyxHpxbj+Bt3bPlK\nvQQAELom8Bc9coZGdidfmaSGqq2Ykz1lM0uaHUfj8INboeTbTgF1ND2tcLuZXaO8\nuq7W3zQFehzu6XUIaaBraP8BaxUH5LB5PxVFX6/XAcaNO7xbvvnP7fHObdwyC4St\nOkou2u7CLdAHzi75rFaNEmgdk9vKo55u5xFrodjNH5tXppPWhS77v7v4dTi3EM+0\nj4f5xYBgVcRyC3kYIfYmKaGq5yp0YjP7wsBsIEvWutQn/OeGfXbCTeb5WS+Jl2/l\nGPhUHnRM+cuiBq2j3wvYEEDueNuReswR4SsVgz9h7QKBgQDlj7yYAA6HXwevUxN5\nC2YESFDYO92a36TH4vPrmmZJdYg8dR2Eg0aJ9BoBNXVKSUrWaL7Nl8aWfJS43PSk\nKZu4ZhfWwH9STjCp+g99rODUuKTrIx0FEXvAb7kl4OdRIZAUrGfrC6xO2bwDAlxe\n34pXoVTWl89wYcPnyKCeIBJJCwKBgQC3kwIQscuqq5PtIjH/22vKQBMviaZDFBZL\n2YnHCVN1iwxIecPInVt8w66g91cjLEDrt4AQEoo/Ey9J4Tf1fc0WbTC9xZckgAy/\nfhVJGR+N5JElB1am+0vj5UiadKXmP0FkAh/lN7vbE83CbamVVUgfZQwjw/jsuvUK\nVafzISlabQKBgQCs2ReF07Uc1L7ykjj9UUnVO6Yzyo/Hh1GJeCd1ZOJTuX2FGCHL\nnxTD1tqlwly4PItu+ZuBLiDHOrK4pxZFbVbk92pHttWnYVxe//weAsefJBB5RA0b\nvdhSQ01Dah6CBiV4i4ALiNSK4oMgOOzYOrTt2noIwnHdCp/5rCTUKw3ZlQKBgDgi\nM9d3BphBrxIsCq36IpPN1BANP1Hzqn23H3JFX8fppO/kjAGkXH1iONvvxi1zMsbh\nbb98a9mtvCATRlFDDpt0+BqPeRAoN722iDu5+vQgmGGCRPT6ktI1ImZYlQI7BXvX\nSnmE+WScQabacajAUzWGaJfnLQ72fEeUua6WzVZhAoGBAKhV50ZuBjYfNoehVtcw\nT23zHaup21s1leDtLKc7lAcEfz916w1kmu2aR0ICJTl0TABwTxO1M4sCeQPeEedG\nN+YCmhs+d3dxM7wYntN9p5XHmr/NTIcI3OPQAKE0U7M/sE59lOj4r2kfLTQ8ceOn\nyVcSlVTNCGNQmaBhD8B+PTHi\n-----END PRIVATE KEY-----\n",
+          "client_email": "email",
+          "client_id": "key",
+          "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+          "token_uri": "https://accounts.google.com/o/oauth2/token",
+          "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+          "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-pzipw%40mcc-fall-2017-g19.iam.gserviceaccount.com"
+        }
+
 firebaseConfig = {
           "apiKey": "AIzaSyBNrgNc9VQ0FuEJKYMDsocJbMnPSctix3M",
           "authDomain": "mcc_2017_g19.firebaseapp.com",
           "databaseURL": "https://mcc-fall-2017-g19.firebaseio.com/",
           "storageBucket": "mcc-fall-2017-g19.appspot.com",
-          "serviceAccount": "mcc-fall-2017-g19-firebase-adminsdk-pzipw-d092116b07.json"
+          "serviceAccount": serviceAcc
         }
+
 
 firebase = pyrebase.initialize_app(firebaseConfig)
 #auth = firebase.auth()
