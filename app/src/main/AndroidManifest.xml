@@ -3,6 +3,12 @@
     package="com.example.chris.mcc_2017_g19">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="true" />
 
     <application
         android:allowBackup="true"
@@ -31,7 +37,8 @@
         <activity android:name=".AlbumsActivity" />
         <activity android:name=".CustomAdapter" />
         <activity android:name=".MainActivity" />
-        <activity android:name=".ResetPasswordActivity"></activity>
+        <activity android:name=".ResetPasswordActivity" />
+        <activity android:name=".PrivateGallery"></activity>
     </application>
 
 </manifest>

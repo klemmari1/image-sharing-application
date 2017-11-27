@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.example.chris.mcc_2017_g19.pvtgallery.SquareLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <!--Every image that will be taken from the private folder, will be added here-->
+    <ImageView
+        android:id="@+id/imageViewThumbnail"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:scaleType="centerCrop" />
+
+
+</com.example.chris.mcc_2017_g19.pvtgallery.SquareLayout>

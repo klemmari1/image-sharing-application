@@ -1,6 +1,7 @@
 package com.example.chris.mcc_2017_g19;
 
 
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -28,6 +29,15 @@ public class AlbumsActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Toast.makeText(AlbumsActivity.this, "Position: " + position, Toast.LENGTH_SHORT).show();
+
+                if(position == 0){
+
+                    Intent intent = new Intent(AlbumsActivity.this, PrivateGallery.class);
+                    startActivity(intent);
+                    finish();
+
+                }
+
             }
         });
     }
