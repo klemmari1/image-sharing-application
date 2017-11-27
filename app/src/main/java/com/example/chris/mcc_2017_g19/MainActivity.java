@@ -17,6 +17,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.SparseArray;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -94,16 +96,14 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        //temporary solution for signout button (just for testing) CAN BE REMOVED
         settings = (ImageView) findViewById(R.id.setting);
         settings.setClickable(true);
         settings.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                FirebaseAuth.getInstance().signOut();
+                //TODO Move to activity for settings
             }
         });
-        //-----------------------------------------------------------------------
 
         //Click on the photo image and open the camera
         takepicture = (ImageView) findViewById(R.id.photo);
@@ -114,6 +114,25 @@ public class MainActivity extends AppCompatActivity {
                 TakePictureIntent();
             }
         });
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.logout_button, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_logout:
+                //TODO Do we need (onCompletion) listeners for these kinds of situations?
+                FirebaseAuth.getInstance().signOut();
+                startActivity(new Intent(MainActivity.this, LoginActivity.class));
+            default:
+                return super.onOptionsItemSelected(item);
+
+        }
     }
 
     private void selectGroupManagementActivity() {
