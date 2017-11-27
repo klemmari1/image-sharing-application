@@ -35,7 +35,6 @@ dependencies {
     compile 'com.google.firebase:firebase-database:9.0.2'
     compile 'com.squareup.okhttp3:okhttp:3.9.1'
     testCompile 'junit:junit:4.12'
-    compile 'com.intellij:annotations:+@jar'
 }
 
 apply plugin: 'com.google.gms.google-services'

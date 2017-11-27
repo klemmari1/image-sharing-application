@@ -77,6 +77,16 @@ public class GroupCreationActivity extends AppCompatActivity {
 
        //okhttp request: create_group
         BackendAPI api = new BackendAPI();
-        String token = api.createGroup(groupName, user.getUid());
+        api.createGroup(groupName, user.getUid(), new BackendAPI.HttpCallback() {
+            @Override
+            public void onFailure(String response, Exception exception) {
+                // handle failure
+            }
+
+            @Override
+            public void onSuccess(String response) {
+                // handle response
+            }
+        });
     }
 }
