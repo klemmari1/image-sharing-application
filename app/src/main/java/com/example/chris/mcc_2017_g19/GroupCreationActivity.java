@@ -68,10 +68,6 @@ public class GroupCreationActivity extends AppCompatActivity {
             throw new IllegalArgumentException("No group name provided");
         GroupObject group = new GroupObject(groupName, user.getUid());
 
-        // Completion listeners?
-        databaseReference.child("groups").child(groupName).setValue(group); //TODO Register by Group ID?
-        databaseReference.child("groups").child(groupName).child("group_members").push().setValue(user.getUid());
-        databaseReference.child("users").child(user.getUid()).child("group").setValue(groupName);
-        Toast.makeText(GroupCreationActivity.this, "Group created", Toast.LENGTH_SHORT).show();
+       //okhttp request: create_group
     }
 }

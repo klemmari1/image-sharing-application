@@ -7,6 +7,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -25,6 +26,7 @@ public class GroupStatusActivity extends AppCompatActivity {
 
     private List<String> members;
     private MemberAdapter memberAdapter;
+    private Button addMemberButton;
     private FirebaseUser firebaseUser;
     private DatabaseReference databaseReference;
     private boolean userIsGroupCreator;
@@ -34,7 +36,6 @@ public class GroupStatusActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_member);
-//        invalidateOptionsMenu();
 
         members = new ArrayList<String>();
         firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
@@ -43,6 +44,14 @@ public class GroupStatusActivity extends AppCompatActivity {
         ListView memberList = (ListView) findViewById(R.id.group_info_member_list);
         memberAdapter = new MemberAdapter(this, members);
         memberList.setAdapter(memberAdapter);
+
+        addMemberButton = (Button) findViewById(R.id.group_info_add);
+        addMemberButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //TODO okhttp: join_group
+            }
+        });
 
         checkIfUserIsGroupCreator();
         //To be removed
@@ -61,12 +70,13 @@ public class GroupStatusActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
+
+
+    //TODO onClick (Actionbar: leave)
+    //TODO Call leaveGroup()
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        //TODO Modify actionbar button title if current user is the creator
-//        checkIfUserIsGroupCreator();
-//        if (userIsGroupCreator)
-//            menu.findItem(R.id.action_leave).setTitle("Delete group");
         getMenuInflater().inflate(R.menu.leave_button, menu);
         return super.onCreateOptionsMenu(menu);
     }
@@ -75,45 +85,11 @@ public class GroupStatusActivity extends AppCompatActivity {
         return members;
     }
 
-//    public boolean onOptionsItemSelected(MenuItem item) {
-//        switch(item.getItemId()) {
-//            case(R.id.action_leave):
-//                //leaveGroup(); => backend
-//        }
-//    }
+    public void leaveGroup() {
+        //TODO Add query: really wish to leave/delete group?
 
-    //TODO: MOVE handling to backend
-//    public void leaveGroup() {
-//        //TODO Add query: really wish to leave/delete group?
-//
-//        //User is not creator => remove group from user, remove user from group
-//        //User is creator => remove group from all members, all members from group
-//
-//        //TODO Note: a lot of repetition, should the listeners be located in a helper class / own data structure?
-//        databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(DataSnapshot dataSnapshot) {
-//                UserObject user = dataSnapshot.child("users").child(firebaseUser.getUid()).getValue(UserObject.class);
-//                String userGroup = user.getGroup();
-//                GroupObject group = dataSnapshot.child("groups").child(userGroup).getValue(GroupObject.class);
-//
-//                for (UserObject userObject : group.getGroupMembers()) {
-//                    //databaseReference.child("users").child(userObject.); //TODO Problem: how to remove members based on name? (fixed after username introduces?)
-//                }
-//                if (userIsGroupCreator) {
-//
-//                } else {
-//                    databaseReference.child("")
-//                }
-//            }
-//
-//            @Override
-//            public void onCancelled(DatabaseError databaseError) {
-//
-//            }
-//        });
-//
-//    }
+        //TODO okhttp: leave_group
+    }
 
     public void checkIfUserIsGroupCreator() {
         databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
