@@ -17,16 +17,24 @@ import pyrebase
 import uuid
 import logging
 from flask import Flask, redirect, render_template, request, url_for
+from google.cloud import vision
+import json
+import requests
+from PIL import Image, ImageTk
+from io import BytesIO
+from google.cloud import vision
+import os
 # from google.cloud import vision
 
 #CLOUD_STORAGE_BUCKET = os.environ.get('CLOUD_STORAGE_BUCKET')
 
 firebaseConfig = {
-  "apiKey": "apiKey",
-  "authDomain": "mcc-fall-2017-g19.firebaseapp.com",
-  "databaseURL": "https://mcc-fall-2017-g19.firebaseio.com/",
-  "storageBucket": "gs://mcc-fall-2017-g19.appspot.com/"
-}
+          "apiKey": "AIzaSyBNrgNc9VQ0FuEJKYMDsocJbMnPSctix3M",
+          "authDomain": "mcc_2017_g19.firebaseapp.com",
+          "databaseURL": "https://mcc-fall-2017-g19.firebaseio.com/",
+          "storageBucket": "mcc-fall-2017-g19.appspot.com",
+          "serviceAccount": "mcc-fall-2017-g19-firebase-adminsdk-pzipw-d092116b07.json"
+        }
 
 firebase = pyrebase.initialize_app(firebaseConfig)
 #auth = firebase.auth()
@@ -121,6 +129,133 @@ def server_error(e):
     An internal error occurred: <pre>{}</pre>
     See logs for full stacktrace.
     """.format(e), 500
+
+
+
+'''
+UPLOAD IMAGE
+
+input: group-id, user-id, filename, maxQUality
+output: group-id, owner, URLs, maxQuality, people 
+
+example urls
+http://127.0.0.1:8080/upload_image?owner=Seppo&groupID=someGroupID&filename=anImageUploadedFromAndroid.jpg&maxQuality=high
+http://127.0.0.1:8080/upload_image?owner=Seppo&groupID=someGroupID&filename=4kImage.jpg&maxQuality=full
+'''
+@app.route('/upload_image', methods=['GET'])
+def upload_image():
+    
+    #get arguments
+    args = request.args
+    print (args) # For debugging
+
+    owner = args.get('userID')
+    groupID = args.get('groupID')
+    filename = args.get('filename')
+    maxQuality = args.get('maxQuality')
+
+    urlpath = groupID + "/" + filename
+    initialURL = storage.child(urlpath).get_url(0)
+
+
+    
+    """image_processing() function should generate lower quality pictures and upload them into STORAGE.
+    returns URLs and if any people found in google-vision face detection
+    """
+    URLs, people = image_processing(initialURL, maxQuality,groupID, filename)
+
+    '''Push to firebase
+    '''
+    data = {}
+    data['owner'] = owner
+    data['groupID'] = groupID
+    data['maxQuality'] = maxQuality
+    if (maxQuality == 'low'):
+        data['lowURL'] = URLs[0]
+    if (maxQuality == 'high'):
+        data['lowURL'] = URLs[1]
+        data['highURL'] = URLs[0]
+    if (maxQuality == 'full'):
+        data['lowURL'] = URLs[2]
+        data['highURL'] = URLs[1]
+        data['fullURL'] = URLs[0]
+    data['people'] = people
+
+    database.child("groups").child(groupID).child("images").push(data)
+
+    print("upload_image() ok")
+    return "upload_image() ok" # this will be returned to android if we'll end up using 'GET' I think.
+
+
+def image_processing(initialURL, maxQuality,groupID, filename):
+    URLs = []
+    people = 0
+    if (maxQuality == 'low'):
+        URLs.append(initialURL)
+    else:
+        r = requests.get(initialURL)
+        pilImage = Image.open(BytesIO(r.content))
+        #pilImage.mode = 'RGBA'
+
+    if (maxQuality == 'high'):
+        URLs.append(initialURL)
+        URLs.append(img_to_low(pilImage, groupID, filename))
+    if (maxQuality == 'full'):
+        URLs.append(initialURL)
+        URLs.append(img_to_high(pilImage, groupID, filename))
+        URLs.append(img_to_low(pilImage, groupID, filename))
+
+    if (check_for_faces(initialURL)):
+        people = 1
+
+    return URLs, people
+
+'''resize-functions:
+get image, resize, push to STORAGE /<group-id>/images/
+return: url to pushed image
+'''
+def img_to_low(pilImage, groupID, filename):
+    pilImage = pilImage.resize((640, 480))
+    fname = addLowToFileName(filename)
+    pilImage.save(fname,'JPEG')
+    fbpath = groupID + "/" + fname
+    storage.child(fbpath).put(fname)
+    os.remove(fname)
+
+    return storage.child(fbpath).get_url(0)
+
+def img_to_high(pilImage, groupID, filename):
+    pilImage = pilImage.resize((1280, 960))
+    fname = addHighToFileName(filename)
+    pilImage.save(fname,'JPEG')
+    fbpath = groupID + "/" + fname
+    storage.child(fbpath).put(fname)
+    os.remove(fname)
+
+    return storage.child(fbpath).get_url(0)
+
+'''check for faces'''
+def check_for_faces(url):
+    client = vision.ImageAnnotatorClient()
+    #url = "gs://mcc-fall-2017-g19.appspot.com/someGroupID/fullQualityWithFaces.jpg"
+    #url = "https://auto.ndtvimg.com/car-images/medium/ferrari/gtc4lusso/ferrari-gtc4lusso.jpg?v=11"
+    request = {
+    'source': {'image_uri': url},
+    }
+    response = client.face_detection(request)
+
+    if (len(response.face_annotations) > 0):
+        return 1
+    else:
+        return 0
+
+'''helper functions'''
+def addLowToFileName(filename):
+    split = filename.split(".")
+    return split[0]+ "Low." +split[1]
+def addHighToFileName(filename):
+    split = filename.split(".")
+    return split[0]+ "High." +split[1]
 
 
 if __name__ == '__main__':
