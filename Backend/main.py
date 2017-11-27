@@ -15,6 +15,7 @@
 # [START app]
 import pyrebase
 import uuid
+import logging
 from flask import Flask, redirect, render_template, request, url_for
 # from google.cloud import vision
 
@@ -42,7 +43,8 @@ app = Flask(__name__)
 #Implement listeners
 @app.route('/')
 def homepage():
-    return redirect(url_for('create_group', user_id='testuserID', group_name='testgroupName'))
+    return "Homepage"
+    # return redirect(url_for('create_group', user_id='testuserID', group_name='testgroupName'))
 
     # Testing: replace group_id with real id from db
     # Real implementation: Group id is passed from application
@@ -52,30 +54,33 @@ def homepage():
 
 
 # TODO Change parameters into "methods=['GET'] ..." => request.args.get('param')
-@app.route('/create_group/<user_id>/<group_name>')
-def create_group(user_id, group_name):
+@app.route('/groups', methods=['POST'])
+def create_group():
+    user_id = request.form['user_id']
+    group_name = request.form['group_name']
     group_reference = database.child("groups").push({"name": group_name})
     group_key = group_reference["name"]
     database.child("groups").child(group_key).child("members").push({"user": user_id})
     database.child("users").child(user_id).update({"group": group_key})
 
     # TODO Response: groupID combined with token
-    # token = uuid.uuid4()
+    token = str(get_token())
     # qr_string = group_key + ":" + token
-
     return "GROUP ADDED"
 
 
-@app.route('/join_group/<user_id>/<group_id>')
-def join_group(user_id, group_id):
+@app.route('/groups/<group_id>/members', methods=['POST'])
+def add_member(group_id):
+    user_id = request.form['user_id']
     database.child("groups").child(group_id).child("members").push({"user": user_id})
     database.child("users").child(user_id).update({"group": group_id})
 
     return "JOINED GROUP"
 
 
-@app.route('/delete_group/<group_id>')
-def delete_group(group_id):
+@app.route('/groups', methods=['DELETE'])
+def delete_group():
+    group_id = request.form['group_id']
     group_members = database.child("groups").child(group_id).child("members").get()
     for member in group_members.each():
         member_id = member.val()["user"]
@@ -85,17 +90,16 @@ def delete_group(group_id):
     return "GROUP DELETED"
 
 
-@app.route('/get_token', methods=['GET'])
 def get_token():
     token = None
     #get group token from firebase db
     #get group ID
     #Combine! (token = group_id:token)
     #(encrypt code)
+    token = uuid.uuid4()
     return token
 
 
-@app.route('/verify_token', methods=['POST'])
 def verify_token():
     #(Decrypt code)
     #split the group_id and one-use-token

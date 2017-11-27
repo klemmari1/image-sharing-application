@@ -18,6 +18,9 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import com.example.chris.mcc_2017_g19.BackendAPI.BackendAPI;
+
+
 public class GroupCreationActivity extends AppCompatActivity {
 
     private static final String TAG = "GroupCreationActivity";
@@ -60,6 +63,10 @@ public class GroupCreationActivity extends AppCompatActivity {
         });
     }
 
+    public void onClick(android.view.View v){
+        addGroup();
+    }
+
     //TODO: MOVE handling to backend
     private void addGroup() throws IllegalArgumentException {
         EditText nameField = (EditText) findViewById(R.id.fieldGroupName);
@@ -69,5 +76,7 @@ public class GroupCreationActivity extends AppCompatActivity {
         GroupObject group = new GroupObject(groupName, user.getUid());
 
        //okhttp request: create_group
+        BackendAPI api = new BackendAPI();
+        String token = api.createGroup(groupName, user.getUid());
     }
 }
