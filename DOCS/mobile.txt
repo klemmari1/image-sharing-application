@@ -1,4 +1,4 @@
-GROUP MANAGEMENT:
+GROUP MANAGEMENT (Cloud interaction):
 	- Create a group:
 		- Request returns the single use token
 		- Makes a firebase entry for the group
@@ -9,3 +9,19 @@ GROUP MANAGEMENT:
 			- Create a QR code from the token on Android (Token gets replaced if somebody joins)
 				- User joins the group and the token gets expired.
 	
+GROUP MANAGEMENT (Logic):
+	- User IS NOT in a group
+		=> Create a group:	
+			- Name does not need to be unique
+			- Duration, any restrictions to maximum length?
+
+	- User IS in a group
+		=> Group status:
+			- Add a member:	 
+				- Cannot join if already in a group
+				- If token expired before reading, notification to the user with the code? (e.g. "Code expired, go back and click 'add' to refresh")
+			- Leave (user IS NOT group creator):
+				- Remove user from group, remove group field from user
+			- Destroy (user IS group creator):
+				- For all members in group => remove group field
+				- Remove group as a whole from database

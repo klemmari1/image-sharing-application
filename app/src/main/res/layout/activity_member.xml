@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.example.chris.mcc_2017_g19.MemberActivity">
+    tools:context="com.example.chris.mcc_2017_g19.GroupStatusActivity">
 
     <TextView
         android:id="@+id/group_info"
@@ -71,21 +71,21 @@
         android:divider="@null" />
 
     <TextView
-        android:id="@+id/group_info_name_value"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:layout_constraintLeft_toRightOf="@+id/group_info_expiration"
-        android:layout_marginStart="32dp"
-        android:layout_marginTop="24dp"
-        app:layout_constraintTop_toBottomOf="@+id/group_info_name" />
-
-    <TextView
         android:id="@+id/group_info_expiration_value"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="24dp"
         app:layout_constraintLeft_toRightOf="@+id/group_info_expiration"
+        app:layout_constraintTop_toBottomOf="@+id/group_info_name" />
+
+    <TextView
+        android:id="@+id/group_info_name_value"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_marginStart="32dp"
         android:layout_marginTop="32dp"
+        app:layout_constraintLeft_toRightOf="@+id/group_info_expiration"
         app:layout_constraintTop_toBottomOf="@+id/group_info" />
 
 </android.support.constraint.ConstraintLayout>

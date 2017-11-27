@@ -15,27 +15,74 @@
 # [START app]
 import pyrebase
 import uuid
-from flask import Flask, redirect, render_template, request
-from google.cloud import vision
+from flask import Flask, redirect, render_template, request, url_for
+# from google.cloud import vision
 
 #CLOUD_STORAGE_BUCKET = os.environ.get('CLOUD_STORAGE_BUCKET')
+
+firebaseConfig = {
+  "apiKey": "apiKey",
+  "authDomain": "mcc-fall-2017-g19.firebaseapp.com",
+  "databaseURL": "https://mcc-fall-2017-g19.firebaseio.com/",
+  "storageBucket": "gs://mcc-fall-2017-g19.appspot.com/"
+}
+
+firebase = pyrebase.initialize_app(firebaseConfig)
+#auth = firebase.auth()
+database = firebase.database()
+storage = firebase.storage()
+
+# For testing purposes
+# database.child("users").child('testuserID').set({"name": "testusername"})
+# database.child("users").child('testuser2ID').set({"name": "testuser2name"})
 
 app = Flask(__name__)
 
 
 #Implement listeners
-
 @app.route('/')
 def homepage():
-   return("Hello world!")
+    return redirect(url_for('create_group', user_id='testuserID', group_name='testgroupName'))
+
+    # Testing: replace group_id with real id from db
+    # Real implementation: Group id is passed from application
+    #return redirect(url_for('delete_group', group_id='-KziglkrFvdzfQE3wHhQ'))
+
+    #return redirect(url_for('join_group', user_id='testuser2ID', group_id='-KzihPzu45uBnue10kM9'))  # Similar as above
 
 
-@app.route('/create_group', methods=['GET'])
-def create_group():
-    user_id = request.args.get('user')
-    #create group
+# TODO Change parameters into "methods=['GET'] ..." => request.args.get('param')
+@app.route('/create_group/<user_id>/<group_name>')
+def create_group(user_id, group_name):
+    group_reference = database.child("groups").push({"name": group_name})
+    group_key = group_reference["name"]
+    database.child("groups").child(group_key).child("members").push({"user": user_id})
+    database.child("users").child(user_id).update({"group": group_key})
 
-    #get group token
+    # TODO Response: groupID combined with token
+    # token = uuid.uuid4()
+    # qr_string = group_key + ":" + token
+
+    return "GROUP ADDED"
+
+
+@app.route('/join_group/<user_id>/<group_id>')
+def join_group(user_id, group_id):
+    database.child("groups").child(group_id).child("members").push({"user": user_id})
+    database.child("users").child(user_id).update({"group": group_id})
+
+    return "JOINED GROUP"
+
+
+@app.route('/delete_group/<group_id>')
+def delete_group(group_id):
+    group_members = database.child("groups").child(group_id).child("members").get()
+    for member in group_members.each():
+        member_id = member.val()["user"]
+        database.child("users").child(member_id).child("group").remove()
+    database.child("groups").child(group_id).remove()
+
+    return "GROUP DELETED"
 
 
 @app.route('/get_token', methods=['GET'])
@@ -56,7 +103,7 @@ def verify_token():
 
     #verify token based on the group_id
 
-    if(token_valid == True)
+    if(token_valid == True):
         newtoken = uuid.uuid4()
         #put to firebase to group of group_id
 

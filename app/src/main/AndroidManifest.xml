@@ -26,19 +26,21 @@
         </activity>
         <activity
             android:name=".MemberQRActivity"
-            android:parentActivityName=".MemberActivity">
+            android:parentActivityName=".GroupStatusActivity">
 
             <!-- The meta-data tag is required if you support API level 15 and lower -->
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".MemberActivity" />
+                android:value=".GroupStatusActivity" />
         </activity>
         <activity android:name=".SignupActivity" />
         <activity android:name=".AlbumsActivity" />
+        <activity android:name=".GroupCreationActivity" />
         <activity android:name=".CustomAdapter" />
         <activity android:name=".MainActivity" />
         <activity android:name=".ResetPasswordActivity" />
         <activity android:name=".PrivateGallery"></activity>
+        <activity android:name=".GroupStatusActivity" />
     </application>
 
 </manifest>

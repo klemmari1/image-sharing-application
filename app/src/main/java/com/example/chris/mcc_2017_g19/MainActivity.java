@@ -23,6 +23,12 @@ import android.widget.Toast;
 
 import com.google.android.gms.vision.Frame;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -36,6 +42,7 @@ import com.google.android.gms.vision.barcode.BarcodeDetector;
 public class MainActivity extends AppCompatActivity {
 
     ImageView gallery;
+    ImageView groupManagement;
     ImageView settings;
     ImageView takepicture;
 
@@ -43,13 +50,32 @@ public class MainActivity extends AppCompatActivity {
 
     static final int REQUEST_IMAGE_CAPTURE = 1;
     static final int MY_PERMISSIONS_REQUEST_WRITE_EXT_STORAGE = 2;
+    private FirebaseUser firebaseUser;
+    private DatabaseReference databaseReference;
+    private static final String TAG = "MainActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        gallery = (ImageView)findViewById(R.id.gallery);
+        databaseReference = FirebaseDatabase.getInstance().getReference();
+        databaseReference.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
+                // Called any time data is added to database reference
+                Log.d(TAG, "Value is: " + snapshot.getValue());
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Log.w(TAG, "Failed to read value.", databaseError.toException());
+            }
+        });
+
+        firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+
+        gallery = (ImageView) findViewById(R.id.gallery);
         gallery.setClickable(true);
         gallery.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -59,6 +85,14 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        groupManagement = (ImageView) findViewById(R.id.group);
+        groupManagement.setClickable(true);
+        groupManagement.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                selectGroupManagementActivity();
+            }
+        });
 
         //temporary solution for signout button (just for testing) CAN BE REMOVED
         settings = (ImageView) findViewById(R.id.setting);
@@ -72,17 +106,35 @@ public class MainActivity extends AppCompatActivity {
         //-----------------------------------------------------------------------
 
         //Click on the photo image and open the camera
-        settings = (ImageView) findViewById(R.id.photo);
-        settings.setClickable(true);
-        settings.setOnClickListener(new View.OnClickListener() {
+        takepicture = (ImageView) findViewById(R.id.photo);
+        takepicture.setClickable(true);
+        takepicture.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
-            TakePictureIntent();
-
+                TakePictureIntent();
             }
         });
+    }
 
+    private void selectGroupManagementActivity() {
+        databaseReference.child("users").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
+                Class activityClass;
+                UserObject user = snapshot.child(firebaseUser.getUid()).getValue(UserObject.class);
+                if (user.getGroup() == null)
+                    activityClass = GroupCreationActivity.class;
+                else
+                    activityClass = GroupStatusActivity.class;
+                Intent intent = new Intent(MainActivity.this, activityClass);
+                startActivity(intent);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                System.out.println("The read failed: " + databaseError.getMessage());
+            }
+        });
     }
 
     private void TakePictureIntent() {
@@ -122,29 +174,23 @@ public class MainActivity extends AppCompatActivity {
                 // We check the permission at Runtime
                 //
                 return;
-            }
-            else{
+            } else {
 
                 new SensibleDataTask().execute(bitmap);
-
             }
-
         }
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode,
-                                           String permissions[], int[] grantResults) {
+                                           String permissions[],
+                                           int[] grantResults) {
         switch (requestCode) {
             case MY_PERMISSIONS_REQUEST_WRITE_EXT_STORAGE: {
                 if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-
                     new SensibleDataTask().execute(bitmap);
-
                 } else {
-
                     // permission denied, boo!
-
                 }
                 return;
             }
@@ -154,9 +200,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
     //TODO: Check if image is sensible or not;
-
 
     public class SensibleDataTask extends AsyncTask<Bitmap, Void, Bitmap> {
 
@@ -170,16 +214,13 @@ public class MainActivity extends AppCompatActivity {
             //Create the Barcode detector and detect barcode
             BarcodeDetector detector = new BarcodeDetector.Builder(getApplicationContext()).setBarcodeFormats(Barcode.DATA_MATRIX | Barcode.QR_CODE | Barcode.EAN_13).build();
             Frame frame = new Frame.Builder().setBitmap(bit).build();
-            SparseArray< Barcode > barcodes = detector.detect(frame);
+            SparseArray<Barcode> barcodes = detector.detect(frame);
 
-
-            if(barcodes.size() != 1)
-            {
+            if (barcodes.size() != 1) {
                 System.out.println("This is res: " + result);
                 // If the image has no sensitive data, TODO: Call method to store in Firebase + Google App Engine
 
-            }else{
-
+            } else {
                 result = 1;
                 // The image has one sensitive data, check here to know what is a sensitive data:
                 // https://developers.google.com/vision/android/barcodes-overview
@@ -188,69 +229,51 @@ public class MainActivity extends AppCompatActivity {
                 SaveImage(bit);
             }
 
-
-
             return bit;
             //return Bitmap.createScaledBitmap(bit, width, height, true);
         }
 
-        @Override protected void onPostExecute(Bitmap bit) {
-
+        @Override
+        protected void onPostExecute(Bitmap bit) {
             Integer check = 0;
-
-            if(result == check){
+            if (result == check) {
                 //It is not showing the toast, I don't know why (But it is entering this :
                 Toast.makeText(MainActivity.this, "Image has been added to your shared folder!", Toast.LENGTH_LONG);
-            }else{
+            } else {
                 Toast.makeText(MainActivity.this, "SENSIBLE DATA! Image has been added to private folder", Toast.LENGTH_LONG);
             }
+        }
 
 
+        private void SaveImage(Bitmap finalBitmap) {
 
+            String root = Environment.getExternalStorageDirectory().toString();
+            File myDir = new File(root + "/OrganizerApp");
+
+            if (!myDir.exists()) {
+                myDir.mkdirs();
+            }
+
+            //Creating a unique name for the picture
+            Random generator = new Random();
+            int n = 1000;
+            n = generator.nextInt(n);
+            String fname = "Image-" + n + ".jpg";
+
+            File file = new File(myDir, fname);
+
+            try {
+                MediaScannerConnection.scanFile(getApplicationContext(), new String[]{file.getPath()}, new String[]{"Image/*"}, null);
+                System.out.println(file);
+
+                //TODO: This part has to be solved. Images are losing quality and apparently there is no solution for it
+                FileOutputStream out = new FileOutputStream(file);
+                finalBitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+                out.flush();
+                out.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
-
-
-
-
-
-
-    private void SaveImage(Bitmap finalBitmap) {
-
-        String root = Environment.getExternalStorageDirectory().toString();
-
-        File myDir = new File(root + "/OrganizerApp");
-
-        if(!myDir.exists()){
-            myDir.mkdirs();
-        }
-
-        //Creating a unique name for the picture
-        Random generator = new Random();
-        int n = 1000;
-        n = generator.nextInt(n);
-        String fname = "Image-" + n + ".jpg";
-
-        File file = new File(myDir,fname);
-
-
-        try {
-            MediaScannerConnection.scanFile(getApplicationContext(), new String[]  {file.getPath()} , new String[]{"Image/*"}, null);
-            System.out.println(file);
-
-            //TODO: This part has to be solved. Images are losing quality and apparently there is no solution for it
-            FileOutputStream out = new FileOutputStream(file);
-            finalBitmap.compress(Bitmap.CompressFormat.JPEG,100,out);
-            out.flush();
-            out.close();
-
-
-        } catch (Exception e) {
-
-            e.printStackTrace();
-        }
-
-    }
-
-
 }
