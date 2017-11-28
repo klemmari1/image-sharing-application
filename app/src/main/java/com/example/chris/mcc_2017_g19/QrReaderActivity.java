@@ -1,6 +1,5 @@
 package com.example.chris.mcc_2017_g19;
 
-import android.*;
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.os.Bundle;

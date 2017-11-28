@@ -45,7 +45,9 @@
         <activity android:name=".ResetPasswordActivity" />
         <activity android:name=".PrivateGallery"></activity>
         <activity android:name=".GroupStatusActivity" />
-        <activity android:name=".QrReaderActivity" />
+        <activity android:name=".QrReaderActivity"
+                  android:screenOrientation="portrait"
+                  android:configChanges="orientation|keyboardHidden" />
     </application>
 
 </manifest>
