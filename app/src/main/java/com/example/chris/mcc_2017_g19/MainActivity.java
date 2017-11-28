@@ -48,6 +48,7 @@ public class MainActivity extends AppCompatActivity {
 
     static final int REQUEST_IMAGE_CAPTURE = 1;
     static final int MY_PERMISSIONS_REQUEST_WRITE_EXT_STORAGE = 2;
+    static final int MY_PERMISSIONS_REQUEST_CAMERA = 3;
     private FirebaseUser firebaseUser;
     private DatabaseReference databaseReference;
     private static final String TAG = "MainActivity";
@@ -160,6 +161,9 @@ public class MainActivity extends AppCompatActivity {
     private void TakePictureIntent() {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+            if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, MY_PERMISSIONS_REQUEST_CAMERA);
+            }
             startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
         }
     }
