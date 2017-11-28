@@ -4,6 +4,7 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.widget.ImageView;
 
 import com.example.chris.mcc_2017_g19.BackendAPI.BackendAPI;
@@ -12,7 +13,6 @@ import com.google.zxing.BarcodeFormat;
 import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
-import com.squareup.picasso.Picasso;
 
 import com.google.firebase.auth.FirebaseUser;
 
@@ -25,6 +25,8 @@ import org.json.JSONObject;
 public class MemberQRActivity extends AppCompatActivity {
 
     private FirebaseUser firebaseUser;
+    private static final String TAG = "GroupStatusActivity";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,9 +45,17 @@ public class MemberQRActivity extends AppCompatActivity {
             public void onSuccess(String response) {
                 try {
                     JSONObject jsonObj = new JSONObject(response);
-                    String token = jsonObj.getString("token");
-                    ImageView imageView = (ImageView) findViewById(R.id.qr_image);
-                    imageView.setImageBitmap(createBarcode(token));
+                    final String token = jsonObj.getString("token");
+                    MemberQRActivity.this.runOnUiThread(new Runnable() {
+                        public void run() {
+                            try{
+                                ImageView imageView = (ImageView) findViewById(R.id.qr_image);
+                                imageView.setImageBitmap(createBarcode(token));
+                            }
+                            catch (Exception e){
+                            }
+                        }
+                    });
                 } catch (Exception e) {
                 }
             }

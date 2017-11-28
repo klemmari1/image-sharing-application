@@ -20,6 +20,10 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -56,7 +60,12 @@ public class GroupStatusActivity extends AppCompatActivity {
             }
             @Override
             public void onSuccess(String response) {
-                // handle response
+                try{
+                    JSONObject jsonObj = new JSONObject(response);
+                    JSONArray members = jsonObj.getJSONArray("members");
+                }
+                catch (Exception e){
+                }
             }
         });
         checkIfUserIsGroupCreator();
