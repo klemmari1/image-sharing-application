@@ -20,11 +20,10 @@ from flask import Flask, redirect, render_template, request, url_for
 from google.cloud import vision
 import json
 import requests
-from PIL import Image, ImageTk
+from PIL import Image
 from io import BytesIO
 from google.cloud import vision
 import os
-# from google.cloud import vision
 
 #CLOUD_STORAGE_BUCKET = os.environ.get('CLOUD_STORAGE_BUCKET')
 
