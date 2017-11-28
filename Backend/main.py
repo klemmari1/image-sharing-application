@@ -174,7 +174,7 @@ example urls
 http://127.0.0.1:8080/upload_image?owner=Seppo&groupID=someGroupID&filename=anImageUploadedFromAndroid.jpg&maxQuality=high
 http://127.0.0.1:8080/upload_image?owner=Seppo&groupID=someGroupID&filename=4kImage.jpg&maxQuality=full
 '''
-@app.route('/upload_image', methods=['GET'])
+@app.route('/upload_image', methods=['POST'])
 def upload_image():
     
     # Get arguments
