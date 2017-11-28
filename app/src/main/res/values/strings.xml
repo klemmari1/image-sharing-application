@@ -42,4 +42,5 @@
     <string name="forgot_password_msg">We just need your registered Email Id to sent you password reset instructions.</string>
     <string name="btn_logout">Log out</string>
     <string name="btn_read_qr">Join a group</string>
+    <string name="text_qr_code_info">Nothing to read.</string>
 </resources>

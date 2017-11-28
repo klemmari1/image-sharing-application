@@ -128,7 +128,7 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(new Intent(MainActivity.this, LoginActivity.class));
                 return true;
             case R.id.action_read_qr:
-                //TODO start activity for QR reading
+                startActivity(new Intent(MainActivity.this, QrReaderActivity.class));
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
