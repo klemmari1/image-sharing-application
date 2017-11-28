@@ -7,58 +7,58 @@
     tools:context="com.example.chris.mcc_2017_g19.GroupStatusActivity">
 
     <TextView
-        android:id="@+id/group_info"
+        android:id="@+id/group_status"
         android:layout_width="wrap_content"
         android:layout_height="20dp"
         android:layout_marginStart="32dp"
         android:layout_marginTop="32dp"
-        android:text="@string/view_group_info"
+        android:text="@string/group_status_status"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/group_info_name"
+        android:id="@+id/group_status_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="32dp"
         android:layout_marginTop="32dp"
-        android:text="@string/view_group_name"
+        android:text="@string/group_status_name"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/group_info" />
+        app:layout_constraintTop_toBottomOf="@+id/group_status" />
 
     <TextView
-        android:id="@+id/group_info_expiration"
+        android:id="@+id/group_status_expiration"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="32dp"
         android:layout_marginTop="24dp"
-        android:text="@string/view_group_expiration"
+        android:text="@string/group_status_expiration"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/group_info_name" />
+        app:layout_constraintTop_toBottomOf="@+id/group_status_name" />
 
     <TextView
-        android:id="@+id/group_info_members"
+        android:id="@+id/group_status_members"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="32dp"
         android:layout_marginTop="24dp"
-        android:text="@string/view_group_members"
+        android:text="@string/group_status_members"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/group_info_expiration" />
+        app:layout_constraintTop_toBottomOf="@+id/group_status_expiration" />
 
     <Button
-        android:id="@+id/group_info_add"
+        android:id="@+id/group_status_add"
         android:layout_width="92dp"
         android:layout_height="41dp"
         android:layout_marginStart="32dp"
         android:layout_marginTop="16dp"
-        android:onClick="onClick"
-        android:text="@string/view_group_add"
-        app:layout_constraintStart_toEndOf="@+id/group_info_expiration"
-        app:layout_constraintTop_toBottomOf="@+id/group_info_expiration" />
+        android:onClick="addButton"
+        android:text="@string/group_status_add"
+        app:layout_constraintStart_toEndOf="@+id/group_status_expiration"
+        app:layout_constraintTop_toBottomOf="@+id/group_status_expiration" />
 
     <ListView
-        android:id="@+id/group_info_member_list"
+        android:id="@+id/group_status_member_list"
         android:layout_width="fill_parent"
         android:layout_height="0dp"
         android:layout_marginStart="100dp"
@@ -66,26 +66,26 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/group_info_members"
+        app:layout_constraintTop_toBottomOf="@+id/group_status_members"
         android:dividerHeight="0dp"
         android:divider="@null" />
 
     <TextView
-        android:id="@+id/group_info_expiration_value"
+        android:id="@+id/group_status_expiration_value"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="32dp"
         android:layout_marginTop="24dp"
-        app:layout_constraintLeft_toRightOf="@+id/group_info_expiration"
-        app:layout_constraintTop_toBottomOf="@+id/group_info_name" />
+        app:layout_constraintLeft_toRightOf="@+id/group_status_expiration"
+        app:layout_constraintTop_toBottomOf="@+id/group_status_name" />
 
     <TextView
-        android:id="@+id/group_info_name_value"
+        android:id="@+id/group_status_name_value"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="32dp"
         android:layout_marginTop="32dp"
-        app:layout_constraintLeft_toRightOf="@+id/group_info_expiration"
-        app:layout_constraintTop_toBottomOf="@+id/group_info" />
+        app:layout_constraintLeft_toRightOf="@+id/group_status_expiration"
+        app:layout_constraintTop_toBottomOf="@+id/group_status" />
 
 </android.support.constraint.ConstraintLayout>

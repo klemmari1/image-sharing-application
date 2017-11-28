@@ -35,23 +35,15 @@ public class GroupStatusActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_member);
+        setContentView(R.layout.activity_group_status);
 
         members = new ArrayList<String>();
         firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
         databaseReference = FirebaseDatabase.getInstance().getReference();
 
-        ListView memberList = (ListView) findViewById(R.id.group_info_member_list);
+        ListView memberList = (ListView) findViewById(R.id.group_status_member_list);
         memberAdapter = new MemberAdapter(this, members);
         memberList.setAdapter(memberAdapter);
-
-        addMemberButton = (Button) findViewById(R.id.group_info_add);
-        addMemberButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //TODO okhttp: join_group
-            }
-        });
 
         checkIfUserIsGroupCreator();
         //To be removed
@@ -61,11 +53,11 @@ public class GroupStatusActivity extends AppCompatActivity {
 //        memberAdapter.notifyDataSetChanged();
         displayGroupName();
 
-        TextView expirationValue = (TextView) findViewById(R.id.group_info_expiration_value);
+        TextView expirationValue = (TextView) findViewById(R.id.group_status_expiration_value);
         expirationValue.setText("Tue 31 Oct - 10:00pm"); // Placeholder
     }
 
-    public void onClick(View v) {
+    public void addButton(View v) {
         Intent intent = new Intent(this, MemberQRActivity.class);
         startActivity(intent);
     }
@@ -113,7 +105,7 @@ public class GroupStatusActivity extends AppCompatActivity {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 UserObject user = dataSnapshot.child(firebaseUser.getUid()).getValue(UserObject.class);
-                TextView groupNameField = (TextView) findViewById(R.id.group_info_name_value);
+                TextView groupNameField = (TextView) findViewById(R.id.group_status_name_value);
                     groupNameField.setText(user.getGroup());
             }
 

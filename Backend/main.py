@@ -84,10 +84,28 @@ def create_group():
     database.child("groups").child(group_key).child("members").push({"user": user_id})
     database.child("users").child(user_id).update({"group": group_key})
 
-    # TODO Response: groupID combined with token
     token = str(get_token())
-    # qr_string = group_key + ":" + token
-    return "GROUP ADDED"
+    database.child("groups").child(group_key).update({"token": token})
+    qr_string = str(group_key) + ":" + str(token)
+    return qr_string
+
+
+@app.route('/groups', methods=['GET'])
+def get_groups():
+    groups = database.child("groups").get().val()
+    return str(dict(groups))
+
+
+@app.route('/groups/<group_id>', methods=['GET'])
+def get_group_info(group_id):
+    group = database.child("groups").child(group_id).get().val()
+    return str(dict(group))
+
+
+@app.route('/groups/<group_id>/members', methods=['GET'])
+def get_members(group_id):
+    members = database.child("groups").child(group_id).child("members").get().val()
+    return str(dict(members))
 
 
 @app.route('/groups/<group_id>/members', methods=['POST'])
@@ -158,14 +176,14 @@ http://127.0.0.1:8080/upload_image?owner=Seppo&groupID=someGroupID&filename=4kIm
 @app.route('/upload_image', methods=['GET'])
 def upload_image():
     
-    #get arguments
+    # Get arguments
     args = request.args
-    print (args) # For debugging
+    print(args)  # For debugging
 
-    owner = args.get('userID')
-    groupID = args.get('groupID')
-    filename = args.get('filename')
-    maxQuality = args.get('maxQuality')
+    owner = request.form['userID']
+    groupID = request.form['groupID']
+    filename = request.form['filename']
+    maxQuality = request.form['maxQuality']
 
     urlpath = groupID + "/" + filename
     initialURL = storage.child(urlpath).get_url(0)
@@ -197,7 +215,7 @@ def upload_image():
     database.child("groups").child(groupID).child("images").push(data)
 
     print("upload_image() ok")
-    return "upload_image() ok" # this will be returned to android if we'll end up using 'GET' I think.
+    return "upload_image() ok"  # this will be returned to android if we'll end up using 'GET' I think.
 
 
 def image_processing(initialURL, maxQuality,groupID, filename):
@@ -230,7 +248,7 @@ return: url to pushed image
 def img_to_low(pilImage, groupID, filename):
     pilImage = pilImage.resize((640, 480))
     fname = addLowToFileName(filename)
-    pilImage.save(fname,'JPEG')
+    pilImage.save(fname, 'JPEG')
     fbpath = groupID + "/" + fname
     storage.child(fbpath).put(fname)
     os.remove(fname)
@@ -240,7 +258,7 @@ def img_to_low(pilImage, groupID, filename):
 def img_to_high(pilImage, groupID, filename):
     pilImage = pilImage.resize((1280, 960))
     fname = addHighToFileName(filename)
-    pilImage.save(fname,'JPEG')
+    pilImage.save(fname, 'JPEG')
     fbpath = groupID + "/" + fname
     storage.child(fbpath).put(fname)
     os.remove(fname)
@@ -265,10 +283,10 @@ def check_for_faces(url):
 '''helper functions'''
 def addLowToFileName(filename):
     split = filename.split(".")
-    return split[0]+ "Low." +split[1]
+    return split[0] + "Low." + split[1]
 def addHighToFileName(filename):
     split = filename.split(".")
-    return split[0]+ "High." +split[1]
+    return split[0] + "High." + split[1]
 
 
 if __name__ == '__main__':

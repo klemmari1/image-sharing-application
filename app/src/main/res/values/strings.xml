@@ -1,10 +1,10 @@
 <resources>
     <string name="app_name">PhotoOrganizer</string>
-    <string name="view_group_info">Group Information</string>
-    <string name="view_group_name">Name</string>
-    <string name="view_group_expiration">Expiration</string>
-    <string name="view_group_members">Members</string>
-    <string name="view_group_add">ADD</string>
+    <string name="group_status_status">Group Information</string>
+    <string name="group_status_name">Name</string>
+    <string name="group_status_expiration">Expiration</string>
+    <string name="group_status_members">Members</string>
+    <string name="group_status_add">ADD</string>
     <string name="scan_to_join">Scan to join!</string>
     <string name="leave_button">Leave</string>
     <string name="text_new_group">NEW GROUP</string>

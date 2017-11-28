@@ -10,6 +10,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.example.chris.mcc_2017_g19.BackendAPI.BackendAPI;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -17,8 +18,6 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-
-import com.example.chris.mcc_2017_g19.BackendAPI.BackendAPI;
 
 
 public class GroupCreationActivity extends AppCompatActivity {
@@ -48,15 +47,13 @@ public class GroupCreationActivity extends AppCompatActivity {
         });
 
         user = FirebaseAuth.getInstance().getCurrentUser();
-
         createGroupButton = (Button)findViewById(R.id.buttonCreateGroup);
         createGroupButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 try {
                     addGroup();
-                    startActivity(new Intent(GroupCreationActivity.this, MainActivity.class));
-                } catch (IllegalArgumentException e){
+                } catch (Exception e){
                     Toast.makeText(GroupCreationActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
                 }
             }
@@ -72,7 +69,7 @@ public class GroupCreationActivity extends AppCompatActivity {
             throw new IllegalArgumentException("No group name provided");
         GroupObject group = new GroupObject(groupName, user.getUid());
 
-       //okhttp request: create_group
+        //okhttp request: create_group
         BackendAPI api = new BackendAPI();
         api.createGroup(groupName, user.getUid(), new BackendAPI.HttpCallback() {
             @Override
@@ -82,8 +79,13 @@ public class GroupCreationActivity extends AppCompatActivity {
 
             @Override
             public void onSuccess(String response) {
-                // handle response
+
             }
         });
+        try {
+            startActivity(new Intent(GroupCreationActivity.this, GroupStatusActivity.class));
+        } catch (Exception e){
+            Toast.makeText(GroupCreationActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
     }
 }
