@@ -63,9 +63,6 @@ public class GroupCreationActivity extends AppCompatActivity {
         });
     }
 
-    public void onClick(android.view.View v){
-        addGroup();
-    }
 
     //TODO: MOVE handling to backend
     private void addGroup() throws IllegalArgumentException {
