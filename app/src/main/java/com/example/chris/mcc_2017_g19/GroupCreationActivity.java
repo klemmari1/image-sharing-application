@@ -74,18 +74,19 @@ public class GroupCreationActivity extends AppCompatActivity {
         api.createGroup(groupName, user.getUid(), new BackendAPI.HttpCallback() {
             @Override
             public void onFailure(String response, Exception exception) {
-                // handle failure
+                Log.d(TAG, "Error: " + response + " " + exception);
             }
 
             @Override
             public void onSuccess(String response) {
-
+                try {
+                    Intent groupStatus = new Intent(GroupCreationActivity.this, GroupStatusActivity.class);
+                    groupStatus.putExtra("GROUP_TOKEN", response);
+                    startActivity(groupStatus);
+                } catch (Exception e){
+                    Toast.makeText(GroupCreationActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
+                }
             }
         });
-        try {
-            startActivity(new Intent(GroupCreationActivity.this, GroupStatusActivity.class));
-        } catch (Exception e){
-            Toast.makeText(GroupCreationActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
-        }
     }
 }

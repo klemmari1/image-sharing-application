@@ -9,6 +9,7 @@ import java.io.IOException;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.MediaType;
+import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -18,7 +19,7 @@ import okhttp3.Response;
 public class BackendAPI {
 
     private OkHttpClient client;
-    private String backendUrl = "127.0.0.1";
+    private String backendUrl = "https://mcc-fall-2017-g19.appspot.com";
     private MediaType JSON = MediaType.parse("application/json; charset=utf-8");
 
 
@@ -36,8 +37,7 @@ public class BackendAPI {
     }
 
 
-    private void postRequest(String url, String json, HttpCallback cb) throws IOException {
-        RequestBody body = RequestBody.create(JSON, json);
+    private void postRequest(String url, RequestBody body, HttpCallback cb) throws IOException {
         Request request = new Request.Builder()
                 .url(url)
                 .post(body)
@@ -76,9 +76,12 @@ public class BackendAPI {
     //API functions
     public String joinGroup(String groupID, String userID, HttpCallback cb){
         String url = backendUrl + "/groups/" + groupID + "/members";
-        String json = "{'user_id': '" + userID + "'}";
+        RequestBody requestBody = new MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("user_id", userID)
+                .build();
         try{
-            postRequest(url, json, cb);
+            postRequest(url, requestBody, cb);
         }
         catch (Exception e){
         }
@@ -87,10 +90,13 @@ public class BackendAPI {
 
     public String createGroup(String groupName, String userID, HttpCallback cb){
         String url = backendUrl + "/groups";
-        String json = "{'group_name': '" + groupName + "'," +
-                "'user_id': '" + userID + "'}";
+        RequestBody requestBody = new MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("group_name", groupName)
+                .addFormDataPart("user_id", userID)
+                .build();
         try{
-            postRequest(url, json, cb);
+            postRequest(url, requestBody, cb);
         }
         catch (Exception e){
         }
@@ -108,8 +114,18 @@ public class BackendAPI {
         return null;
     }
 
-    public String testAPI(HttpCallback cb){
-        String url = "http://httpbin.org/ip";
+    public String getGroup(String groupID, HttpCallback cb){
+        String url = backendUrl + "/groups/" + groupID;
+        try{
+            getRequest(url, cb);
+        }
+        catch (Exception e){
+        }
+        return null;
+    }
+
+    public String getUserGroup(String userID, HttpCallback cb){
+        String url = backendUrl + "/users/" + userID + "/group";
         try{
             getRequest(url, cb);
         }

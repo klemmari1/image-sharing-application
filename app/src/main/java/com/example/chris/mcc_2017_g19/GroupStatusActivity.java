@@ -11,6 +11,7 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.example.chris.mcc_2017_g19.BackendAPI.BackendAPI;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -30,6 +31,7 @@ public class GroupStatusActivity extends AppCompatActivity {
     private FirebaseUser firebaseUser;
     private DatabaseReference databaseReference;
     private boolean userIsGroupCreator;
+
     private static final String TAG = "GroupStatusActivity";
 
     @Override
@@ -45,12 +47,20 @@ public class GroupStatusActivity extends AppCompatActivity {
         memberAdapter = new MemberAdapter(this, members);
         memberList.setAdapter(memberAdapter);
 
+        String user_id = firebaseUser.getUid();
+        BackendAPI api = new BackendAPI();
+        api.getUserGroup(user_id, new BackendAPI.HttpCallback() {
+            @Override
+            public void onFailure(String response, Exception exception) {
+                // handle failure
+            }
+            @Override
+            public void onSuccess(String response) {
+                // handle response
+            }
+        });
         checkIfUserIsGroupCreator();
-        //To be removed
-//        members.add("Lisa");
-//        members.add("Mark");
-//        members.add("Joe");
-//        memberAdapter.notifyDataSetChanged();
+
         displayGroupName();
 
         TextView expirationValue = (TextView) findViewById(R.id.group_status_expiration_value);
@@ -58,8 +68,8 @@ public class GroupStatusActivity extends AppCompatActivity {
     }
 
     public void addButton(View v) {
-        Intent intent = new Intent(this, MemberQRActivity.class);
-        startActivity(intent);
+        Intent QRActivity = new Intent(this, MemberQRActivity.class);
+        startActivity(QRActivity);
     }
 
 

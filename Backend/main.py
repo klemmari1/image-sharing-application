@@ -85,8 +85,8 @@ def create_group():
     database.child("users").child(user_id).update({"group": group_key})
 
     token = str(get_token())
-    database.child("groups").child(group_key).update({"token": token})
     qr_string = str(group_key) + ":" + str(token)
+    database.child("groups").child(group_key).update({"token": qr_string})
     return qr_string
 
 
@@ -129,12 +129,13 @@ def delete_group():
     return "GROUP DELETED"
 
 
+@app.route('/users/<user_id>/group', methods=['GET'])
+def get_user_group(user_id):
+    group_id = database.child("users").child(user_id).child("group").get().val()
+    return get_group_info(group_id)
+
+
 def get_token():
-    token = None
-    #get group token from firebase db
-    #get group ID
-    #Combine! (token = group_id:token)
-    #(encrypt code)
     token = uuid.uuid4()
     return token
 
