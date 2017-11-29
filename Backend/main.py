@@ -93,8 +93,8 @@ def create_group():
         qr_string = str(group_key) + ":" + str(token)
         database.child("groups").child(group_key).update({"token": qr_string})
         return qr_string
-    except:
-        return "ERROR"
+    except Exception:
+        return Exception
 
 
 @app.route('/groups', methods=['GET'])
@@ -102,8 +102,8 @@ def get_groups():
     try:
         groups = database.child("groups").get().val()
         return str(dict(groups))
-    except:
-        return "ERROR"
+    except Exception:
+        return Exception
 
 
 @app.route('/groups/<group_id>', methods=['GET'])
@@ -111,8 +111,8 @@ def get_group_info(group_id):
     try:
         group = database.child("groups").child(group_id).get().val()
         return str(dict(group))
-    except:
-        return "ERROR"
+    except Exception:
+        return Exception
 
 
 @app.route('/groups/<group_id>/members', methods=['GET'])
@@ -120,8 +120,8 @@ def get_members(group_id):
     try:
         members = database.child("groups").child(group_id).child("members").get().val()
         return str(dict(members))
-    except:
-        return "ERROR"
+    except Exception:
+        return Exception
 
 
 @app.route('/groups/<group_id>/members', methods=['POST'])
@@ -133,8 +133,8 @@ def add_member(group_id):
         database.child("users").child(user_id).update({"group": group_id})
 
         return "JOINED GROUP"
-    except:
-        return "ERROR"
+    except Exception:
+        return Exception
 
 
 @app.route('/groups', methods=['DELETE'])
@@ -148,8 +148,8 @@ def delete_group():
         database.child("groups").child(group_id).remove()
 
         return "GROUP DELETED"
-    except:
-        return "ERROR"
+    except Exception:
+        return Exception
 
 
 @app.route('/users/<user_id>/group', methods=['GET'])
@@ -157,8 +157,8 @@ def get_user_group(user_id):
     try:
         group_id = database.child("users").child(user_id).child("group").get().val()
         return get_group_info(group_id)
-    except:
-        return "ERROR"
+    except Exception:
+        return Exception
 
 
 @app.route('/users/<user_id>/token', methods=['GET'])
@@ -167,8 +167,8 @@ def get_group_token(user_id):
         group_id = database.child("users").child(user_id).child("group").get().val()
         group_token = database.child("groups").child(group_id).child("token").get().val()
         return group_token
-    except:
-        return "ERROR"
+    except Exception:
+        return Exception
 
 
 def get_token():
@@ -214,7 +214,7 @@ http://127.0.0.1:8080/upload_image?owner=Seppo&groupID=someGroupID&filename=4kIm
 def upload_image():
     
     # Get arguments
-    args = request.args
+    args = request.form
     print(args)  # For debugging
 
     owner = request.form['userID']

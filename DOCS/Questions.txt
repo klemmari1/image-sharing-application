@@ -1,3 +1,11 @@
--Private pictures stored locally or firebase??
+-Private pictures stored locally or firebase?? -> only locally
 
--Private or group single-use-token??
+-Private or group single-use-token?? -> 1 token per group is best
+
+-Authentication done only in firebase or cloud also -> firebase tokens for cloud
+
+-Push notifications from firebase / sync in background -> only in background,
+not when closed
+
+Push notifications sent according to device ID or topics.
+PyFCM
