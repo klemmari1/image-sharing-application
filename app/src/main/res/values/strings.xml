@@ -43,4 +43,5 @@
     <string name="btn_logout">Log out</string>
     <string name="btn_read_qr">Join a group</string>
     <string name="text_qr_code_info">Nothing to read.</string>
+    <string name="description_join_group_qr">Qr for joining group</string>
 </resources>
