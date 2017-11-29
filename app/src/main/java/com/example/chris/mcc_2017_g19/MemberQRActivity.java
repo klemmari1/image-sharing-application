@@ -21,4 +21,6 @@ public class MemberQRActivity extends AppCompatActivity {
         ImageView imageView = (ImageView) findViewById(R.id.qr_image);
         Picasso.with(this).load("https://lh3.googleusercontent.com/u9CquezfCFyXtTqr9Ls_PnLmKibDJK2ZKiuZGkgNc-M6qlxIWpK_Q-Buki9cgHBVXOc=w300").into(imageView);
     }
+
+
 }

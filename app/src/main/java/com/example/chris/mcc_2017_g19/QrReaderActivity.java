@@ -1,14 +1,18 @@
 package com.example.chris.mcc_2017_g19;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.vision.CameraSource;
 import com.google.android.gms.vision.Detector;
@@ -41,7 +45,7 @@ public class QrReaderActivity extends AppCompatActivity {
 
         cameraSource = new CameraSource
                 .Builder(this, barcodeDetector)
-                .setRequestedPreviewSize(400,200)
+                .setRequestedPreviewSize(400,400)
                 .build();
 
         cameraView.getHolder().addCallback(new SurfaceHolder.Callback() {
@@ -77,11 +81,15 @@ public class QrReaderActivity extends AppCompatActivity {
                 final SparseArray<Barcode> barcodes = detections.getDetectedItems();
 
                 if (barcodes.size() != 0) {
-                    barcodeInfo.post(new Runnable() {    // Use the post method of the TextView TODO Change
+                    // The following is required for UI manipulation
+                    // The handler object is linked to the UI thread
+                    new Handler(Looper.getMainLooper()).post(new Runnable() {
+                        @Override
                         public void run() {
-                            barcodeInfo.setText(    // Update the TextView
-                                    barcodes.valueAt(0).displayValue
-                            );
+                            //barcodeInfo.setText(barcodes.valueAt(0).displayValue);
+                            Toast.makeText(QrReaderActivity.this, "Found: " + barcodes.valueAt(0).displayValue,
+                                    Toast.LENGTH_SHORT).show();
+                            //startActivity(new Intent(QrReaderActivity.this, MainActivity.class));
                         }
                     });
                 }

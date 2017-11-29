@@ -59,19 +59,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         databaseReference = FirebaseDatabase.getInstance().getReference();
-        databaseReference.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot snapshot) {
-                // Called any time data is added to database reference
-                Log.d(TAG, "Value is: " + snapshot.getValue());
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                Log.w(TAG, "Failed to read value.", databaseError.toException());
-            }
-        });
-
         firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
 
         gallery = (ImageView) findViewById(R.id.gallery);
