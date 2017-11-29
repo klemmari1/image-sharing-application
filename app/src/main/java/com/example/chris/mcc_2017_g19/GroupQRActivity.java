@@ -49,6 +49,7 @@ public class GroupQRActivity extends AppCompatActivity {
                                 ImageView imageView = (ImageView) findViewById(R.id.qr_image);
                                 Bitmap bitmap = getBitmap(token, 750);
                                 imageView.setImageBitmap(bitmap);
+
                             }
                             catch (Exception e){
                             }
@@ -86,29 +87,4 @@ public class GroupQRActivity extends AppCompatActivity {
         }
         return pixelArray;
     }
-
-
-//    Bitmap createBarcode(String txtInput) throws WriterException {
-//        int map_width = 750;
-//        BitMatrix result;
-//        try {
-//            result = new MultiFormatWriter().encode(txtInput,
-//                    BarcodeFormat.QR_CODE, map_width, map_width, null);
-//        } catch (IllegalArgumentException iae) {
-//            // Unsupported format
-//            return null;
-//        }
-//        int w = result.getWidth();
-//        int h = result.getHeight();
-//        int[] pixels = new int[w * h];
-//        for (int y = 0; y < h; y++) {
-//            int offset = y * w;
-//            for (int x = 0; x < w; x++) {
-//                pixels[offset + x] = result.get(x, y) ? Color.BLACK : Color.WHITE;
-//            }
-//        }
-//        Bitmap bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
-//        bitmap.setPixels(pixels, 0, map_width, 0, 0, w, h);
-//        return bitmap;
-//    }
 }
