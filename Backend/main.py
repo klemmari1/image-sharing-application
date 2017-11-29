@@ -92,7 +92,7 @@ def create_group():
         token = set_new_token(group_key)
         return token
     except Exception as e:
-        return "Unexpected error" + str(e)
+        return "Unexpected error: " + str(e)
 
 
 @app.route('/groups', methods=['GET'])
@@ -101,7 +101,7 @@ def get_groups():
         groups = database.child("groups").get().val()
         return str(dict(groups))
     except Exception as e:
-        return "Unexpected error" + str(e)
+        return "Unexpected error: " + str(e)
 
 
 @app.route('/groups/<group_id>', methods=['GET'])
@@ -110,7 +110,7 @@ def get_group_info(group_id):
         group = database.child("groups").child(group_id).get().val()
         return str(dict(group))
     except Exception as e:
-        return "Unexpected error" + str(e)
+        return "Unexpected error: " + str(e)
 
 
 @app.route('/groups/<group_id>/members', methods=['GET'])
@@ -119,7 +119,7 @@ def get_members(group_id):
         members = database.child("groups").child(group_id).child("members").get().val()
         return str(dict(members))
     except Exception as e:
-        return "Unexpected error" + str(e)
+        return "Unexpected error: " + str(e)
 
 
 @app.route('/groups/<group_id>/members', methods=['POST'])
@@ -139,7 +139,7 @@ def add_member(group_id):
         else:
             return "INVALID TOKEN"
     except Exception as e:
-        return "Unexpected error" + str(e)
+        return "Unexpected error: " + str(e)
 
 
 @app.route('/groups', methods=['DELETE'])
@@ -148,13 +148,24 @@ def delete_group():
         group_id = request.form['group_id']
         group_members = database.child("groups").child(group_id).child("members").get()
         for member in group_members.each():
-            member_id = member.val()["user"]
+            member_id = member.key()
             database.child("users").child(member_id).child("group").remove()
         database.child("groups").child(group_id).remove()
 
         return "GROUP DELETED"
     except Exception as e:
-        return "Unexpected error" + str(e)
+        return "Unexpected error: " + str(e)
+
+
+@app.route('/groups/<group_id>/members', methods=['DELETE'])
+def leave_group(group_id):
+    try:
+        user_id = request.form['user_id']
+        database.child("groups").child(group_id).child("members").child(user_id).remove()
+        database.child("users").child(user_id).child("group").remove()
+        return "LEFT GROUP"
+    except Exception as e:
+        return "Unexpected error: " + str(e)
 
 
 @app.route('/users/<user_id>/group', methods=['GET'])
@@ -163,7 +174,7 @@ def get_user_group(user_id):
         group_id = database.child("users").child(user_id).child("group").get().val()
         return get_group_info(group_id)
     except Exception as e:
-        return "Unexpected error" + str(e)
+        return "Unexpected error: " + str(e)
 
 
 @app.route('/users/<user_id>/token', methods=['GET'])
@@ -173,7 +184,7 @@ def get_group_token(user_id):
         group_token = database.child("groups").child(group_id).child("token").get().val()
         return group_token
     except Exception as e:
-        return "Unexpected error" + str(e)
+        return "Unexpected error: " + str(e)
 
 
 def set_new_token(group_id):
@@ -247,7 +258,7 @@ def upload_image():
         print("upload_image() ok")
         return "upload_image() ok"  # this will be returned to android if we'll end up using 'GET' I think.
     except Exception as e:
-        return "Unexpected error" + str(e)
+        return "Unexpected error: " + str(e)
 
 
 def image_processing(initialURL, maxQuality,groupID, filename):
