@@ -74,11 +74,11 @@ public class BackendAPI {
     }
 
     //API functions
-    public String joinGroup(String groupID, String userID, HttpCallback cb){
-        String url = backendUrl + "/groups/" + groupID + "/members";
+    public String joinGroup(String userID, String token, HttpCallback cb){
+        String url = backendUrl + "/members/" + userID + "/group";
         RequestBody requestBody = new MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
-                .addFormDataPart("user_id", userID)
+                .addFormDataPart("token", token)
                 .build();
         try{
             postRequest(url, requestBody, cb);

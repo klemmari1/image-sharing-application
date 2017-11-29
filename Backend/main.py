@@ -122,11 +122,11 @@ def get_members(group_id):
         return "Unexpected error: " + str(e)
 
 
-@app.route('/groups/<group_id>/members', methods=['POST'])
-def add_member(group_id):
+@app.route('/users/<user_id>/group', methods=['POST'])
+def join_group(user_id):
     try:
-        user_id = request.form['user_id']
         user_token = request.form['token']
+        group_id = user_token.split(":")[0]
         group_token = database.child("groups").child(group_id).child("token").get().val()
 
         if user_token == group_token:
