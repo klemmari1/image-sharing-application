@@ -11,6 +11,7 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.example.chris.mcc_2017_g19.BackendAPI.BackendAPI;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -19,55 +20,77 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import org.json.JSONObject;
+
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public class GroupStatusActivity extends AppCompatActivity {
 
     private List<String> members;
     private MemberAdapter memberAdapter;
-    private Button addMemberButton;
     private FirebaseUser firebaseUser;
     private DatabaseReference databaseReference;
     private boolean userIsGroupCreator;
+
     private static final String TAG = "GroupStatusActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_member);
+        setContentView(R.layout.activity_group_status);
 
         members = new ArrayList<String>();
         firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
         databaseReference = FirebaseDatabase.getInstance().getReference();
 
-        ListView memberList = (ListView) findViewById(R.id.group_info_member_list);
+        ListView memberList = (ListView) findViewById(R.id.group_status_member_list);
         memberAdapter = new MemberAdapter(this, members);
         memberList.setAdapter(memberAdapter);
 
-        addMemberButton = (Button) findViewById(R.id.group_info_add);
-        addMemberButton.setOnClickListener(new View.OnClickListener() {
+        String user_id = firebaseUser.getUid();
+        BackendAPI api = new BackendAPI();
+        api.getUserGroup(user_id, new BackendAPI.HttpCallback() {
             @Override
-            public void onClick(View v) {
-                //TODO okhttp: join_group
+            public void onFailure(String response, Exception exception) {
+            }
+            @Override
+            public void onSuccess(String response) {
+                try{
+                    JSONObject groupInfo = new JSONObject(response);
+                    final String groupName = groupInfo.getString("name");
+                    JSONObject membs = groupInfo.getJSONObject("members");
+                    Iterator<?> keys = membs.keys();
+                    while (keys.hasNext()) {
+                        Object key = keys.next();
+                        String name = membs.getString((String) key);
+                        members.add(name);
+                    }
+                    GroupStatusActivity.this.runOnUiThread(new Runnable() {
+                        public void run() {
+                            try{
+                                memberAdapter.notifyDataSetChanged();
+                                displayGroupName(groupName);
+                            }
+                            catch (Exception e){
+                            }
+                        }
+                    });
+                }
+                catch (Exception e){
+                }
             }
         });
-
         checkIfUserIsGroupCreator();
-        //To be removed
-//        members.add("Lisa");
-//        members.add("Mark");
-//        members.add("Joe");
-//        memberAdapter.notifyDataSetChanged();
-        displayGroupName();
 
-        TextView expirationValue = (TextView) findViewById(R.id.group_info_expiration_value);
+        TextView expirationValue = (TextView) findViewById(R.id.group_status_expiration_value);
         expirationValue.setText("Tue 31 Oct - 10:00pm"); // Placeholder
     }
 
-    public void onClick(View v) {
-        Intent intent = new Intent(this, MemberQRActivity.class);
-        startActivity(intent);
+    public void addButton(View v) {
+        Intent QRActivity = new Intent(this, GroupQRActivity.class);
+        startActivity(QRActivity);
     }
 
 
@@ -108,19 +131,8 @@ public class GroupStatusActivity extends AppCompatActivity {
         });
     }
 
-    public void displayGroupName() {
-        databaseReference.child("users").addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                UserObject user = dataSnapshot.child(firebaseUser.getUid()).getValue(UserObject.class);
-                TextView groupNameField = (TextView) findViewById(R.id.group_info_name_value);
-                    groupNameField.setText(user.getGroup());
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                System.out.println("The read failed: " + databaseError.getMessage());
-            }
-        });
+    public void displayGroupName(String name) {
+        TextView groupNameField = (TextView) findViewById(R.id.group_status_name_value);
+        groupNameField.setText(name);
     }
 }
