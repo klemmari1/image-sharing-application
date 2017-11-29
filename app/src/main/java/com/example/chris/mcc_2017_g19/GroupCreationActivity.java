@@ -23,7 +23,6 @@ import com.google.firebase.database.ValueEventListener;
 public class GroupCreationActivity extends AppCompatActivity {
 
     private static final String TAG = "GroupCreationActivity";
-    private DatabaseReference databaseReference;
     private Button createGroupButton;
     private FirebaseUser user;
 
@@ -31,20 +30,6 @@ public class GroupCreationActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create_group);
-
-        databaseReference = FirebaseDatabase.getInstance().getReference();
-        databaseReference.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot snapshot) {
-                // Called any time data is added to database reference
-                Log.d(TAG, "Value is: " + snapshot.getValue());
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                Log.w(TAG, "Failed to read value.", databaseError.toException());
-            }
-        });
 
         user = FirebaseAuth.getInstance().getCurrentUser();
         createGroupButton = (Button)findViewById(R.id.buttonCreateGroup);
@@ -60,8 +45,6 @@ public class GroupCreationActivity extends AppCompatActivity {
         });
     }
 
-
-    //TODO: MOVE handling to backend
     private void addGroup() throws IllegalArgumentException {
         EditText nameField = (EditText) findViewById(R.id.fieldGroupName);
         String groupName = nameField.getText().toString();

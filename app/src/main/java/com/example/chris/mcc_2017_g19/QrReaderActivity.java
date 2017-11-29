@@ -14,6 +14,7 @@ import android.view.SurfaceView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.chris.mcc_2017_g19.BackendAPI.BackendAPI;
 import com.google.android.gms.vision.CameraSource;
 import com.google.android.gms.vision.Detector;
 import com.google.android.gms.vision.barcode.Barcode;
@@ -81,8 +82,27 @@ public class QrReaderActivity extends AppCompatActivity {
                 final SparseArray<Barcode> barcodes = detections.getDetectedItems();
 
                 if (barcodes.size() != 0) {
-                    //TODO okhttp: add_member
-                    //startActivity(new Intent(QrReaderActivity.this, MainActivity.class));
+//                    String barcode = barcodes.valueAt(0).displayValue;
+                    //okhttp: add_member
+//                    BackendAPI api = new BackendAPI();
+//                    api.addMember(barcode, new BackendAPI.HttpCallback() {
+//                        @Override
+//                        public void onFailure(String response, Exception exception) {
+//                            Log.d(TAG, "Error: " + response + " " + exception);
+//                        }
+//
+//                        @Override
+//                        public void onSuccess(String response) {
+//                            try {
+//                                Intent groupStatus = new Intent(GroupCreationActivity.this, GroupStatusActivity.class);
+//                                groupStatus.putExtra("GROUP_TOKEN", response);
+//                                startActivity(groupStatus);
+//                            } catch (Exception e){
+//                                Toast.makeText(GroupCreationActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
+//                            }
+//                        }
+//                    });
+                    startActivity(new Intent(QrReaderActivity.this, MainActivity.class));
                 }
             }
         });
