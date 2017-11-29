@@ -22,10 +22,10 @@ import org.json.JSONObject;
  * Created by Chris on 6.11.2017.
  */
 
-public class MemberQRActivity extends AppCompatActivity {
+public class GroupQRActivity extends AppCompatActivity {
 
     private FirebaseUser firebaseUser;
-    private static final String TAG = "GroupStatusActivity";
+    private static final String TAG = "GroupQRActivity";
 
 
     @Override
@@ -36,17 +36,15 @@ public class MemberQRActivity extends AppCompatActivity {
         firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
         String user_id = firebaseUser.getUid();
         BackendAPI api = new BackendAPI();
-        api.getUserGroup(user_id, new BackendAPI.HttpCallback() {
+        api.getGroupToken(user_id, new BackendAPI.HttpCallback() {
             @Override
             public void onFailure(String response, Exception exception) {
                 // Handle exception
             }
             @Override
-            public void onSuccess(String response) {
+            public void onSuccess(String token) {
                 try {
-                    JSONObject jsonObj = new JSONObject(response);
-                    final String token = jsonObj.getString("token");
-                    MemberQRActivity.this.runOnUiThread(new Runnable() {
+                    GroupQRActivity.this.runOnUiThread(new Runnable() {
                         public void run() {
                             try{
                                 ImageView imageView = (ImageView) findViewById(R.id.qr_image);

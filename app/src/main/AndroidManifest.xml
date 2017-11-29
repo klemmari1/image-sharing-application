@@ -25,7 +25,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".MemberQRActivity"
+            android:name=".GroupQRActivity"
             android:parentActivityName=".GroupStatusActivity">
 
             <!-- The meta-data tag is required if you support API level 15 and lower -->

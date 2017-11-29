@@ -135,6 +135,13 @@ def get_user_group(user_id):
     return get_group_info(group_id)
 
 
+@app.route('/users/<user_id>/token', methods=['GET'])
+def get_group_token(user_id):
+    group_id = database.child("users").child(user_id).child("group").get().val()
+    group_token = database.child("groups").child(group_id).child("token").get().val()
+    return group_token
+
+
 def get_token():
     token = uuid.uuid4()
     return token

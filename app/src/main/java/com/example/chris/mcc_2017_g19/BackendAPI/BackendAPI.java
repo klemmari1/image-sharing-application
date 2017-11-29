@@ -134,6 +134,16 @@ public class BackendAPI {
         return null;
     }
 
+    public String getGroupToken(String userID, HttpCallback cb){
+        String url = backendUrl + "/users/" + userID + "/token";
+        try{
+            getRequest(url, cb);
+        }
+        catch (Exception e){
+        }
+        return null;
+    }
+
     public interface HttpCallback  {
         public void onFailure(String response, Exception exception);
 

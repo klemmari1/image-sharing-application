@@ -77,7 +77,7 @@ public class GroupStatusActivity extends AppCompatActivity {
     }
 
     public void addButton(View v) {
-        Intent QRActivity = new Intent(this, MemberQRActivity.class);
+        Intent QRActivity = new Intent(this, GroupQRActivity.class);
         startActivity(QRActivity);
     }
 
