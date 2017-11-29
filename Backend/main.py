@@ -77,69 +77,98 @@ def homepage():
 # TODO Change parameters into "methods=['GET'] ..." => request.args.get('param')
 @app.route('/groups', methods=['POST'])
 def create_group():
-    user_id = request.form['user_id']
-    group_name = request.form['group_name']
-    group_reference = database.child("groups").push({"name": group_name})
-    group_key = group_reference["name"]
-    database.child("groups").child(group_key).child("members").push({"user": user_id})
-    database.child("users").child(user_id).update({"group": group_key})
+    try:
+        user_id = request.form['user_id']
+        user_name = database.child("users").child(user_id).child("name").get().val()
 
-    token = str(get_token())
-    qr_string = str(group_key) + ":" + str(token)
-    database.child("groups").child(group_key).update({"token": qr_string})
-    return qr_string
+        group_name = request.form['group_name']
+        group_reference = database.child("groups").push({"name": group_name})
+        group_key = group_reference["name"]
+        database.child("groups").child(group_key).child("members").update({user_id: user_name})
+        database.child("groups").child(group_key).update({"creator": user_id})
+
+        database.child("users").child(user_id).update({"group": group_key})
+
+        token = str(get_token())
+        qr_string = str(group_key) + ":" + str(token)
+        database.child("groups").child(group_key).update({"token": qr_string})
+        return qr_string
+    except:
+        return "ERROR"
 
 
 @app.route('/groups', methods=['GET'])
 def get_groups():
-    groups = database.child("groups").get().val()
-    return str(dict(groups))
+    try:
+        groups = database.child("groups").get().val()
+        return str(dict(groups))
+    except:
+        return "ERROR"
 
 
 @app.route('/groups/<group_id>', methods=['GET'])
 def get_group_info(group_id):
-    group = database.child("groups").child(group_id).get().val()
-    return str(dict(group))
+    try:
+        group = database.child("groups").child(group_id).get().val()
+        return str(dict(group))
+    except:
+        return "ERROR"
 
 
 @app.route('/groups/<group_id>/members', methods=['GET'])
 def get_members(group_id):
-    members = database.child("groups").child(group_id).child("members").get().val()
-    return str(dict(members))
+    try:
+        members = database.child("groups").child(group_id).child("members").get().val()
+        return str(dict(members))
+    except:
+        return "ERROR"
 
 
 @app.route('/groups/<group_id>/members', methods=['POST'])
 def add_member(group_id):
-    user_id = request.form['user_id']
-    database.child("groups").child(group_id).child("members").push({"user": user_id})
-    database.child("users").child(user_id).update({"group": group_id})
+    try:
+        user_id = request.form['user_id']
+        user_name = database.child("users").child(user_id).child("name").get().val()
+        database.child("groups").child(group_id).child("members").update({user_id: user_name})
+        database.child("users").child(user_id).update({"group": group_id})
 
-    return "JOINED GROUP"
+        return "JOINED GROUP"
+    except:
+        return "ERROR"
 
 
 @app.route('/groups', methods=['DELETE'])
 def delete_group():
-    group_id = request.form['group_id']
-    group_members = database.child("groups").child(group_id).child("members").get()
-    for member in group_members.each():
-        member_id = member.val()["user"]
-        database.child("users").child(member_id).child("group").remove()
-    database.child("groups").child(group_id).remove()
+    try:
+        group_id = request.form['group_id']
+        group_members = database.child("groups").child(group_id).child("members").get()
+        for member in group_members.each():
+            member_id = member.val()["user"]
+            database.child("users").child(member_id).child("group").remove()
+        database.child("groups").child(group_id).remove()
 
-    return "GROUP DELETED"
+        return "GROUP DELETED"
+    except:
+        return "ERROR"
 
 
 @app.route('/users/<user_id>/group', methods=['GET'])
 def get_user_group(user_id):
-    group_id = database.child("users").child(user_id).child("group").get().val()
-    return get_group_info(group_id)
+    try:
+        group_id = database.child("users").child(user_id).child("group").get().val()
+        return get_group_info(group_id)
+    except:
+        return "ERROR"
 
 
 @app.route('/users/<user_id>/token', methods=['GET'])
 def get_group_token(user_id):
-    group_id = database.child("users").child(user_id).child("group").get().val()
-    group_token = database.child("groups").child(group_id).child("token").get().val()
-    return group_token
+    try:
+        group_id = database.child("users").child(user_id).child("group").get().val()
+        group_token = database.child("groups").child(group_id).child("token").get().val()
+        return group_token
+    except:
+        return "ERROR"
 
 
 def get_token():

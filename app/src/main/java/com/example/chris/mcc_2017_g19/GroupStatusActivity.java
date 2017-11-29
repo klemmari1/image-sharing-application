@@ -20,18 +20,16 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public class GroupStatusActivity extends AppCompatActivity {
 
     private List<String> members;
     private MemberAdapter memberAdapter;
-    private Button addMemberButton;
     private FirebaseUser firebaseUser;
     private DatabaseReference databaseReference;
     private boolean userIsGroupCreator;
@@ -56,21 +54,35 @@ public class GroupStatusActivity extends AppCompatActivity {
         api.getUserGroup(user_id, new BackendAPI.HttpCallback() {
             @Override
             public void onFailure(String response, Exception exception) {
-                // handle failure
             }
             @Override
             public void onSuccess(String response) {
                 try{
-                    JSONObject jsonObj = new JSONObject(response);
-                    JSONArray members = jsonObj.getJSONArray("members");
+                    JSONObject groupInfo = new JSONObject(response);
+                    final String groupName = groupInfo.getString("name");
+                    JSONObject membs = groupInfo.getJSONObject("members");
+                    Iterator<?> keys = membs.keys();
+                    while (keys.hasNext()) {
+                        Object key = keys.next();
+                        String name = membs.getString((String) key);
+                        members.add(name);
+                    }
+                    GroupStatusActivity.this.runOnUiThread(new Runnable() {
+                        public void run() {
+                            try{
+                                memberAdapter.notifyDataSetChanged();
+                                displayGroupName(groupName);
+                            }
+                            catch (Exception e){
+                            }
+                        }
+                    });
                 }
                 catch (Exception e){
                 }
             }
         });
         checkIfUserIsGroupCreator();
-
-        displayGroupName();
 
         TextView expirationValue = (TextView) findViewById(R.id.group_status_expiration_value);
         expirationValue.setText("Tue 31 Oct - 10:00pm"); // Placeholder
@@ -119,19 +131,8 @@ public class GroupStatusActivity extends AppCompatActivity {
         });
     }
 
-    public void displayGroupName() {
-        databaseReference.child("users").addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                UserObject user = dataSnapshot.child(firebaseUser.getUid()).getValue(UserObject.class);
-                TextView groupNameField = (TextView) findViewById(R.id.group_status_name_value);
-                    groupNameField.setText(user.getGroup());
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                System.out.println("The read failed: " + databaseError.getMessage());
-            }
-        });
+    public void displayGroupName(String name) {
+        TextView groupNameField = (TextView) findViewById(R.id.group_status_name_value);
+        groupNameField.setText(name);
     }
 }

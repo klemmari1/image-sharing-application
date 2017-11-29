@@ -42,7 +42,7 @@ public class GroupQRActivity extends AppCompatActivity {
                 // Handle exception
             }
             @Override
-            public void onSuccess(String token) {
+            public void onSuccess(final String token) {
                 try {
                     GroupQRActivity.this.runOnUiThread(new Runnable() {
                         public void run() {
