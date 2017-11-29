@@ -6,11 +6,12 @@
 
     <SurfaceView
         android:id="@+id/camera_view"
-        android:layout_width="400dp"
-        android:layout_height="400dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:layout_alignParentStart="true"
         android:layout_centerVertical="true"
-        android:paddingBottom="16dp"/>
+        android:layout_marginBottom="32dp"
+        android:paddingBottom="16dp" />
 
     <TextView
         android:id="@+id/code_info"
