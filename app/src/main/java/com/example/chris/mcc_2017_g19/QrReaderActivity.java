@@ -19,6 +19,7 @@ import com.google.android.gms.vision.CameraSource;
 import com.google.android.gms.vision.Detector;
 import com.google.android.gms.vision.barcode.Barcode;
 import com.google.android.gms.vision.barcode.BarcodeDetector;
+import com.google.firebase.auth.FirebaseAuth;
 
 import java.io.IOException;
 
@@ -82,27 +83,24 @@ public class QrReaderActivity extends AppCompatActivity {
                 final SparseArray<Barcode> barcodes = detections.getDetectedItems();
 
                 if (barcodes.size() != 0) {
-//                    String barcode = barcodes.valueAt(0).displayValue;
+                    String barcode = barcodes.valueAt(0).displayValue;
                     //okhttp: add_member
-//                    BackendAPI api = new BackendAPI();
-//                    api.addMember(barcode, new BackendAPI.HttpCallback() {
-//                        @Override
-//                        public void onFailure(String response, Exception exception) {
-//                            Log.d(TAG, "Error: " + response + " " + exception);
-//                        }
-//
-//                        @Override
-//                        public void onSuccess(String response) {
-//                            try {
-//                                Intent groupStatus = new Intent(GroupCreationActivity.this, GroupStatusActivity.class);
-//                                groupStatus.putExtra("GROUP_TOKEN", response);
-//                                startActivity(groupStatus);
-//                            } catch (Exception e){
-//                                Toast.makeText(GroupCreationActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
-//                            }
-//                        }
-//                    });
-                    startActivity(new Intent(QrReaderActivity.this, MainActivity.class));
+                    BackendAPI api = new BackendAPI();
+                    api.joinGroup(barcode, FirebaseAuth.getInstance().getCurrentUser().getUid(), new BackendAPI.HttpCallback() {
+                        @Override
+                        public void onFailure(String response, Exception exception) {
+                            Log.d(TAG, "Error: " + response + " " + exception);
+                        }
+
+                        @Override
+                        public void onSuccess(String response) {
+                            try {
+                                startActivity(new Intent(QrReaderActivity.this, GroupStatusActivity.class));
+                            } catch (Exception e) {
+                                //Toast.makeText(QrReaderActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    });
                 }
             }
         });
