@@ -33,6 +33,7 @@ public class GroupStatusActivity extends AppCompatActivity {
     private FirebaseUser firebaseUser;
     private DatabaseReference databaseReference;
     private boolean userIsGroupCreator;
+    private String group_id;
 
     private static final String TAG = "GroupStatusActivity";
 
@@ -49,39 +50,29 @@ public class GroupStatusActivity extends AppCompatActivity {
         memberAdapter = new MemberAdapter(this, members);
         memberList.setAdapter(memberAdapter);
 
-        String user_id = firebaseUser.getUid();
-        BackendAPI api = new BackendAPI();
-        api.getUserGroup(user_id, new BackendAPI.HttpCallback() {
+        group_id = getIntent().getStringExtra("GROUP_ID");
+
+        DatabaseReference groupRef = databaseReference.child("groups").child(group_id);
+        groupRef.addValueEventListener(new ValueEventListener() {
             @Override
-            public void onFailure(String response, Exception exception) {
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                GroupObject groupObj = dataSnapshot.getValue(GroupObject.class);
+                displayGroupName(groupObj.getName());
+
+                DataSnapshot membersSnapshot = dataSnapshot.child("members");
+                members.clear();
+                for (DataSnapshot member : membersSnapshot.getChildren()) {
+                    members.add((String) member.getValue());
+                }
+                memberAdapter.notifyDataSetChanged();
             }
+
             @Override
-            public void onSuccess(String response) {
-                try{
-                    JSONObject groupInfo = new JSONObject(response);
-                    final String groupName = groupInfo.getString("name");
-                    JSONObject membs = groupInfo.getJSONObject("members");
-                    Iterator<?> keys = membs.keys();
-                    while (keys.hasNext()) {
-                        Object key = keys.next();
-                        String name = membs.getString((String) key);
-                        members.add(name);
-                    }
-                    GroupStatusActivity.this.runOnUiThread(new Runnable() {
-                        public void run() {
-                            try{
-                                memberAdapter.notifyDataSetChanged();
-                                displayGroupName(groupName);
-                            }
-                            catch (Exception e){
-                            }
-                        }
-                    });
-                }
-                catch (Exception e){
-                }
+            public void onCancelled(DatabaseError databaseError) {
+                System.out.println("The read failed: " + databaseError.getCode());
             }
         });
+
         checkIfUserIsGroupCreator();
 
         TextView expirationValue = (TextView) findViewById(R.id.group_status_expiration_value);
@@ -90,6 +81,7 @@ public class GroupStatusActivity extends AppCompatActivity {
 
     public void addButton(View v) {
         Intent QRActivity = new Intent(this, GroupQRActivity.class);
+        QRActivity.putExtra("GROUP_ID", group_id);
         startActivity(QRActivity);
     }
 

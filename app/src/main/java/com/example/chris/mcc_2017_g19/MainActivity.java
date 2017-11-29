@@ -139,13 +139,19 @@ public class MainActivity extends AppCompatActivity {
         databaseReference.child("users").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
+                String group_id = null;
                 Class activityClass;
                 UserObject user = snapshot.child(firebaseUser.getUid()).getValue(UserObject.class);
                 if (user.getGroup() == null)
                     activityClass = GroupCreationActivity.class;
-                else
+                else{
                     activityClass = GroupStatusActivity.class;
+                    group_id = user.getGroup();
+                }
+
                 Intent intent = new Intent(MainActivity.this, activityClass);
+                if(group_id != null)
+                    intent.putExtra("GROUP_ID", group_id);
                 startActivity(intent);
             }
 

@@ -9,6 +9,11 @@ import android.widget.ImageView;
 
 import com.example.chris.mcc_2017_g19.BackendAPI.BackendAPI;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.WriterException;
@@ -27,37 +32,38 @@ public class GroupQRActivity extends AppCompatActivity {
     private FirebaseUser firebaseUser;
     private static final String TAG = "GroupQRActivity";
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_qr);
-
+        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
         firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
-        String user_id = firebaseUser.getUid();
-        BackendAPI api = new BackendAPI();
-        api.getGroupToken(user_id, new BackendAPI.HttpCallback() {
+
+        String group_id = getIntent().getStringExtra("GROUP_ID");
+        DatabaseReference groupRef = databaseReference.child("groups").child(group_id);
+        groupRef.addValueEventListener(new ValueEventListener() {
             @Override
-            public void onFailure(String response, Exception exception) {
-                // Handle exception
-            }
-            @Override
-            public void onSuccess(final String token) {
-                try {
-                    GroupQRActivity.this.runOnUiThread(new Runnable() {
-                        public void run() {
-                            try{
-                                ImageView imageView = (ImageView) findViewById(R.id.qr_image);
-                                imageView.setImageBitmap(createBarcode(token));
-                            }
-                            catch (Exception e){
-                            }
-                        }
-                    });
-                } catch (Exception e) {
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                GroupObject groupObj = dataSnapshot.getValue(GroupObject.class);
+                System.out.println(groupObj);
+                try{
+                    displayQR(createBarcode(groupObj.getToken()));
+                }
+                catch (Exception e){
                 }
             }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                System.out.println("The read failed: " + databaseError.getCode());
+            }
         });
+    }
+
+
+    private void displayQR(Bitmap qr) {
+        ImageView groupNameField = (ImageView) findViewById(R.id.qr_image);
+        groupNameField.setImageBitmap(qr);
     }
 
 

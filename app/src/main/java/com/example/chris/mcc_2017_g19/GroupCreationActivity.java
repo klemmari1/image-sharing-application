@@ -67,7 +67,6 @@ public class GroupCreationActivity extends AppCompatActivity {
         String groupName = nameField.getText().toString();
         if (groupName.isEmpty())
             throw new IllegalArgumentException("No group name provided");
-        GroupObject group = new GroupObject(groupName, user.getUid());
 
         //okhttp request: create_group
         BackendAPI api = new BackendAPI();
@@ -81,7 +80,8 @@ public class GroupCreationActivity extends AppCompatActivity {
             public void onSuccess(String response) {
                 try {
                     Intent groupStatus = new Intent(GroupCreationActivity.this, GroupStatusActivity.class);
-                    groupStatus.putExtra("GROUP_TOKEN", response);
+                    String group_id = response.split(":")[0];
+                    groupStatus.putExtra("GROUP_ID", group_id);
                     startActivity(groupStatus);
                 } catch (Exception e){
                     Toast.makeText(GroupCreationActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();

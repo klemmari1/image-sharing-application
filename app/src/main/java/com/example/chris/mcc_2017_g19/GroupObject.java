@@ -1,22 +1,20 @@
 package com.example.chris.mcc_2017_g19;
 
 
+import android.util.ArrayMap;
+
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class GroupObject {
     private String name;
     private String creator;
-    private List<UserObject> groupMembers;
+    private String token;
 
     public GroupObject() {
 
-    }
-
-    public GroupObject(String name, String creator) {
-        this.name = name;
-        this.creator = creator;
-        this.groupMembers = new ArrayList<UserObject>();
     }
 
     public String getName() {
@@ -27,7 +25,7 @@ public class GroupObject {
         return this.creator;
     }
 
-    public List<UserObject> getGroupMembers() {
-        return this.groupMembers;
+    public String getToken() {
+        return this.token;
     }
 }

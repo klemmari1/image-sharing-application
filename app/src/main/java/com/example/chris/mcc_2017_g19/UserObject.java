@@ -2,7 +2,7 @@ package com.example.chris.mcc_2017_g19;
 
 
 public class UserObject {
-    private String username;
+    private String name;
     private String group;
 
     public UserObject() {
@@ -10,12 +10,12 @@ public class UserObject {
     }
 
     public UserObject(String name) {
-        this.username = name;
+        this.name = name;
         this.group = null;
     }
 
     public String getName() {
-        return this.username;
+        return this.name;
     }
 
     public String getGroup() {
