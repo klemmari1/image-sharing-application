@@ -83,6 +83,7 @@ public class GroupCreationActivity extends AppCompatActivity {
                     String group_id = response.split(":")[0];
                     groupStatus.putExtra("GROUP_ID", group_id);
                     startActivity(groupStatus);
+                    GroupCreationActivity.this.finish();
                 } catch (Exception e){
                     Toast.makeText(GroupCreationActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
                 }
