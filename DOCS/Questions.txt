@@ -9,3 +9,6 @@ not when closed
 
 Push notifications sent according to device ID or topics.
 PyFCM
+
+Sync pictures according to image name. for example:
+username_noPeople_date.jpg

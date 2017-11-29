@@ -89,12 +89,10 @@ def create_group():
 
         database.child("users").child(user_id).update({"group": group_key})
 
-        token = str(get_token())
-        qr_string = str(group_key) + ":" + str(token)
-        database.child("groups").child(group_key).update({"token": qr_string})
-        return qr_string
-    except Exception:
-        return Exception
+        token = set_new_token(group_key)
+        return token
+    except Exception as e:
+        return "Unexpected error" + str(e)
 
 
 @app.route('/groups', methods=['GET'])
@@ -102,8 +100,8 @@ def get_groups():
     try:
         groups = database.child("groups").get().val()
         return str(dict(groups))
-    except Exception:
-        return Exception
+    except Exception as e:
+        return "Unexpected error" + str(e)
 
 
 @app.route('/groups/<group_id>', methods=['GET'])
@@ -111,8 +109,8 @@ def get_group_info(group_id):
     try:
         group = database.child("groups").child(group_id).get().val()
         return str(dict(group))
-    except Exception:
-        return Exception
+    except Exception as e:
+        return "Unexpected error" + str(e)
 
 
 @app.route('/groups/<group_id>/members', methods=['GET'])
@@ -120,21 +118,28 @@ def get_members(group_id):
     try:
         members = database.child("groups").child(group_id).child("members").get().val()
         return str(dict(members))
-    except Exception:
-        return Exception
+    except Exception as e:
+        return "Unexpected error" + str(e)
 
 
 @app.route('/groups/<group_id>/members', methods=['POST'])
 def add_member(group_id):
     try:
         user_id = request.form['user_id']
-        user_name = database.child("users").child(user_id).child("name").get().val()
-        database.child("groups").child(group_id).child("members").update({user_id: user_name})
-        database.child("users").child(user_id).update({"group": group_id})
+        user_token = request.form['token']
+        group_token = database.child("groups").child(group_id).child("token").get().val()
 
-        return "JOINED GROUP"
-    except Exception:
-        return Exception
+        if user_token == group_token:
+            user_name = database.child("users").child(user_id).child("name").get().val()
+            database.child("groups").child(group_id).child("members").update({user_id: user_name})
+            database.child("users").child(user_id).update({"group": group_id})
+
+            set_new_token(group_id)
+            return "JOINED GROUP"
+        else:
+            return "INVALID TOKEN"
+    except Exception as e:
+        return "Unexpected error" + str(e)
 
 
 @app.route('/groups', methods=['DELETE'])
@@ -148,8 +153,8 @@ def delete_group():
         database.child("groups").child(group_id).remove()
 
         return "GROUP DELETED"
-    except Exception:
-        return Exception
+    except Exception as e:
+        return "Unexpected error" + str(e)
 
 
 @app.route('/users/<user_id>/group', methods=['GET'])
@@ -157,8 +162,8 @@ def get_user_group(user_id):
     try:
         group_id = database.child("users").child(user_id).child("group").get().val()
         return get_group_info(group_id)
-    except Exception:
-        return Exception
+    except Exception as e:
+        return "Unexpected error" + str(e)
 
 
 @app.route('/users/<user_id>/token', methods=['GET'])
@@ -167,27 +172,15 @@ def get_group_token(user_id):
         group_id = database.child("users").child(user_id).child("group").get().val()
         group_token = database.child("groups").child(group_id).child("token").get().val()
         return group_token
-    except Exception:
-        return Exception
+    except Exception as e:
+        return "Unexpected error" + str(e)
 
 
-def get_token():
-    token = uuid.uuid4()
-    return token
-
-
-def verify_token():
-    #(Decrypt code)
-    #split the group_id and one-use-token
-    token_valid = False
-
-    #verify token based on the group_id
-
-    if(token_valid == True):
-        newtoken = uuid.uuid4()
-        #put to firebase to group of group_id
-
-
+def set_new_token(group_id):
+    token = str(uuid.uuid4())
+    qr_string = str(group_id) + ":" + token
+    database.child("groups").child(group_id).update({"token": qr_string})
+    return qr_string
 
 
 @app.errorhandler(500)
@@ -212,47 +205,49 @@ http://127.0.0.1:8080/upload_image?owner=Seppo&groupID=someGroupID&filename=4kIm
 '''
 @app.route('/upload_image', methods=['POST'])
 def upload_image():
-    
-    # Get arguments
-    args = request.form
-    print(args)  # For debugging
+    try:
+        # Get arguments
+        args = request.form
+        print(args)  # For debugging
 
-    owner = request.form['userID']
-    groupID = request.form['groupID']
-    filename = request.form['filename']
-    maxQuality = request.form['maxQuality']
+        owner = request.form['userID']
+        groupID = request.form['groupID']
+        filename = request.form['filename']
+        maxQuality = request.form['maxQuality']
 
-    urlpath = groupID + "/" + filename
-    initialURL = storage.child(urlpath).get_url(0)
+        urlpath = groupID + "/" + filename
+        initialURL = storage.child(urlpath).get_url(0)
 
 
-    
-    """image_processing() function should generate lower quality pictures and upload them into STORAGE.
-    returns URLs and if any people found in google-vision face detection
-    """
-    URLs, people = image_processing(initialURL, maxQuality,groupID, filename)
 
-    '''Push to firebase
-    '''
-    data = {}
-    data['owner'] = owner
-    data['groupID'] = groupID
-    data['maxQuality'] = maxQuality
-    if (maxQuality == 'low'):
-        data['lowURL'] = URLs[0]
-    if (maxQuality == 'high'):
-        data['lowURL'] = URLs[1]
-        data['highURL'] = URLs[0]
-    if (maxQuality == 'full'):
-        data['lowURL'] = URLs[2]
-        data['highURL'] = URLs[1]
-        data['fullURL'] = URLs[0]
-    data['people'] = people
+        """image_processing() function should generate lower quality pictures and upload them into STORAGE.
+        returns URLs and if any people found in google-vision face detection
+        """
+        URLs, people = image_processing(initialURL, maxQuality,groupID, filename)
 
-    database.child("groups").child(groupID).child("images").push(data)
+        '''Push to firebase
+        '''
+        data = {}
+        data['owner'] = owner
+        data['groupID'] = groupID
+        data['maxQuality'] = maxQuality
+        if (maxQuality == 'low'):
+            data['lowURL'] = URLs[0]
+        if (maxQuality == 'high'):
+            data['lowURL'] = URLs[1]
+            data['highURL'] = URLs[0]
+        if (maxQuality == 'full'):
+            data['lowURL'] = URLs[2]
+            data['highURL'] = URLs[1]
+            data['fullURL'] = URLs[0]
+        data['people'] = people
 
-    print("upload_image() ok")
-    return "upload_image() ok"  # this will be returned to android if we'll end up using 'GET' I think.
+        database.child("groups").child(groupID).child("images").push(data)
+
+        print("upload_image() ok")
+        return "upload_image() ok"  # this will be returned to android if we'll end up using 'GET' I think.
+    except Exception as e:
+        return "Unexpected error" + str(e)
 
 
 def image_processing(initialURL, maxQuality,groupID, filename):
