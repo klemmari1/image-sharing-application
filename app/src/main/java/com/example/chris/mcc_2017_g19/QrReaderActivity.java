@@ -81,17 +81,8 @@ public class QrReaderActivity extends AppCompatActivity {
                 final SparseArray<Barcode> barcodes = detections.getDetectedItems();
 
                 if (barcodes.size() != 0) {
-                    // The following is required for UI manipulation
-                    // The handler object is linked to the UI thread
-                    new Handler(Looper.getMainLooper()).post(new Runnable() {
-                        @Override
-                        public void run() {
-                            //barcodeInfo.setText(barcodes.valueAt(0).displayValue);
-                            Toast.makeText(QrReaderActivity.this, "Found: " + barcodes.valueAt(0).displayValue,
-                                    Toast.LENGTH_SHORT).show();
-                            //startActivity(new Intent(QrReaderActivity.this, MainActivity.class));
-                        }
-                    });
+                    //TODO okhttp: add_member
+                    //startActivity(new Intent(QrReaderActivity.this, MainActivity.class));
                 }
             }
         });
