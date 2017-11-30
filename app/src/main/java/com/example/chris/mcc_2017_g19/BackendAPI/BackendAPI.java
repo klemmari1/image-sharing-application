@@ -4,6 +4,9 @@ package com.example.chris.mcc_2017_g19.BackendAPI;
  * Created by Chris on 27.11.2017.
  */
 
+import android.os.Handler;
+import android.os.Looper;
+
 import java.io.IOException;
 
 import okhttp3.Call;
@@ -49,18 +52,36 @@ public class BackendAPI {
 
     private void executeRequest(Request request, final HttpCallback cb){
         client.newCall(request).enqueue(new Callback() {
+            Handler mainHandler = new Handler(Looper.getMainLooper());
+
             @Override
-            public void onFailure(Call call, IOException exception) {
-                cb.onFailure(null, exception);
+            public void onFailure(Call call, final IOException exception) {
+                mainHandler.post(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        cb.onFailure(null, exception);
+                    }
+                });
+
             }
 
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                if (!response.isSuccessful()) {
-                    cb.onFailure(response.body().string(), null);
-                    return;
-                }
-                cb.onSuccess(response.body().string());
+            public void onResponse(Call call, final Response response) throws IOException {
+                mainHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        try{
+                            if (!response.isSuccessful()) {
+                                cb.onFailure(response.body().string(), null);
+                                return;
+                            }
+                            cb.onSuccess(response.body().string());
+                        }
+                        catch(Exception e){
+                        }
+                    }
+                });
             }
         });
     }

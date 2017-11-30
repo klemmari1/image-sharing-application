@@ -56,16 +56,18 @@ public class GroupStatusActivity extends AppCompatActivity {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 GroupObject groupObj = dataSnapshot.getValue(GroupObject.class);
-                displayGroupName(groupObj.getName());
+                if(groupObj != null){
+                    displayGroupName(groupObj.getName());
 
-                checkIfUserIsGroupCreator(groupObj.getCreator());
+                    checkIfUserIsGroupCreator(groupObj.getCreator());
 
-                DataSnapshot membersSnapshot = dataSnapshot.child("members");
-                members.clear();
-                for (DataSnapshot member : membersSnapshot.getChildren()) {
-                    members.add((String) member.getValue());
+                    DataSnapshot membersSnapshot = dataSnapshot.child("members");
+                    members.clear();
+                    for (DataSnapshot member : membersSnapshot.getChildren()) {
+                        members.add((String) member.getValue());
+                    }
+                    memberAdapter.notifyDataSetChanged();
                 }
-                memberAdapter.notifyDataSetChanged();
             }
 
             @Override
@@ -73,7 +75,6 @@ public class GroupStatusActivity extends AppCompatActivity {
                 System.out.println("The read failed: " + databaseError.getCode());
             }
         });
-
 
         TextView expirationValue = (TextView) findViewById(R.id.group_status_expiration_value);
         expirationValue.setText("Tue 31 Oct - 10:00pm"); // Placeholder
@@ -126,7 +127,6 @@ public class GroupStatusActivity extends AppCompatActivity {
                 }
             }
         };
-
         AlertDialog.Builder builder = new AlertDialog.Builder(GroupStatusActivity.this);
         builder.setMessage("Are you sure?").setPositiveButton("Yes", dialogClickListener)
                 .setNegativeButton("No", dialogClickListener).show();
@@ -139,26 +139,23 @@ public class GroupStatusActivity extends AppCompatActivity {
             api.deleteGroup(group_id, new BackendAPI.HttpCallback() {
                 @Override
                 public void onFailure(String response, Exception exception) {
-                    Log.d(TAG, "Error: " + response + " " + exception);
                 }
 
                 @Override
                 public void onSuccess(String response) {
-                    Log.i(TAG, "Jaa " + response);
                     GroupStatusActivity.this.onBackPressed();
                 }
             });
         }
         else{
+
             api.leaveGroup(firebaseUser.getUid(), group_id, new BackendAPI.HttpCallback() {
                 @Override
                 public void onFailure(String response, Exception exception) {
-                    Log.d(TAG, "Error: " + response + " " + exception);
                 }
 
                 @Override
                 public void onSuccess(String response) {
-                    Log.i(TAG, "Jaa " + response);
                     GroupStatusActivity.this.onBackPressed();
                 }
             });
