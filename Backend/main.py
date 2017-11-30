@@ -95,33 +95,6 @@ def create_group():
         return "Unexpected error: " + str(e)
 
 
-@app.route('/groups', methods=['GET'])
-def get_groups():
-    try:
-        groups = database.child("groups").get().val()
-        return str(dict(groups))
-    except Exception as e:
-        return "Unexpected error: " + str(e)
-
-
-@app.route('/groups/<group_id>', methods=['GET'])
-def get_group_info(group_id):
-    try:
-        group = database.child("groups").child(group_id).get().val()
-        return str(dict(group))
-    except Exception as e:
-        return "Unexpected error: " + str(e)
-
-
-@app.route('/groups/<group_id>/members', methods=['GET'])
-def get_members(group_id):
-    try:
-        members = database.child("groups").child(group_id).child("members").get().val()
-        return str(dict(members))
-    except Exception as e:
-        return "Unexpected error: " + str(e)
-
-
 @app.route('/users/<user_id>/group', methods=['POST'])
 def join_group(user_id):
     try:
@@ -157,32 +130,13 @@ def delete_group():
         return "Unexpected error: " + str(e)
 
 
-@app.route('/groups/<group_id>/members', methods=['DELETE'])
-def leave_group(group_id):
+@app.route('/users/<user_id>/group', methods=['DELETE'])
+def leave_group(user_id):
     try:
-        user_id = request.form['user_id']
+        group_id = request.form['group_id']
         database.child("groups").child(group_id).child("members").child(user_id).remove()
         database.child("users").child(user_id).child("group").remove()
         return "LEFT GROUP"
-    except Exception as e:
-        return "Unexpected error: " + str(e)
-
-
-@app.route('/users/<user_id>/group', methods=['GET'])
-def get_user_group(user_id):
-    try:
-        group_id = database.child("users").child(user_id).child("group").get().val()
-        return get_group_info(group_id)
-    except Exception as e:
-        return "Unexpected error: " + str(e)
-
-
-@app.route('/users/<user_id>/token', methods=['GET'])
-def get_group_token(user_id):
-    try:
-        group_id = database.child("users").child(user_id).child("group").get().val()
-        group_token = database.child("groups").child(group_id).child("token").get().val()
-        return group_token
     except Exception as e:
         return "Unexpected error: " + str(e)
 

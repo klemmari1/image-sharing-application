@@ -1,13 +1,6 @@
 package com.example.chris.mcc_2017_g19;
 
 
-import android.util.ArrayMap;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 public class GroupObject {
     private String name;
     private String creator;

@@ -1,13 +1,14 @@
 package com.example.chris.mcc_2017_g19;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -20,10 +21,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-import org.json.JSONObject;
-
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 public class GroupStatusActivity extends AppCompatActivity {
@@ -34,6 +32,7 @@ public class GroupStatusActivity extends AppCompatActivity {
     private DatabaseReference databaseReference;
     private boolean userIsGroupCreator;
     private String group_id;
+    private MenuItem leaveButton;
 
     private static final String TAG = "GroupStatusActivity";
 
@@ -59,6 +58,8 @@ public class GroupStatusActivity extends AppCompatActivity {
                 GroupObject groupObj = dataSnapshot.getValue(GroupObject.class);
                 displayGroupName(groupObj.getName());
 
+                checkIfUserIsGroupCreator(groupObj.getCreator());
+
                 DataSnapshot membersSnapshot = dataSnapshot.child("members");
                 members.clear();
                 for (DataSnapshot member : membersSnapshot.getChildren()) {
@@ -73,7 +74,6 @@ public class GroupStatusActivity extends AppCompatActivity {
             }
         });
 
-        checkIfUserIsGroupCreator();
 
         TextView expirationValue = (TextView) findViewById(R.id.group_status_expiration_value);
         expirationValue.setText("Tue 31 Oct - 10:00pm"); // Placeholder
@@ -93,7 +93,17 @@ public class GroupStatusActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.leave_button, menu);
+        this.leaveButton = menu.findItem(R.id.action_leave);
         return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if(item.getItemId() == R.id.action_leave)
+        {
+            leaveGroup();
+        }
+        return true;
     }
 
     public List<String> getMembers() {
@@ -101,29 +111,68 @@ public class GroupStatusActivity extends AppCompatActivity {
     }
 
     public void leaveGroup() {
-        //TODO Add query: really wish to leave/delete group?
+        DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                switch (which){
+                    case DialogInterface.BUTTON_POSITIVE:
+                        //Yes button pressed: Leave or delete the group
+                        deleteOrLeave();
+                        break;
 
-        //TODO okhttp: leave_group
+                    case DialogInterface.BUTTON_NEGATIVE:
+                        //No button pressed: Do nothing
+                        break;
+                }
+            }
+        };
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(GroupStatusActivity.this);
+        builder.setMessage("Are you sure?").setPositiveButton("Yes", dialogClickListener)
+                .setNegativeButton("No", dialogClickListener).show();
     }
 
-    public void checkIfUserIsGroupCreator() {
-        databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                UserObject user = dataSnapshot.child("users").child(firebaseUser.getUid()).getValue(UserObject.class);
-                String userGroup = user.getGroup();
-                GroupObject group = dataSnapshot.child("groups").child(userGroup).getValue(GroupObject.class);
-                if (group.getCreator().equals(firebaseUser.getUid()))
-                    userIsGroupCreator = true;
-            }
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                System.out.println("The read failed: " + databaseError.getMessage());
-            }
-        });
+    private void deleteOrLeave(){
+        BackendAPI api = new BackendAPI();
+
+        if(userIsGroupCreator){
+            api.deleteGroup(group_id, new BackendAPI.HttpCallback() {
+                @Override
+                public void onFailure(String response, Exception exception) {
+                    Log.d(TAG, "Error: " + response + " " + exception);
+                }
+
+                @Override
+                public void onSuccess(String response) {
+                    Log.i(TAG, "Jaa " + response);
+                    GroupStatusActivity.this.onBackPressed();
+                }
+            });
+        }
+        else{
+            api.leaveGroup(firebaseUser.getUid(), group_id, new BackendAPI.HttpCallback() {
+                @Override
+                public void onFailure(String response, Exception exception) {
+                    Log.d(TAG, "Error: " + response + " " + exception);
+                }
+
+                @Override
+                public void onSuccess(String response) {
+                    Log.i(TAG, "Jaa " + response);
+                    GroupStatusActivity.this.onBackPressed();
+                }
+            });
+        }
     }
 
-    public void displayGroupName(String name) {
+    private void checkIfUserIsGroupCreator(String creator) {
+        if(creator.equals(firebaseUser.getUid())){
+            userIsGroupCreator = true;
+            leaveButton.setTitle("Delete");
+        }
+    }
+
+    private void displayGroupName(String name) {
         TextView groupNameField = (TextView) findViewById(R.id.group_status_name_value);
         groupNameField.setText(name);
     }

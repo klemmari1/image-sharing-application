@@ -28,13 +28,6 @@ public class BackendAPI {
     }
 
     //Helper Functions
-    private void getRequest(String url, HttpCallback cb) throws IOException {
-        Request request = new Request.Builder()
-                .url(url)
-                .build();
-
-        executeRequest(request, cb);
-    }
 
 
     private void postRequest(String url, RequestBody body, HttpCallback cb) throws IOException {
@@ -46,8 +39,7 @@ public class BackendAPI {
     }
 
 
-    private void deleteRequest(String url, String json, HttpCallback cb) throws IOException {
-        RequestBody body = RequestBody.create(JSON, json);
+    private void deleteRequest(String url, RequestBody body, HttpCallback cb) throws IOException {
         Request request = new Request.Builder()
                 .url(url)
                 .delete(body)
@@ -74,7 +66,7 @@ public class BackendAPI {
     }
 
     //API functions
-    public String joinGroup(String userID, String token, HttpCallback cb){
+    public void joinGroup(String userID, String token, HttpCallback cb){
         String url = backendUrl + "/users/" + userID + "/group";
         RequestBody requestBody = new MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
@@ -85,10 +77,9 @@ public class BackendAPI {
         }
         catch (Exception e){
         }
-        return null;
     }
 
-    public String createGroup(String groupName, String userID, HttpCallback cb){
+    public void createGroup(String groupName, String userID, HttpCallback cb){
         String url = backendUrl + "/groups";
         RequestBody requestBody = new MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
@@ -100,49 +91,34 @@ public class BackendAPI {
         }
         catch (Exception e){
         }
-        return null;
     }
 
-    public String deleteGroup(String group_id, HttpCallback cb){
+    public void deleteGroup(String group_id, HttpCallback cb){
         String url = backendUrl + "/groups";
-        String json = "{'group_id': '" + group_id + "'}";
+        RequestBody requestBody = new MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("group_id", group_id)
+                .build();
         try{
-            deleteRequest(url, json, cb);
+            deleteRequest(url, requestBody, cb);
         }
         catch (Exception e){
         }
-        return null;
     }
 
-    public String getGroup(String groupID, HttpCallback cb){
-        String url = backendUrl + "/groups/" + groupID;
+    public void leaveGroup(String user_id, String group_id, HttpCallback cb){
+        String url = backendUrl + "/users/" + user_id + "/group";
+        RequestBody requestBody = new MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("group_id", group_id)
+                .build();
         try{
-            getRequest(url, cb);
+            deleteRequest(url, requestBody, cb);
         }
         catch (Exception e){
         }
-        return null;
     }
 
-    public String getUserGroup(String userID, HttpCallback cb){
-        String url = backendUrl + "/users/" + userID + "/group";
-        try{
-            getRequest(url, cb);
-        }
-        catch (Exception e){
-        }
-        return null;
-    }
-
-    public String getGroupToken(String userID, HttpCallback cb){
-        String url = backendUrl + "/users/" + userID + "/token";
-        try{
-            getRequest(url, cb);
-        }
-        catch (Exception e){
-        }
-        return null;
-    }
 
     public interface HttpCallback  {
         public void onFailure(String response, Exception exception);
