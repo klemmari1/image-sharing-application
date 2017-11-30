@@ -51,6 +51,7 @@ public class MainActivity extends AppCompatActivity {
     static final int REQUEST_IMAGE_CAPTURE = 1;
     static final int MY_PERMISSIONS_REQUEST_WRITE_EXT_STORAGE = 2;
     static final int MY_PERMISSIONS_REQUEST_CAMERA = 3;
+    static final int MY_PERMISSIONS_REQUEST_QR = 4;
     private FirebaseUser firebaseUser;
     private DatabaseReference databaseReference;
     private static final String TAG = "MainActivity";
@@ -121,7 +122,7 @@ public class MainActivity extends AppCompatActivity {
                 if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
                         != PackageManager.PERMISSION_GRANTED) {
                     ActivityCompat.requestPermissions(this,
-                            new String[]{Manifest.permission.CAMERA}, MY_PERMISSIONS_REQUEST_CAMERA);
+                            new String[]{Manifest.permission.CAMERA}, MY_PERMISSIONS_REQUEST_QR);
                 } else {
                     Intent intent = new Intent(MainActivity.this, QrReaderActivity.class);
                     startActivity(intent);
@@ -161,11 +162,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void TakePictureIntent() {
-        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-            if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-                requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, MY_PERMISSIONS_REQUEST_CAMERA);
-            }
+        if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA}, MY_PERMISSIONS_REQUEST_CAMERA);
+        } else {
+            Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
             startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
         }
     }
@@ -212,23 +212,29 @@ public class MainActivity extends AppCompatActivity {
                                            String permissions[],
                                            int[] grantResults) {
         switch (requestCode) {
-            case MY_PERMISSIONS_REQUEST_WRITE_EXT_STORAGE: {
+            case MY_PERMISSIONS_REQUEST_WRITE_EXT_STORAGE:
                 if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     new SensibleDataTask().execute(bitmap);
                 } else {
-                    // permission denied, boo!
+                    Toast.makeText(this, "Please grant permissions to use the app", Toast.LENGTH_SHORT).show();
                 }
-                return;
-            }
+                break;
             case MY_PERMISSIONS_REQUEST_CAMERA:
+                if (grantResults.length > 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                    startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+                } else {
+                    Toast.makeText(this, "Please grant permissions to use the Camera", Toast.LENGTH_SHORT).show();
+                }
+                break;
+            case MY_PERMISSIONS_REQUEST_QR:
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     Intent intent = new Intent(this, QrReaderActivity.class);
                     startActivity(intent);
                 } else {
                     Toast.makeText(this, "Please grant camera permission to use the QR Scanner", Toast.LENGTH_SHORT).show();
                 }
-                return;
-
+                break;
             // other 'switch' lines to check for other
             // permissions this app might request
         }
