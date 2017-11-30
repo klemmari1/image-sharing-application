@@ -9,7 +9,6 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -30,9 +29,9 @@ public class GroupStatusActivity extends AppCompatActivity {
     private List<String> members;
     private MemberAdapter memberAdapter;
     private FirebaseUser firebaseUser;
-    private DatabaseReference databaseReference;
     private boolean userIsGroupCreator;
     private String group_id;
+    private DatabaseReference databaseReference;
     private boolean isFinalized;
 
     private static final String TAG = "GroupStatusActivity";
@@ -42,7 +41,7 @@ public class GroupStatusActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_group_status);
 
-        members = new ArrayList<String>();
+        members = new ArrayList<>();
         firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
         databaseReference = FirebaseDatabase.getInstance().getReference();
 

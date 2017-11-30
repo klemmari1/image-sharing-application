@@ -74,7 +74,6 @@ def homepage():
     #return redirect(url_for('join_group', user_id='testuser2ID', group_id='-KzihPzu45uBnue10kM9'))  # Similar as above
 
 
-# TODO Change parameters into "methods=['GET'] ..." => request.args.get('param')
 @app.route('/groups', methods=['POST'])
 def create_group():
     try:

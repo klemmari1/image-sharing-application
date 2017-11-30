@@ -1,8 +1,6 @@
 package com.example.chris.mcc_2017_g19;
 
-import android.*;
 import android.Manifest;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -18,6 +16,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
@@ -35,7 +34,6 @@ import com.google.firebase.database.ValueEventListener;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.Random;
 
 import com.google.android.gms.vision.barcode.Barcode;
@@ -52,6 +50,7 @@ public class MainActivity extends AppCompatActivity {
 
     static final int REQUEST_IMAGE_CAPTURE = 1;
     static final int MY_PERMISSIONS_REQUEST_WRITE_EXT_STORAGE = 2;
+    static final int MY_PERMISSIONS_REQUEST_CAMERA = 3;
     private FirebaseUser firebaseUser;
     private DatabaseReference databaseReference;
     private static final String TAG = "MainActivity";
@@ -62,7 +61,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         databaseReference = FirebaseDatabase.getInstance().getReference();
-
         firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
 
         gallery = (ImageView) findViewById(R.id.gallery);
@@ -106,7 +104,8 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.logout_button, menu);
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.toolbar_mainactivity, menu);
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -117,6 +116,17 @@ public class MainActivity extends AppCompatActivity {
                 //TODO Do we need (onCompletion) listeners for these kinds of situations?
                 FirebaseAuth.getInstance().signOut();
                 startActivity(new Intent(MainActivity.this, LoginActivity.class));
+                return true;
+            case R.id.action_read_qr:
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+                        != PackageManager.PERMISSION_GRANTED) {
+                    ActivityCompat.requestPermissions(this,
+                            new String[]{Manifest.permission.CAMERA}, MY_PERMISSIONS_REQUEST_CAMERA);
+                } else {
+                    Intent intent = new Intent(MainActivity.this, QrReaderActivity.class);
+                    startActivity(intent);
+                }
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
 
@@ -153,6 +163,9 @@ public class MainActivity extends AppCompatActivity {
     private void TakePictureIntent() {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+            if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, MY_PERMISSIONS_REQUEST_CAMERA);
+            }
             startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
         }
     }
@@ -207,6 +220,14 @@ public class MainActivity extends AppCompatActivity {
                 }
                 return;
             }
+            case MY_PERMISSIONS_REQUEST_CAMERA:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Intent intent = new Intent(this, QrReaderActivity.class);
+                    startActivity(intent);
+                } else {
+                    Toast.makeText(this, "Please grant camera permission to use the QR Scanner", Toast.LENGTH_SHORT).show();
+                }
+                return;
 
             // other 'switch' lines to check for other
             // permissions this app might request

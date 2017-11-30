@@ -45,9 +45,12 @@ public class GroupQRActivity extends AppCompatActivity {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 GroupObject groupObj = dataSnapshot.getValue(GroupObject.class);
+                String token = groupObj.getToken();
                 System.out.println(groupObj);
                 try{
-                    displayQR(createBarcode(groupObj.getToken()));
+                    ImageView imageView = (ImageView) findViewById(R.id.qr_image);
+                    Bitmap bitmap = getBitmap(token, 750);
+                    imageView.setImageBitmap(bitmap);
                 }
                 catch (Exception e){
                 }
@@ -60,34 +63,30 @@ public class GroupQRActivity extends AppCompatActivity {
         });
     }
 
-
-    private void displayQR(Bitmap qr) {
-        ImageView groupNameField = (ImageView) findViewById(R.id.qr_image);
-        groupNameField.setImageBitmap(qr);
-    }
-
-
-    Bitmap createBarcode(String txtInput) throws WriterException {
-        int map_width = 750;
-        BitMatrix result;
+    private Bitmap getBitmap(String str, int dim) throws WriterException {
+        MultiFormatWriter barcodeWriter = new MultiFormatWriter();
+        BitMatrix bitMatrix;
         try {
-            result = new MultiFormatWriter().encode(txtInput,
-                    BarcodeFormat.QR_CODE, map_width, map_width, null);
-        } catch (IllegalArgumentException iae) {
-            // Unsupported format
+            bitMatrix = barcodeWriter.encode(str, BarcodeFormat.QR_CODE, dim, dim);
+        } catch (IllegalArgumentException e) {
             return null;
         }
-        int w = result.getWidth();
-        int h = result.getHeight();
-        int[] pixels = new int[w * h];
-        for (int y = 0; y < h; y++) {
-            int offset = y * w;
-            for (int x = 0; x < w; x++) {
-                pixels[offset + x] = result.get(x, y) ? Color.BLACK : Color.WHITE;
+        int[] pixelArray = createPixelArray(bitMatrix);
+        Bitmap bitmap = Bitmap.createBitmap(dim, dim, Bitmap.Config.ARGB_8888);
+        bitmap.setPixels(pixelArray, 0, dim, 0, 0, dim, dim);
+        return bitmap;
+    }
+
+    private int[] createPixelArray(BitMatrix bitMatrix) {
+        int width = bitMatrix.getWidth();
+        int height = bitMatrix.getHeight();
+        int[] pixelArray = new int[width * height];
+        for (int j=0; j < height; ++j) {
+            int index = j * width;
+            for (int i=0; i < width; ++i) {
+                pixelArray[index + i] = bitMatrix.get(i, j) ? Color.BLACK : Color.WHITE;
             }
         }
-        Bitmap bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
-        bitmap.setPixels(pixels, 0, map_width, 0, 0, w, h);
-        return bitmap;
+        return pixelArray;
     }
 }
