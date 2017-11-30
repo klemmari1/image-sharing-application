@@ -8,6 +8,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.MediaScannerConnection;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -37,6 +38,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Random;
+import java.util.UUID;
 
 import com.google.android.gms.vision.barcode.Barcode;
 import com.google.android.gms.vision.barcode.BarcodeDetector;
@@ -49,12 +51,15 @@ public class MainActivity extends AppCompatActivity {
     ImageView takepicture;
 
     Bitmap bitmap;
+    private String imagePath;
 
     static final int REQUEST_IMAGE_CAPTURE = 1;
     static final int MY_PERMISSIONS_REQUEST_WRITE_EXT_STORAGE = 2;
     private FirebaseUser firebaseUser;
     private DatabaseReference databaseReference;
     private static final String TAG = "MainActivity";
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -101,7 +106,8 @@ public class MainActivity extends AppCompatActivity {
         settings.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //TODO Move to activity for settings
+                Intent intent = new Intent(MainActivity.this, Settings.class);
+                startActivity(intent);
             }
         });
 
@@ -111,6 +117,7 @@ public class MainActivity extends AppCompatActivity {
         takepicture.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
                 TakePictureIntent();
             }
         });
@@ -168,22 +175,20 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
 
 
+            //this bundle is giving back an image with bad resolution
+            //TODO:this bundle is giving back an image with bad resolution
             Bundle extras = data.getExtras();
             Bitmap imageBitmap = (Bitmap) extras.get("data");
+
+            //SaveImage(imageBitmap);
             //save image to an imageview
             //mImageView.setImageBitmap(imageBitmap);
-
-            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            /*ByteArrayOutputStream stream = new ByteArrayOutputStream();
             imageBitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
             byte[] byteArray = stream.toByteArray();
 
             // convert byte array to Bitmap
-            bitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
-
-
-            //TODO: Here I need to check if the image contains sensible data
-            // If yes, store in local
-            // If no, store inside the group ... ... ...
+            bitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);*/
 
             if (checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
                     != PackageManager.PERMISSION_GRANTED) {
@@ -195,7 +200,7 @@ public class MainActivity extends AppCompatActivity {
                 return;
             } else {
 
-                new SensibleDataTask().execute(bitmap);
+                new SensibleDataTask().execute(imageBitmap);
             }
         }
     }
@@ -264,35 +269,47 @@ public class MainActivity extends AppCompatActivity {
         }
 
 
-        private void SaveImage(Bitmap finalBitmap) {
 
-            String root = Environment.getExternalStorageDirectory().toString();
-            File myDir = new File(root + "/OrganizerApp");
+    }
 
-            if (!myDir.exists()) {
-                myDir.mkdirs();
-            }
+    private void SaveImage(Bitmap finalBitmap) {
 
-            //Creating a unique name for the picture
-            Random generator = new Random();
-            int n = 1000;
-            n = generator.nextInt(n);
-            String fname = "Image-" + n + ".jpg";
+        String root = Environment.getExternalStorageDirectory().toString();
+        File myDir = new File(root + "/OrganizerApp");
 
-            File file = new File(myDir, fname);
+        if (!myDir.exists()) {
+            myDir.mkdirs();
+        }
 
-            try {
-                MediaScannerConnection.scanFile(getApplicationContext(), new String[]{file.getPath()}, new String[]{"Image/*"}, null);
-                System.out.println(file);
 
-                //TODO: This part has to be solved. Images are losing quality and apparently there is no solution for it
-                FileOutputStream out = new FileOutputStream(file);
-                finalBitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
-                out.flush();
-                out.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+        //Creating a unique name for the picture
+        Random generator = new Random();
+        int n = 1000;
+        n = generator.nextInt(n);
+        String fname = "Image-" + n + ".jpeg";
+
+        File file = new File(myDir, fname);
+
+
+        try {
+            MediaScannerConnection.scanFile(getApplicationContext(), new String[]{file.getPath()}, new String[]{"Image/*"}, null);
+            System.out.println(file);
+
+            //TODO: This part has to be solved. Images are losing quality and apparently there is no solution for it
+            //FileOutputStream out = new FileOutputStream(file);
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            finalBitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+
+
+            file.createNewFile();
+            FileOutputStream fo = new FileOutputStream(file);
+            fo.write(out.toByteArray());
+            fo.close();
+
+            out.flush();
+            out.close();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }
