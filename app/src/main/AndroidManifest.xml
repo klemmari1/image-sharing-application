@@ -36,10 +36,10 @@
         <activity android:name=".SignupActivity" />
         <activity android:name=".AlbumsActivity" />
         <activity android:name=".GroupCreationActivity" />
-        <activity android:name=".CustomAdapter" />
-        <activity android:name=".MainActivity" />
+        <activity android:name=".MainActivity"
+            android:launchMode = "singleInstance" />
         <activity android:name=".ResetPasswordActivity" />
-        <activity android:name=".PrivateGallery"></activity>
+        <activity android:name=".PrivateGallery" />
         <activity android:name=".GroupStatusActivity" />
     </application>
 

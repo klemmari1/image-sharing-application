@@ -9,6 +9,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -32,7 +33,7 @@ public class GroupStatusActivity extends AppCompatActivity {
     private DatabaseReference databaseReference;
     private boolean userIsGroupCreator;
     private String group_id;
-    private MenuItem leaveButton;
+    private boolean isFinalized;
 
     private static final String TAG = "GroupStatusActivity";
 
@@ -87,14 +88,9 @@ public class GroupStatusActivity extends AppCompatActivity {
     }
 
 
-
-    //TODO onClick (Actionbar: leave)
-    //TODO Call leaveGroup()
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.leave_button, menu);
-        this.leaveButton = menu.findItem(R.id.action_leave);
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -103,6 +99,14 @@ public class GroupStatusActivity extends AppCompatActivity {
         if(item.getItemId() == R.id.action_leave)
         {
             leaveGroup();
+        }
+        return true;
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu (Menu menu) {
+        if (isFinalized) {
+            menu.findItem(R.id.action_leave).setEnabled(false);
         }
         return true;
     }
@@ -118,6 +122,8 @@ public class GroupStatusActivity extends AppCompatActivity {
                 switch (which){
                     case DialogInterface.BUTTON_POSITIVE:
                         //Yes button pressed: Leave or delete the group
+                        isFinalized = true;
+                        findViewById(R.id.group_status_add).setEnabled(false);
                         deleteOrLeave();
                         break;
 
@@ -127,9 +133,17 @@ public class GroupStatusActivity extends AppCompatActivity {
                 }
             }
         };
-        AlertDialog.Builder builder = new AlertDialog.Builder(GroupStatusActivity.this);
-        builder.setMessage("Are you sure?").setPositiveButton("Yes", dialogClickListener)
-                .setNegativeButton("No", dialogClickListener).show();
+        if(userIsGroupCreator){
+            AlertDialog.Builder builder = new AlertDialog.Builder(GroupStatusActivity.this);
+            builder.setMessage("Are you sure you want to delete the group?").setPositiveButton("Yes", dialogClickListener)
+                    .setNegativeButton("No", dialogClickListener).show();
+        }
+        else{
+            AlertDialog.Builder builder = new AlertDialog.Builder(GroupStatusActivity.this);
+            builder.setMessage("Are you sure you want to leave the group?").setPositiveButton("Yes", dialogClickListener)
+                    .setNegativeButton("No", dialogClickListener).show();
+        }
+
     }
 
     private void deleteOrLeave(){
@@ -165,7 +179,6 @@ public class GroupStatusActivity extends AppCompatActivity {
     private void checkIfUserIsGroupCreator(String creator) {
         if(creator.equals(firebaseUser.getUid())){
             userIsGroupCreator = true;
-            leaveButton.setTitle("Delete");
         }
     }
 

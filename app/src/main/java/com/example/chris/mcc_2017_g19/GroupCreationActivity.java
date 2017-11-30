@@ -68,6 +68,8 @@ public class GroupCreationActivity extends AppCompatActivity {
         if (groupName.isEmpty())
             throw new IllegalArgumentException("No group name provided");
 
+        findViewById(R.id.buttonCreateGroup).setEnabled(false);
+
         //okhttp request: create_group
         BackendAPI api = new BackendAPI();
         api.createGroup(groupName, user.getUid(), new BackendAPI.HttpCallback() {
@@ -79,6 +81,7 @@ public class GroupCreationActivity extends AppCompatActivity {
             @Override
             public void onSuccess(String response) {
                 try {
+
                     Intent groupStatus = new Intent(GroupCreationActivity.this, GroupStatusActivity.class);
                     String group_id = response.split(":")[0];
                     groupStatus.putExtra("GROUP_ID", group_id);
