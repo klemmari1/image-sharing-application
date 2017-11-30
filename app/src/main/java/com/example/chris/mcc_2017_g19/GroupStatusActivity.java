@@ -31,7 +31,6 @@ public class GroupStatusActivity extends AppCompatActivity {
     private List<String> members;
     private MemberAdapter memberAdapter;
     private FirebaseUser firebaseUser;
-    private DatabaseReference databaseReference;
     private boolean userIsGroupCreator;
 
     private static final String TAG = "GroupStatusActivity";
@@ -41,9 +40,8 @@ public class GroupStatusActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_group_status);
 
-        members = new ArrayList<String>();
+        members = new ArrayList<>();
         firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
-        databaseReference = FirebaseDatabase.getInstance().getReference();
 
         ListView memberList = (ListView) findViewById(R.id.group_status_member_list);
         memberAdapter = new MemberAdapter(this, members);
@@ -82,7 +80,7 @@ public class GroupStatusActivity extends AppCompatActivity {
                 }
             }
         });
-        checkIfUserIsGroupCreator();
+        //checkIfUserIsGroupCreator();
 
         TextView expirationValue = (TextView) findViewById(R.id.group_status_expiration_value);
         expirationValue.setText("Tue 31 Oct - 10:00pm"); // Placeholder
@@ -114,22 +112,22 @@ public class GroupStatusActivity extends AppCompatActivity {
         //TODO okhttp: leave_group
     }
 
-    public void checkIfUserIsGroupCreator() {
-        databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                UserObject user = dataSnapshot.child("users").child(firebaseUser.getUid()).getValue(UserObject.class);
-                String userGroup = user.getGroup();
-                GroupObject group = dataSnapshot.child("groups").child(userGroup).getValue(GroupObject.class);
-                if (group.getCreator().equals(firebaseUser.getUid()))
-                    userIsGroupCreator = true;
-            }
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                System.out.println("The read failed: " + databaseError.getMessage());
-            }
-        });
-    }
+//    public void checkIfUserIsGroupCreator() {
+//        databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(DataSnapshot dataSnapshot) {
+//                UserObject user = dataSnapshot.child("users").child(firebaseUser.getUid()).getValue(UserObject.class);
+//                String userGroup = user.getGroup();
+//                GroupObject group = dataSnapshot.child("groups").child(userGroup).getValue(GroupObject.class);
+//                if (group.getCreator().equals(firebaseUser.getUid()))
+//                    userIsGroupCreator = true;
+//            }
+//            @Override
+//            public void onCancelled(DatabaseError databaseError) {
+//                System.out.println("The read failed: " + databaseError.getMessage());
+//            }
+//        });
+//    }
 
     public void displayGroupName(String name) {
         TextView groupNameField = (TextView) findViewById(R.id.group_status_name_value);

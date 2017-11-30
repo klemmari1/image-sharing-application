@@ -20,90 +20,60 @@ import com.google.android.gms.vision.Detector;
 import com.google.android.gms.vision.barcode.Barcode;
 import com.google.android.gms.vision.barcode.BarcodeDetector;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 import java.io.IOException;
+import android.app.AlertDialog;
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
 
+import com.google.zxing.Result;
+import me.dm7.barcodescanner.zxing.ZXingScannerView;
 
-public class QrReaderActivity extends AppCompatActivity {
-
-    private SurfaceView cameraView;
-    private TextView barcodeInfo;
-    private BarcodeDetector barcodeDetector;
-    private CameraSource cameraSource;
-    private static final String TAG = "CAMERA SOURCE";
-    private static final int PERMISSION_CAMERA = 1;
+public class QrReaderActivity extends AppCompatActivity implements ZXingScannerView.ResultHandler {
+    private ZXingScannerView mScannerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_qr_reader);
-        
-        cameraView = (SurfaceView)findViewById(R.id.camera_view);
-        barcodeInfo = (TextView)findViewById(R.id.code_info);
+        setContentView(R.layout.activity_main);
 
-        barcodeDetector = new BarcodeDetector.Builder(this)
-                .setBarcodeFormats(Barcode.QR_CODE)
-                .build();
+    }
 
-        cameraSource = new CameraSource
-                .Builder(this, barcodeDetector)
-                .setRequestedPreviewSize(400,400)
-                .build();
+    public void QrScanner(View view){
 
-        cameraView.getHolder().addCallback(new SurfaceHolder.Callback() {
-            @Override
-            public void surfaceCreated(SurfaceHolder holder) {
-                try {
-                    if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-                        requestPermissions(new String[]{Manifest.permission.CAMERA}, PERMISSION_CAMERA);
-                    }
-                    cameraSource.start(cameraView.getHolder());
-                } catch (IOException ie) {
-                    Log.e(TAG, ie.getMessage());
-                }
-            }
 
-            @Override
-            public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-            }
+        mScannerView = new ZXingScannerView(this);   // Programmatically initialize the scanner view
+        setContentView(mScannerView);
 
-            @Override
-            public void surfaceDestroyed(SurfaceHolder holder) {
-                cameraSource.stop();
-            }
-        });
+        mScannerView.setResultHandler(this); // Register ourselves as a handler for scan results.
+        mScannerView.startCamera();         // Start camera
 
-        barcodeDetector.setProcessor(new Detector.Processor<Barcode>() {
-            @Override
-            public void release() {
-            }
+    }
 
-            @Override
-            public void receiveDetections(Detector.Detections<Barcode> detections) {
-                final SparseArray<Barcode> barcodes = detections.getDetectedItems();
+    @Override
+    public void onPause() {
+        super.onPause();
+        mScannerView.stopCamera();           // Stop camera on pause
+    }
 
-                if (barcodes.size() != 0) {
-                    String barcode = barcodes.valueAt(0).displayValue;
-                    //okhttp: add_member
-                    BackendAPI api = new BackendAPI();
-                    api.joinGroup(barcode, FirebaseAuth.getInstance().getCurrentUser().getUid(), new BackendAPI.HttpCallback() {
-                        @Override
-                        public void onFailure(String response, Exception exception) {
-                            Log.d(TAG, "Error: " + response + " " + exception);
-                        }
+    @Override
+    public void handleResult(Result rawResult) {
+        // Do something with the result here
 
-                        @Override
-                        public void onSuccess(String response) {
-                            try {
-                                startActivity(new Intent(QrReaderActivity.this, GroupStatusActivity.class));
-                            } catch (Exception e) {
-                                //Toast.makeText(QrReaderActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
-                            }
-                        }
-                    });
-                }
-            }
-        });
+        Log.e("handler", rawResult.getText()); // Prints scan results
+        Log.e("handler", rawResult.getBarcodeFormat().toString()); // Prints the scan format (qrcode)
 
+        // show the scanner result into dialog box.
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Scan Result");
+        builder.setMessage(rawResult.getText());
+        AlertDialog alert1 = builder.create();
+        alert1.show();
+
+        // If you would like to resume scanning, call this method below:
+        // mScannerView.resumeCameraPreview(this);
     }
 }
