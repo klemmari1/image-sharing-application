@@ -73,11 +73,6 @@ public class GroupCreationActivity extends AppCompatActivity {
 
         EditText durationField = (EditText) findViewById(R.id.fieldGroupDuration);
         String groupDuration = durationField.getText().toString();
-//        try {
-//            validateDuration(groupDuration);
-//        } catch (IllegalArgumentException ie) {
-//            ie.printStackTrace();
-//        }
         int validDuration = validateDuration(groupDuration);
         String expirationTimestamp = generateTimestamp(validDuration);
 
