@@ -4,3 +4,7 @@ Group: timestamp
 	2) Create timestamp upon group creation
 	3) Check timestamp when trying to upload image => expired = no request, notification
 	4) Periodically check group expiration date from backend => delete groups e.g. at the end of a day
+
+Questions/Problems:
+	- After new user creation, crash when trying to enter group creation (user not ready in database?)	
+	- Rules for database/storage?
