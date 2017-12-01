@@ -19,6 +19,10 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+
 
 public class GroupCreationActivity extends AppCompatActivity {
 
@@ -75,13 +79,13 @@ public class GroupCreationActivity extends AppCompatActivity {
 //            ie.printStackTrace();
 //        }
         int validDuration = validateDuration(groupDuration);
-        // TODO Handle timestamp creation here on in API class? atm in API
+        String expirationTimestamp = generateTimestamp(validDuration);
 
         findViewById(R.id.buttonCreateGroup).setEnabled(false);
 
         //okhttp request: create_group
         BackendAPI api = new BackendAPI();
-        api.createGroup(groupName, validDuration, user.getUid(), new BackendAPI.HttpCallback() {
+        api.createGroup(groupName, expirationTimestamp, user.getUid(), new BackendAPI.HttpCallback() {
             @Override
             public void onFailure(String response, Exception exception) {
                 Log.d(TAG, "Error: " + response + " " + exception);
@@ -114,5 +118,12 @@ public class GroupCreationActivity extends AppCompatActivity {
         } catch (NumberFormatException nfe) {
             throw new IllegalArgumentException("Give a valid duration that contains only numbers");
         }
+    }
+
+    private String generateTimestamp(int duration) {
+        final DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.MINUTE, duration);
+        return dateFormat.format(calendar.getTime());
     }
 }
