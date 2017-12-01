@@ -8,6 +8,10 @@ import android.os.Handler;
 import android.os.Looper;
 
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -100,11 +104,17 @@ public class BackendAPI {
         }
     }
 
-    public void createGroup(String groupName, String userID, HttpCallback cb){
+    public void createGroup(String groupName, int groupDuration, String userID, HttpCallback cb){
+        final DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.MINUTE, groupDuration);
+        String expiration = dateFormat.format(calendar.getTime());
+
         String url = backendUrl + "/groups";
         RequestBody requestBody = new MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
                 .addFormDataPart("group_name", groupName)
+                .addFormDataPart("group_expiration", expiration)
                 .addFormDataPart("user_id", userID)
                 .build();
         try{

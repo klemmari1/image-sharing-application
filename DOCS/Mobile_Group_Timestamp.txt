@@ -1,0 +1,6 @@
+Group: timestamp
+
+	1) Create variable in group class
+	2) Create timestamp upon group creation
+	3) Check timestamp when trying to upload image => expired = no request, notification
+	4) Periodically check group expiration date from backend => delete groups e.g. at the end of a day

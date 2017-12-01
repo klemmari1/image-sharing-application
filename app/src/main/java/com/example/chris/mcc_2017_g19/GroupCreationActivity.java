@@ -61,18 +61,27 @@ public class GroupCreationActivity extends AppCompatActivity {
     }
 
 
-    //TODO: MOVE handling to backend
     private void addGroup() throws IllegalArgumentException {
         EditText nameField = (EditText) findViewById(R.id.fieldGroupName);
         String groupName = nameField.getText().toString();
         if (groupName.isEmpty())
             throw new IllegalArgumentException("No group name provided");
 
+        EditText durationField = (EditText) findViewById(R.id.fieldGroupDuration);
+        String groupDuration = durationField.getText().toString();
+//        try {
+//            validateDuration(groupDuration);
+//        } catch (IllegalArgumentException ie) {
+//            ie.printStackTrace();
+//        }
+        int validDuration = validateDuration(groupDuration);
+        // TODO Handle timestamp creation here on in API class? atm in API
+
         findViewById(R.id.buttonCreateGroup).setEnabled(false);
 
         //okhttp request: create_group
         BackendAPI api = new BackendAPI();
-        api.createGroup(groupName, user.getUid(), new BackendAPI.HttpCallback() {
+        api.createGroup(groupName, validDuration, user.getUid(), new BackendAPI.HttpCallback() {
             @Override
             public void onFailure(String response, Exception exception) {
                 Log.d(TAG, "Error: " + response + " " + exception);
@@ -92,5 +101,18 @@ public class GroupCreationActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    private int validateDuration(String inputDuration) throws IllegalArgumentException {
+        try {
+            if (inputDuration.isEmpty())
+                throw new IllegalArgumentException("Give group duration");
+            int duration = Integer.parseInt(inputDuration);
+            if (duration <= 0)
+                throw new IllegalArgumentException("Group duration must be greater than zero");
+            return duration;
+        } catch (NumberFormatException nfe) {
+            throw new IllegalArgumentException("Give a valid duration that contains only numbers");
+        }
     }
 }

@@ -22,7 +22,6 @@ import json
 import requests
 from PIL import Image
 from io import BytesIO
-from google.cloud import vision
 import os
 
 #CLOUD_STORAGE_BUCKET = os.environ.get('CLOUD_STORAGE_BUCKET')
@@ -74,7 +73,6 @@ def homepage():
     #return redirect(url_for('join_group', user_id='testuser2ID', group_id='-KzihPzu45uBnue10kM9'))  # Similar as above
 
 
-# TODO Change parameters into "methods=['GET'] ..." => request.args.get('param')
 @app.route('/groups', methods=['POST'])
 def create_group():
     try:
@@ -82,7 +80,8 @@ def create_group():
         user_name = database.child("users").child(user_id).child("name").get().val()
 
         group_name = request.form['group_name']
-        group_reference = database.child("groups").push({"name": group_name})
+        group_expiration = request.form['group_expiration']
+        group_reference = database.child("groups").push({"name": group_name, "expiration" : group_expiration})
         group_key = group_reference["name"]
         database.child("groups").child(group_key).child("members").update({user_id: user_name})
         database.child("groups").child(group_key).update({"creator": user_id})
