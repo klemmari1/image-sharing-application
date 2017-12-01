@@ -156,7 +156,7 @@ public class GroupStatusActivity extends AppCompatActivity {
 
                 @Override
                 public void onSuccess(String response) {
-                    GroupStatusActivity.this.onBackPressed();
+                    GroupStatusActivity.this.finish();
                 }
             });
         }
@@ -169,7 +169,7 @@ public class GroupStatusActivity extends AppCompatActivity {
 
                 @Override
                 public void onSuccess(String response) {
-                    GroupStatusActivity.this.onBackPressed();
+                    GroupStatusActivity.this.finish();
                 }
             });
         }
