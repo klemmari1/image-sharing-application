@@ -5,7 +5,7 @@ public class GroupObject {
     private String name;
     private String creator;
     private String token;
-    private String timestamp;
+    private String expiration;
 
     public GroupObject() {
 
@@ -23,7 +23,7 @@ public class GroupObject {
         return this.token;
     }
 
-    public String getTimestamp() {
-        return this.timestamp;
+    public String getExpiration() {
+        return this.expiration;
     }
 }

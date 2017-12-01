@@ -58,7 +58,7 @@ public class GroupStatusActivity extends AppCompatActivity {
                 GroupObject groupObj = dataSnapshot.getValue(GroupObject.class);
                 if(groupObj != null){
                     displayGroupName(groupObj.getName());
-
+                    displayGroupExpiration(groupObj.getExpiration());
                     checkIfUserIsGroupCreator(groupObj.getCreator());
 
                     DataSnapshot membersSnapshot = dataSnapshot.child("members");
@@ -75,9 +75,6 @@ public class GroupStatusActivity extends AppCompatActivity {
                 System.out.println("The read failed: " + databaseError.getCode());
             }
         });
-
-        TextView expirationValue = (TextView) findViewById(R.id.group_status_expiration_value);
-        expirationValue.setText("Tue 31 Oct - 10:00pm"); // Placeholder
     }
 
     public void addButton(View v) {
@@ -184,5 +181,10 @@ public class GroupStatusActivity extends AppCompatActivity {
     private void displayGroupName(String name) {
         TextView groupNameField = (TextView) findViewById(R.id.group_status_name_value);
         groupNameField.setText(name);
+    }
+
+    private void displayGroupExpiration(String expiration) {
+        TextView groupExpirationField = (TextView) findViewById(R.id.group_status_expiration_value);
+        groupExpirationField.setText(expiration);
     }
 }
