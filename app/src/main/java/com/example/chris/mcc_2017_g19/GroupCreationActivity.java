@@ -14,6 +14,11 @@ import com.example.chris.mcc_2017_g19.BackendAPI.BackendAPI;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+
+
 public class GroupCreationActivity extends AppCompatActivity {
 
     private static final String TAG = "GroupCreationActivity";
@@ -45,11 +50,16 @@ public class GroupCreationActivity extends AppCompatActivity {
         if (groupName.isEmpty())
             throw new IllegalArgumentException("No group name provided");
 
+        EditText durationField = (EditText) findViewById(R.id.fieldGroupDuration);
+        String groupDuration = durationField.getText().toString();
+        int validDuration = validateDuration(groupDuration);
+        String expirationTimestamp = generateTimestamp(validDuration);
+
         findViewById(R.id.buttonCreateGroup).setEnabled(false);
 
         //okhttp request: create_group
         BackendAPI api = new BackendAPI();
-        api.createGroup(groupName, user.getUid(), new BackendAPI.HttpCallback() {
+        api.createGroup(groupName, expirationTimestamp, user.getUid(), new BackendAPI.HttpCallback() {
             @Override
             public void onFailure(String response, Exception exception) {
                 Log.d(TAG, "Error: " + response + " " + exception);
@@ -69,5 +79,25 @@ public class GroupCreationActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    private int validateDuration(String inputDuration) throws IllegalArgumentException {
+        try {
+            if (inputDuration.isEmpty())
+                throw new IllegalArgumentException("Give group duration");
+            int duration = Integer.parseInt(inputDuration);
+            if (duration <= 0)
+                throw new IllegalArgumentException("Group duration must be greater than zero");
+            return duration;
+        } catch (NumberFormatException nfe) {
+            throw new IllegalArgumentException("Give a valid duration that contains only numbers");
+        }
+    }
+
+    private String generateTimestamp(int duration) {
+        final DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.MINUTE, duration);
+        return dateFormat.format(calendar.getTime());
     }
 }

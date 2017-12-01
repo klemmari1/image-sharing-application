@@ -5,6 +5,7 @@ public class GroupObject {
     private String name;
     private String creator;
     private String token;
+    private String timestamp;
 
     public GroupObject() {
 
@@ -20,5 +21,9 @@ public class GroupObject {
 
     public String getToken() {
         return this.token;
+    }
+
+    public String getTimestamp() {
+        return this.timestamp;
     }
 }
