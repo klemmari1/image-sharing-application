@@ -48,6 +48,7 @@
         <activity android:name=".QrReaderActivity"
                   android:screenOrientation="portrait"
                   android:configChanges="orientation|keyboardHidden" />
+        <activity android:name=".Settings" />
     </application>
 
 </manifest>

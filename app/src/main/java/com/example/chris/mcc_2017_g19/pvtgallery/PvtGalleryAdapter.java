@@ -62,7 +62,7 @@ public class PvtGalleryAdapter extends RecyclerView.Adapter {
         Picasso.with(context)
                 .load(imageViewThoumb)
                 .centerCrop()
-                .resize(ScreenUtils.getScreenWidth(context) / 2, ScreenUtils.getScreenHeight(context) / 3)//Resize image to width half of screen and height 1/3 of screen height
+                .resize(ScreenUtils.getScreenWidth(context) / 3, ScreenUtils.getScreenHeight(context) / 4)//Resize image to width half of screen and height 1/3 of screen height
                 .into(galleryItemHolder.imageViewThumbnail);
 
         //set on click listener on imageViewThumbnail
