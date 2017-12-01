@@ -60,7 +60,6 @@ public class MainActivity extends AppCompatActivity {
     static final int MY_PERMISSIONS_REQUEST_QR = 4;
     private FirebaseUser firebaseUser;
     private DatabaseReference databaseReference;
-    private String photoPath;
     private static final String TAG = "MainActivity";
 
 
@@ -214,7 +213,7 @@ public class MainActivity extends AppCompatActivity {
         );
 
         // Save a file: path for use with ACTION_VIEW intents
-        photoPath = image.getAbsolutePath();
+        imagePath = image.getAbsolutePath();
         return image;
     }
 
@@ -222,10 +221,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
 
-
-            //this bundle is giving back an image with bad resolution
-            //TODO:this bundle is giving back an image with bad resolution
-            Uri imageUri = Uri.parse(imagePath);
+            Uri imageUri = Uri.fromFile(new File(imagePath));
             Bitmap imageBitmap = null;
             try{
                 imageBitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), imageUri);
@@ -361,7 +357,6 @@ public class MainActivity extends AppCompatActivity {
             MediaScannerConnection.scanFile(getApplicationContext(), new String[]{file.getPath()}, new String[]{"Image/*"}, null);
             System.out.println(file);
 
-            //TODO: This part has to be solved. Images are losing quality and apparently there is no solution for it
             //FileOutputStream out = new FileOutputStream(file);
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             finalBitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
