@@ -1,13 +1,12 @@
 package com.example.chris.mcc_2017_g19;
 
-import android.*;
 import android.Manifest;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.MediaScannerConnection;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -18,12 +17,15 @@ import android.os.Bundle;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.google.android.gms.vision.Frame;
+import com.google.android.gms.vision.barcode.Barcode;
+import com.google.android.gms.vision.barcode.BarcodeDetector;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -35,11 +37,8 @@ import com.google.firebase.database.ValueEventListener;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.Random;
-
-import com.google.android.gms.vision.barcode.Barcode;
-import com.google.android.gms.vision.barcode.BarcodeDetector;
+import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -49,12 +48,17 @@ public class MainActivity extends AppCompatActivity {
     ImageView takepicture;
 
     Bitmap bitmap;
+    private String imagePath;
 
     static final int REQUEST_IMAGE_CAPTURE = 1;
     static final int MY_PERMISSIONS_REQUEST_WRITE_EXT_STORAGE = 2;
+    static final int MY_PERMISSIONS_REQUEST_CAMERA = 3;
+    static final int MY_PERMISSIONS_REQUEST_QR = 4;
     private FirebaseUser firebaseUser;
     private DatabaseReference databaseReference;
     private static final String TAG = "MainActivity";
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,7 +66,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         databaseReference = FirebaseDatabase.getInstance().getReference();
-
         firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
 
         gallery = (ImageView) findViewById(R.id.gallery);
@@ -89,7 +92,8 @@ public class MainActivity extends AppCompatActivity {
         settings.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //TODO Move to activity for settings
+                Intent intent = new Intent(MainActivity.this, Settings.class);
+                startActivity(intent);
             }
         });
 
@@ -99,6 +103,7 @@ public class MainActivity extends AppCompatActivity {
         takepicture.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
                 TakePictureIntent();
             }
         });
@@ -106,7 +111,8 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.logout_button, menu);
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.toolbar_mainactivity, menu);
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -117,6 +123,17 @@ public class MainActivity extends AppCompatActivity {
                 //TODO Do we need (onCompletion) listeners for these kinds of situations?
                 FirebaseAuth.getInstance().signOut();
                 startActivity(new Intent(MainActivity.this, LoginActivity.class));
+                return true;
+            case R.id.action_read_qr:
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+                        != PackageManager.PERMISSION_GRANTED) {
+                    ActivityCompat.requestPermissions(this,
+                            new String[]{Manifest.permission.CAMERA}, MY_PERMISSIONS_REQUEST_QR);
+                } else {
+                    Intent intent = new Intent(MainActivity.this, QrReaderActivity.class);
+                    startActivity(intent);
+                }
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
 
@@ -151,8 +168,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void TakePictureIntent() {
-        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+        if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA}, MY_PERMISSIONS_REQUEST_CAMERA);
+        } else {
+            Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
             startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
         }
     }
@@ -162,22 +181,20 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
 
 
+            //this bundle is giving back an image with bad resolution
+            //TODO:this bundle is giving back an image with bad resolution
             Bundle extras = data.getExtras();
             Bitmap imageBitmap = (Bitmap) extras.get("data");
+
+            //SaveImage(imageBitmap);
             //save image to an imageview
             //mImageView.setImageBitmap(imageBitmap);
-
-            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            /*ByteArrayOutputStream stream = new ByteArrayOutputStream();
             imageBitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
             byte[] byteArray = stream.toByteArray();
 
             // convert byte array to Bitmap
-            bitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
-
-
-            //TODO: Here I need to check if the image contains sensible data
-            // If yes, store in local
-            // If no, store inside the group ... ... ...
+            bitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);*/
 
             if (checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
                     != PackageManager.PERMISSION_GRANTED) {
@@ -189,7 +206,7 @@ public class MainActivity extends AppCompatActivity {
                 return;
             } else {
 
-                new SensibleDataTask().execute(bitmap);
+                new SensibleDataTask().execute(imageBitmap);
             }
         }
     }
@@ -199,15 +216,29 @@ public class MainActivity extends AppCompatActivity {
                                            String permissions[],
                                            int[] grantResults) {
         switch (requestCode) {
-            case MY_PERMISSIONS_REQUEST_WRITE_EXT_STORAGE: {
-                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            case MY_PERMISSIONS_REQUEST_WRITE_EXT_STORAGE:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     new SensibleDataTask().execute(bitmap);
                 } else {
-                    // permission denied, boo!
+                    Toast.makeText(this, "Please grant permissions to use the app", Toast.LENGTH_SHORT).show();
                 }
-                return;
-            }
-
+                break;
+            case MY_PERMISSIONS_REQUEST_CAMERA:
+                if (grantResults.length > 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
+                    Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                    startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+                } else {
+                    Toast.makeText(this, "Please grant permissions to use the Camera", Toast.LENGTH_SHORT).show();
+                }
+                break;
+            case MY_PERMISSIONS_REQUEST_QR:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Intent intent = new Intent(this, QrReaderActivity.class);
+                    startActivity(intent);
+                } else {
+                    Toast.makeText(this, "Please grant camera permission to use the QR Scanner", Toast.LENGTH_SHORT).show();
+                }
+                break;
             // other 'switch' lines to check for other
             // permissions this app might request
         }
@@ -258,35 +289,47 @@ public class MainActivity extends AppCompatActivity {
         }
 
 
-        private void SaveImage(Bitmap finalBitmap) {
 
-            String root = Environment.getExternalStorageDirectory().toString();
-            File myDir = new File(root + "/OrganizerApp");
+    }
 
-            if (!myDir.exists()) {
-                myDir.mkdirs();
-            }
+    private void SaveImage(Bitmap finalBitmap) {
 
-            //Creating a unique name for the picture
-            Random generator = new Random();
-            int n = 1000;
-            n = generator.nextInt(n);
-            String fname = "Image-" + n + ".jpg";
+        String root = Environment.getExternalStorageDirectory().toString();
+        File myDir = new File(root + "/OrganizerApp");
 
-            File file = new File(myDir, fname);
+        if (!myDir.exists()) {
+            myDir.mkdirs();
+        }
 
-            try {
-                MediaScannerConnection.scanFile(getApplicationContext(), new String[]{file.getPath()}, new String[]{"Image/*"}, null);
-                System.out.println(file);
 
-                //TODO: This part has to be solved. Images are losing quality and apparently there is no solution for it
-                FileOutputStream out = new FileOutputStream(file);
-                finalBitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
-                out.flush();
-                out.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+        //Creating a unique name for the picture
+        Random generator = new Random();
+        int n = 1000;
+        n = generator.nextInt(n);
+        String fname = "Image-" + n + ".jpeg";
+
+        File file = new File(myDir, fname);
+
+
+        try {
+            MediaScannerConnection.scanFile(getApplicationContext(), new String[]{file.getPath()}, new String[]{"Image/*"}, null);
+            System.out.println(file);
+
+            //TODO: This part has to be solved. Images are losing quality and apparently there is no solution for it
+            //FileOutputStream out = new FileOutputStream(file);
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            finalBitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+
+
+            file.createNewFile();
+            FileOutputStream fo = new FileOutputStream(file);
+            fo.write(out.toByteArray());
+            fo.close();
+
+            out.flush();
+            out.close();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }
