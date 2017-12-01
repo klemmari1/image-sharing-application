@@ -45,14 +45,16 @@ public class GroupQRActivity extends AppCompatActivity {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 GroupObject groupObj = dataSnapshot.getValue(GroupObject.class);
-                String token = groupObj.getToken();
-                System.out.println(groupObj);
-                try{
-                    ImageView imageView = (ImageView) findViewById(R.id.qr_image);
-                    Bitmap bitmap = getBitmap(token, 750);
-                    imageView.setImageBitmap(bitmap);
-                }
-                catch (Exception e){
+                if(groupObj != null){
+                    String token = groupObj.getToken();
+                    System.out.println(groupObj);
+                    try{
+                        ImageView imageView = (ImageView) findViewById(R.id.qr_image);
+                        Bitmap bitmap = getBitmap(token, 750);
+                        imageView.setImageBitmap(bitmap);
+                    }
+                    catch (Exception e){
+                    }
                 }
             }
 
