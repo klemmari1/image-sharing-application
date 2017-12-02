@@ -131,12 +131,12 @@ public class GroupStatusActivity extends AppCompatActivity {
         };
         if(userIsGroupCreator){
             AlertDialog.Builder builder = new AlertDialog.Builder(GroupStatusActivity.this);
-            builder.setMessage("Are you sure you want to delete the group?").setPositiveButton("Yes", dialogClickListener)
+            builder.setMessage("Are you sure you want to delete your group?").setPositiveButton("Yes", dialogClickListener)
                     .setNegativeButton("No", dialogClickListener).show();
         }
         else{
             AlertDialog.Builder builder = new AlertDialog.Builder(GroupStatusActivity.this);
-            builder.setMessage("Are you sure you want to leave the group?").setPositiveButton("Yes", dialogClickListener)
+            builder.setMessage("Are you sure you want to leave your current group?").setPositiveButton("Yes", dialogClickListener)
                     .setNegativeButton("No", dialogClickListener).show();
         }
 

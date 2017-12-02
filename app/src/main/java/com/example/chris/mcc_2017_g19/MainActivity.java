@@ -1,6 +1,7 @@
 package com.example.chris.mcc_2017_g19;
 
 import android.Manifest;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -12,6 +13,7 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -38,7 +40,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.Random;
-import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -55,6 +56,7 @@ public class MainActivity extends AppCompatActivity {
     static final int MY_PERMISSIONS_REQUEST_CAMERA = 3;
     static final int MY_PERMISSIONS_REQUEST_QR = 4;
     private FirebaseUser firebaseUser;
+    private UserObject userObj;
     private DatabaseReference databaseReference;
     private static final String TAG = "MainActivity";
 
@@ -67,6 +69,17 @@ public class MainActivity extends AppCompatActivity {
 
         databaseReference = FirebaseDatabase.getInstance().getReference();
         firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+
+        databaseReference.child("users").child(firebaseUser.getUid()).addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
+                userObj = snapshot.getValue(UserObject.class);
+            }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                System.out.println("The read failed: " + databaseError.getMessage());
+            }
+        });
 
         gallery = (ImageView) findViewById(R.id.gallery);
         gallery.setClickable(true);
@@ -125,13 +138,28 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(new Intent(MainActivity.this, LoginActivity.class));
                 return true;
             case R.id.action_read_qr:
-                if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
-                        != PackageManager.PERMISSION_GRANTED) {
-                    ActivityCompat.requestPermissions(this,
-                            new String[]{Manifest.permission.CAMERA}, MY_PERMISSIONS_REQUEST_QR);
-                } else {
-                    Intent intent = new Intent(MainActivity.this, QrReaderActivity.class);
-                    startActivity(intent);
+                if(userObj.getGroup() == null){
+                    if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+                            != PackageManager.PERMISSION_GRANTED) {
+                        ActivityCompat.requestPermissions(this,
+                                new String[]{Manifest.permission.CAMERA}, MY_PERMISSIONS_REQUEST_QR);
+                    } else {
+                        Intent intent = new Intent(MainActivity.this, QrReaderActivity.class);
+                        startActivity(intent);
+                    }
+
+                }
+                else{
+                    AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).create();
+                    alertDialog.setTitle("Already in a group");
+                    alertDialog.setMessage("You must leave you current group to join a new one");
+                    alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
+                            new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int which) {
+                                    dialog.dismiss();
+                                }
+                            });
+                    alertDialog.show();
                 }
                 return true;
             default:
@@ -141,30 +169,19 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void selectGroupManagementActivity() {
-        databaseReference.child("users").addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot snapshot) {
-                String group_id = null;
-                Class activityClass;
-                UserObject user = snapshot.child(firebaseUser.getUid()).getValue(UserObject.class);
-                if (user.getGroup() == null)
-                    activityClass = GroupCreationActivity.class;
-                else{
-                    activityClass = GroupStatusActivity.class;
-                    group_id = user.getGroup();
-                }
+        Class activityClass;
+        String group_id = null;
+        if (userObj.getGroup() == null)
+            activityClass = GroupCreationActivity.class;
+        else{
+            activityClass = GroupStatusActivity.class;
+            group_id = userObj.getGroup();
+        }
 
-                Intent intent = new Intent(MainActivity.this, activityClass);
-                if(group_id != null)
-                    intent.putExtra("GROUP_ID", group_id);
-                startActivity(intent);
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                System.out.println("The read failed: " + databaseError.getMessage());
-            }
-        });
+        Intent intent = new Intent(MainActivity.this, activityClass);
+        if(group_id != null)
+            intent.putExtra("GROUP_ID", group_id);
+        startActivity(intent);
     }
 
     private void TakePictureIntent() {
