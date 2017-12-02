@@ -136,30 +136,34 @@ public class MainActivity extends AppCompatActivity {
                 //TODO Do we need (onCompletion) listeners for these kinds of situations?
                 FirebaseAuth.getInstance().signOut();
                 startActivity(new Intent(MainActivity.this, LoginActivity.class));
+                userObj = null;
+                MainActivity.this.finish();
                 return true;
             case R.id.action_read_qr:
-                if(userObj.getGroup() == null){
-                    if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
-                            != PackageManager.PERMISSION_GRANTED) {
-                        ActivityCompat.requestPermissions(this,
-                                new String[]{Manifest.permission.CAMERA}, MY_PERMISSIONS_REQUEST_QR);
-                    } else {
-                        Intent intent = new Intent(MainActivity.this, QrReaderActivity.class);
-                        startActivity(intent);
-                    }
+                if(userObj != null){
+                    if(userObj.getGroup() == null){
+                        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+                                != PackageManager.PERMISSION_GRANTED) {
+                            ActivityCompat.requestPermissions(this,
+                                    new String[]{Manifest.permission.CAMERA}, MY_PERMISSIONS_REQUEST_QR);
+                        } else {
+                            Intent intent = new Intent(MainActivity.this, QrReaderActivity.class);
+                            startActivity(intent);
+                        }
 
-                }
-                else{
-                    AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).create();
-                    alertDialog.setTitle("Already in a group");
-                    alertDialog.setMessage("You must leave you current group to join a new one");
-                    alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
-                            new DialogInterface.OnClickListener() {
-                                public void onClick(DialogInterface dialog, int which) {
-                                    dialog.dismiss();
-                                }
-                            });
-                    alertDialog.show();
+                    }
+                    else{
+                        AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).create();
+                        alertDialog.setTitle("Already in a group");
+                        alertDialog.setMessage("You must leave you current group to join a new one");
+                        alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
+                                new DialogInterface.OnClickListener() {
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        dialog.dismiss();
+                                    }
+                                });
+                        alertDialog.show();
+                    }
                 }
                 return true;
             default:
@@ -171,17 +175,19 @@ public class MainActivity extends AppCompatActivity {
     private void selectGroupManagementActivity() {
         Class activityClass;
         String group_id = null;
-        if (userObj.getGroup() == null)
-            activityClass = GroupCreationActivity.class;
-        else{
-            activityClass = GroupStatusActivity.class;
-            group_id = userObj.getGroup();
-        }
+        if (userObj != null){
+            if (userObj.getGroup() == null)
+                activityClass = GroupCreationActivity.class;
+            else{
+                activityClass = GroupStatusActivity.class;
+                group_id = userObj.getGroup();
+            }
 
-        Intent intent = new Intent(MainActivity.this, activityClass);
-        if(group_id != null)
-            intent.putExtra("GROUP_ID", group_id);
-        startActivity(intent);
+            Intent intent = new Intent(MainActivity.this, activityClass);
+            if(group_id != null)
+                intent.putExtra("GROUP_ID", group_id);
+            startActivity(intent);
+        }
     }
 
     private void TakePictureIntent() {

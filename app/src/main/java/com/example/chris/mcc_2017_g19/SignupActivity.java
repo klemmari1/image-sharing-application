@@ -55,7 +55,7 @@ public class SignupActivity extends AppCompatActivity {
         btnSignIn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                SignupActivity.this.finish();
+                finish();
             }
         });
 
@@ -102,7 +102,8 @@ public class SignupActivity extends AppCompatActivity {
                                     database.getReference().child("users").child(firebaseUser.getUid()).setValue(userObject);
 
                                     startActivity(new Intent(SignupActivity.this, MainActivity.class));
-                                    SignupActivity.this.finish();
+                                    setResult(RESULT_OK, null);
+                                    finish();
                                 }
                             }
                         });
