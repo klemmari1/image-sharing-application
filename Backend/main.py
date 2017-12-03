@@ -23,6 +23,7 @@ import requests
 from PIL import Image
 from io import BytesIO
 import os
+from datetime import datetime
 
 #CLOUD_STORAGE_BUCKET = os.environ.get('CLOUD_STORAGE_BUCKET')
 
@@ -145,6 +146,16 @@ def set_new_token(group_id):
     qr_string = str(group_id) + ":" + token
     database.child("groups").child(group_id).update({"token": qr_string})
     return qr_string
+
+
+@app.route('groups/expiration', methods=['GET'])
+def delete_expired_group():
+    groups = database.child("groups").get()
+    for group in groups.each():
+        expiration_time = group.child("expiration").get()
+        timestamp = datetime.strptime(expiration_time, '%Y/%m/%d %H:%M:%S')
+        if timestamp < datetime.now():
+            delete_group(group.key())
 
 
 @app.errorhandler(500)
