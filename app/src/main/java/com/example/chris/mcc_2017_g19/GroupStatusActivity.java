@@ -43,15 +43,15 @@ public class GroupStatusActivity extends AppCompatActivity {
 
         members = new ArrayList<>();
         firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
-        databaseReference = FirebaseDatabase.getInstance().getReference();
+        databaseReference = Utils.getDatabase().getReference();
 
         ListView memberList = (ListView) findViewById(R.id.group_status_member_list);
         memberAdapter = new MemberAdapter(this, members);
         memberList.setAdapter(memberAdapter);
 
         group_id = getIntent().getStringExtra("GROUP_ID");
-
         DatabaseReference groupRef = databaseReference.child("groups").child(group_id);
+        groupRef.keepSynced(true);
         groupRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -131,12 +131,12 @@ public class GroupStatusActivity extends AppCompatActivity {
         };
         if(userIsGroupCreator){
             AlertDialog.Builder builder = new AlertDialog.Builder(GroupStatusActivity.this);
-            builder.setMessage("Are you sure you want to delete the group?").setPositiveButton("Yes", dialogClickListener)
+            builder.setMessage("Are you sure you want to delete your group?").setPositiveButton("Yes", dialogClickListener)
                     .setNegativeButton("No", dialogClickListener).show();
         }
         else{
             AlertDialog.Builder builder = new AlertDialog.Builder(GroupStatusActivity.this);
-            builder.setMessage("Are you sure you want to leave the group?").setPositiveButton("Yes", dialogClickListener)
+            builder.setMessage("Are you sure you want to leave your current group?").setPositiveButton("Yes", dialogClickListener)
                     .setNegativeButton("No", dialogClickListener).show();
         }
 

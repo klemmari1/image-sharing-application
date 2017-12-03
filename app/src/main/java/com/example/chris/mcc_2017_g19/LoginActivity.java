@@ -23,6 +23,7 @@ public class LoginActivity extends AppCompatActivity {
     private FirebaseAuth auth;
     private ProgressBar progressBar;
     private Button btnSignup, btnLogin, btnReset;
+    private int SIGNUP_EXIT = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,7 +57,8 @@ public class LoginActivity extends AppCompatActivity {
         btnSignup.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(LoginActivity.this, SignupActivity.class));
+                Intent signUpActivity = new Intent(LoginActivity.this, SignupActivity.class);
+                startActivityForResult(signUpActivity, SIGNUP_EXIT);
             }
         });
 
@@ -110,5 +112,15 @@ public class LoginActivity extends AppCompatActivity {
                         });
             }
         });
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+        if (requestCode == SIGNUP_EXIT) {
+            if (resultCode == RESULT_OK) {
+                finish();
+            }
+        }
     }
 }

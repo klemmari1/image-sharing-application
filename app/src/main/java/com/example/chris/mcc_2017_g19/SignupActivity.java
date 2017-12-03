@@ -102,6 +102,7 @@ public class SignupActivity extends AppCompatActivity {
                                     database.getReference().child("users").child(firebaseUser.getUid()).setValue(userObject);
 
                                     startActivity(new Intent(SignupActivity.this, MainActivity.class));
+                                    setResult(RESULT_OK, null);
                                     finish();
                                 }
                             }
