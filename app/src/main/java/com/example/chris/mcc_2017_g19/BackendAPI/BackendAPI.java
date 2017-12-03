@@ -6,16 +6,18 @@ package com.example.chris.mcc_2017_g19.BackendAPI;
 
 import android.os.Handler;
 import android.os.Looper;
+import android.support.annotation.NonNull;
+
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.GetTokenResult;
 
 import java.io.IOException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
 
 import okhttp3.Call;
 import okhttp3.Callback;
-import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -27,16 +29,26 @@ public class BackendAPI {
 
     private OkHttpClient client;
     private String backendUrl = "https://mcc-fall-2017-g19.appspot.com";
-    private MediaType JSON = MediaType.parse("application/json; charset=utf-8");
-
+    private String idToken;
 
     public BackendAPI() {
         client = new OkHttpClient();
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        try{
+            user.getToken(true)
+                    .addOnCompleteListener(new OnCompleteListener<GetTokenResult>() {
+                        public void onComplete(@NonNull Task<GetTokenResult> task) {
+                            if (task.isSuccessful()) {
+                                idToken = task.getResult().getToken();
+                            }
+                        }
+                    });
+        }
+        catch (Exception e){
+        }
     }
 
     //Helper Functions
-
-
     private void postRequest(String url, RequestBody body, HttpCallback cb) throws IOException {
         Request request = new Request.Builder()
                 .url(url)
@@ -92,56 +104,68 @@ public class BackendAPI {
 
     //API functions
     public void joinGroup(String userID, String token, HttpCallback cb){
-        String url = backendUrl + "/users/" + userID + "/group";
-        RequestBody requestBody = new MultipartBody.Builder()
-                .setType(MultipartBody.FORM)
-                .addFormDataPart("token", token)
-                .build();
-        try{
-            postRequest(url, requestBody, cb);
-        }
-        catch (Exception e){
+        if(idToken != null){
+            String url = backendUrl + "/users/" + userID + "/group";
+            RequestBody requestBody = new MultipartBody.Builder()
+                    .setType(MultipartBody.FORM)
+                    .addFormDataPart("id_token", idToken)
+                    .addFormDataPart("token", token)
+                    .build();
+            try{
+                postRequest(url, requestBody, cb);
+            }
+            catch (Exception e){
+            }
         }
     }
 
     public void createGroup(String groupName, String expirationTimestamp, String userID, HttpCallback cb){
-        String url = backendUrl + "/groups";
-        RequestBody requestBody = new MultipartBody.Builder()
-                .setType(MultipartBody.FORM)
-                .addFormDataPart("group_name", groupName)
-                .addFormDataPart("group_expiration", expirationTimestamp)
-                .addFormDataPart("user_id", userID)
-                .build();
-        try{
-            postRequest(url, requestBody, cb);
-        }
-        catch (Exception e){
+        if(idToken != null){
+            String url = backendUrl + "/groups";
+            RequestBody requestBody = new MultipartBody.Builder()
+                    .setType(MultipartBody.FORM)
+                    .addFormDataPart("id_token", idToken)
+                    .addFormDataPart("group_name", groupName)
+                    .addFormDataPart("group_expiration", expirationTimestamp)
+                    .addFormDataPart("user_id", userID)
+                    .build();
+            try{
+                postRequest(url, requestBody, cb);
+            }
+            catch (Exception e){
+            }
         }
     }
 
     public void deleteGroup(String group_id, HttpCallback cb){
-        String url = backendUrl + "/groups";
-        RequestBody requestBody = new MultipartBody.Builder()
-                .setType(MultipartBody.FORM)
-                .addFormDataPart("group_id", group_id)
-                .build();
-        try{
-            deleteRequest(url, requestBody, cb);
-        }
-        catch (Exception e){
+        if(idToken != null){
+            String url = backendUrl + "/groups";
+            RequestBody requestBody = new MultipartBody.Builder()
+                    .setType(MultipartBody.FORM)
+                    .addFormDataPart("id_token", idToken)
+                    .addFormDataPart("group_id", group_id)
+                    .build();
+            try{
+                deleteRequest(url, requestBody, cb);
+            }
+            catch (Exception e){
+            }
         }
     }
 
     public void leaveGroup(String user_id, String group_id, HttpCallback cb){
-        String url = backendUrl + "/users/" + user_id + "/group";
-        RequestBody requestBody = new MultipartBody.Builder()
-                .setType(MultipartBody.FORM)
-                .addFormDataPart("group_id", group_id)
-                .build();
-        try{
-            deleteRequest(url, requestBody, cb);
-        }
-        catch (Exception e){
+        if(idToken != null){
+            String url = backendUrl + "/users/" + user_id + "/group";
+            RequestBody requestBody = new MultipartBody.Builder()
+                    .setType(MultipartBody.FORM)
+                    .addFormDataPart("id_token", idToken)
+                    .addFormDataPart("group_id", group_id)
+                    .build();
+            try{
+                deleteRequest(url, requestBody, cb);
+            }
+            catch (Exception e){
+            }
         }
     }
 

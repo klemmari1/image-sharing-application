@@ -14,6 +14,8 @@
 
 # [START app]
 import pyrebase
+import firebase_admin
+from firebase_admin import auth
 import uuid
 import logging
 from flask import Flask, redirect, render_template, request, url_for
@@ -58,7 +60,7 @@ storage = firebase.storage()
 # database.child("users").child('testuser2ID').set({"name": "testuser2name"})
 
 app = Flask(__name__)
-
+default_app = firebase_admin.initialize_app()
 
 #Implement listeners
 @app.route('/')
@@ -76,20 +78,28 @@ def homepage():
 @app.route('/groups', methods=['POST'])
 def create_group():
     try:
-        user_id = request.form['user_id']
-        user_name = database.child("users").child(user_id).child("name").get().val()
+        id_token = request.form['id_token']
+        logging.warning(id_token)
+        decoded_token = auth.verify_id_token(id_token)
+        uid = decoded_token['uid']
+        if uid is not None:
+            user_id = request.form['user_id']
+            group_name = request.form['group_name']
 
-        group_name = request.form['group_name']
-        group_expiration = request.form['group_expiration']
-        group_reference = database.child("groups").push({"name": group_name, "expiration" : group_expiration})
-        group_key = group_reference["name"]
-        database.child("groups").child(group_key).child("members").update({user_id: user_name})
-        database.child("groups").child(group_key).update({"creator": user_id})
+            user_name = database.child("users").child(user_id).child("name").get().val()
 
-        database.child("users").child(user_id).update({"group": group_key})
+            group_expiration = request.form['group_expiration']
+            group_reference = database.child("groups").push({"name": group_name, "expiration" : group_expiration})
+            group_key = group_reference["name"]
+            database.child("groups").child(group_key).child("members").update({user_id: user_name})
+            database.child("groups").child(group_key).update({"creator": user_id})
 
-        token = set_new_token(group_key)
-        return token
+            database.child("users").child(user_id).update({"group": group_key})
+
+            token = set_new_token(group_key)
+            return token
+        else:
+            return "INVALID USER TOKEN"
     except Exception as e:
         return "Unexpected error: " + str(e)
 
@@ -97,19 +107,27 @@ def create_group():
 @app.route('/users/<user_id>/group', methods=['POST'])
 def join_group(user_id):
     try:
-        user_token = request.form['token']
-        group_id = user_token.split(":")[0]
-        group_token = database.child("groups").child(group_id).child("token").get().val()
+        id_token = request.form['id_token']
+        decoded_token = auth.verify_id_token(id_token)
+        uid = decoded_token['uid']
 
-        if user_token == group_token:
-            user_name = database.child("users").child(user_id).child("name").get().val()
-            database.child("groups").child(group_id).child("members").update({user_id: user_name})
-            database.child("users").child(user_id).update({"group": group_id})
+        if uid is not None:
+            user_token = request.form['token']
 
-            set_new_token(group_id)
-            return "JOINED GROUP"
+            group_id = user_token.split(":")[0]
+            group_token = database.child("groups").child(group_id).child("token").get().val()
+
+            if user_token == group_token:
+                user_name = database.child("users").child(user_id).child("name").get().val()
+                database.child("groups").child(group_id).child("members").update({user_id: user_name})
+                database.child("users").child(user_id).update({"group": group_id})
+
+                set_new_token(group_id)
+                return "JOINED GROUP"
+            else:
+                return "INVALID GROUP TOKEN"
         else:
-            return "INVALID TOKEN"
+            return "INVALID USER TOKEN"
     except Exception as e:
         return "Unexpected error: " + str(e)
 
@@ -117,14 +135,22 @@ def join_group(user_id):
 @app.route('/groups', methods=['DELETE'])
 def delete_group():
     try:
-        group_id = request.form['group_id']
-        group_members = database.child("groups").child(group_id).child("members").get()
-        for member in group_members.each():
-            member_id = member.key()
-            database.child("users").child(member_id).child("group").remove()
-        database.child("groups").child(group_id).remove()
+        id_token = request.form['id_token']
+        decoded_token = auth.verify_id_token(id_token)
+        uid = decoded_token['uid']
 
-        return "GROUP DELETED"
+        if uid is not None:
+            group_id = request.form['group_id']
+
+            group_members = database.child("groups").child(group_id).child("members").get()
+            for member in group_members.each():
+                member_id = member.key()
+                database.child("users").child(member_id).child("group").remove()
+            database.child("groups").child(group_id).remove()
+
+            return "GROUP DELETED"
+        else:
+            return "INVALID USER TOKEN!"
     except Exception as e:
         return "Unexpected error: " + str(e)
 
@@ -132,10 +158,18 @@ def delete_group():
 @app.route('/users/<user_id>/group', methods=['DELETE'])
 def leave_group(user_id):
     try:
-        group_id = request.form['group_id']
-        database.child("groups").child(group_id).child("members").child(user_id).remove()
-        database.child("users").child(user_id).child("group").remove()
-        return "LEFT GROUP"
+        id_token = request.form['id_token']
+        decoded_token = auth.verify_id_token(id_token)
+        uid = decoded_token['uid']
+
+        if uid is not None:
+            group_id = request.form['group_id']
+
+            database.child("groups").child(group_id).child("members").child(user_id).remove()
+            database.child("users").child(user_id).child("group").remove()
+            return "LEFT GROUP"
+        else:
+            return "INVALID USER TOKEN!"
     except Exception as e:
         return "Unexpected error: " + str(e)
 
