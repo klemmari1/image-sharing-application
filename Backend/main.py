@@ -15,12 +15,12 @@
 # [START app]
 import pyrebase
 import firebase_admin
+from firebase_admin import credentials
 from firebase_admin import auth
 import uuid
 import logging
 from flask import Flask, redirect, render_template, request, url_for
 from google.cloud import vision
-import json
 import requests
 from PIL import Image
 from io import BytesIO
@@ -51,7 +51,7 @@ firebaseConfig = {
 
 
 firebase = pyrebase.initialize_app(firebaseConfig)
-#auth = firebase.auth()
+#auth2 = firebase.auth()
 database = firebase.database()
 storage = firebase.storage()
 
@@ -60,7 +60,8 @@ storage = firebase.storage()
 # database.child("users").child('testuser2ID').set({"name": "testuser2name"})
 
 app = Flask(__name__)
-default_app = firebase_admin.initialize_app()
+cred = credentials.Certificate('mcc-fall-2017-g19-firebase-adminsdk-pzipw-d092116b07.json')
+default_app = firebase_admin.initialize_app(cred)
 
 #Implement listeners
 @app.route('/')
@@ -79,16 +80,17 @@ def homepage():
 def create_group():
     try:
         id_token = request.form['id_token']
-        logging.warning(id_token)
         decoded_token = auth.verify_id_token(id_token)
         uid = decoded_token['uid']
-        if uid is not None:
-            user_id = request.form['user_id']
+
+        user_id = request.form['user_id']
+
+        if uid == user_id:
             group_name = request.form['group_name']
+            group_expiration = request.form['group_expiration']
 
             user_name = database.child("users").child(user_id).child("name").get().val()
 
-            group_expiration = request.form['group_expiration']
             group_reference = database.child("groups").push({"name": group_name, "expiration" : group_expiration})
             group_key = group_reference["name"]
             database.child("groups").child(group_key).child("members").update({user_id: user_name})
@@ -99,7 +101,7 @@ def create_group():
             token = set_new_token(group_key)
             return token
         else:
-            return "INVALID USER TOKEN"
+            return "INVALID USER TOKEN!"
     except Exception as e:
         return "Unexpected error: " + str(e)
 
@@ -111,7 +113,7 @@ def join_group(user_id):
         decoded_token = auth.verify_id_token(id_token)
         uid = decoded_token['uid']
 
-        if uid is not None:
+        if uid == user_id:
             user_token = request.form['token']
 
             group_id = user_token.split(":")[0]
@@ -127,7 +129,7 @@ def join_group(user_id):
             else:
                 return "INVALID GROUP TOKEN"
         else:
-            return "INVALID USER TOKEN"
+            return "INVALID USER TOKEN!"
     except Exception as e:
         return "Unexpected error: " + str(e)
 
@@ -162,7 +164,7 @@ def leave_group(user_id):
         decoded_token = auth.verify_id_token(id_token)
         uid = decoded_token['uid']
 
-        if uid is not None:
+        if uid == user_id:
             group_id = request.form['group_id']
 
             database.child("groups").child(group_id).child("members").child(user_id).remove()
