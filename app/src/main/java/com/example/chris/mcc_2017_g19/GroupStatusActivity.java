@@ -43,15 +43,15 @@ public class GroupStatusActivity extends AppCompatActivity {
 
         members = new ArrayList<>();
         firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
-        databaseReference = FirebaseDatabase.getInstance().getReference();
+        databaseReference = Utils.getDatabase().getReference();
 
         ListView memberList = (ListView) findViewById(R.id.group_status_member_list);
         memberAdapter = new MemberAdapter(this, members);
         memberList.setAdapter(memberAdapter);
 
         group_id = getIntent().getStringExtra("GROUP_ID");
-
         DatabaseReference groupRef = databaseReference.child("groups").child(group_id);
+        groupRef.keepSynced(true);
         groupRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {

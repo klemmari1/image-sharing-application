@@ -41,6 +41,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.util.Random;
 
+import okhttp3.internal.Util;
+
 public class MainActivity extends AppCompatActivity {
 
     ImageView gallery;
@@ -67,10 +69,13 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        databaseReference = FirebaseDatabase.getInstance().getReference();
+        databaseReference = Utils.getDatabase().getReference();
         firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
 
-        databaseReference.child("users").child(firebaseUser.getUid()).addValueEventListener(new ValueEventListener() {
+        DatabaseReference userReference = databaseReference.child("users").child(firebaseUser.getUid());
+        userReference.keepSynced(true);
+
+        userReference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
                 userObj = snapshot.getValue(UserObject.class);
