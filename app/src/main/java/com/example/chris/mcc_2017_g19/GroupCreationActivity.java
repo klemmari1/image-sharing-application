@@ -17,6 +17,7 @@ import com.google.firebase.auth.FirebaseUser;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.TimeZone;
 
 
 public class GroupCreationActivity extends AppCompatActivity {
@@ -95,7 +96,8 @@ public class GroupCreationActivity extends AppCompatActivity {
     }
 
     private String generateTimestamp(int duration) {
-        final DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+        DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+        dateFormat.setTimeZone(TimeZone.getTimeZone("Europe/Helsinki"));
         Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.MINUTE, duration);
         return dateFormat.format(calendar.getTime());
