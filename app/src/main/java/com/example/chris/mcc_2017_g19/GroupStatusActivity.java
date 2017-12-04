@@ -40,7 +40,6 @@ public class GroupStatusActivity extends AppCompatActivity {
         setContentView(R.layout.activity_group_status);
 
         ListView memberList = (ListView) findViewById(R.id.group_status_member_list);
-        members = new ArrayList<>();
         members = GroupObject.getMembers();
         memberAdapter = new MemberAdapter(this, members);
         memberList.setAdapter(memberAdapter);
@@ -50,15 +49,17 @@ public class GroupStatusActivity extends AppCompatActivity {
         memberReference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(final DataSnapshot snapshot) {
-                try{
-                    members.clear();
-                    for (DataSnapshot member : snapshot.getChildren()) {
-                        members.add((String) member.getValue());
-                    }
+                if(snapshot != null){
+                    try{
+                        members.clear();
+                        for (DataSnapshot member : snapshot.getChildren()) {
+                            members.add((String) member.getValue());
+                        }
 
-                    memberAdapter.notifyDataSetChanged();
-                }
-                catch (Exception e){
+                        memberAdapter.notifyDataSetChanged();
+                    }
+                    catch (Exception e){
+                    }
                 }
             }
             @Override
@@ -139,11 +140,13 @@ public class GroupStatusActivity extends AppCompatActivity {
             api.deleteGroup(UserObject.getGroup(), new BackendAPI.HttpCallback() {
                 @Override
                 public void onFailure(String response, Exception exception) {
+                    Log.i(TAG, "Error: " + response + " " + exception);
                 }
 
                 @Override
                 public void onSuccess(String response) {
                     GroupStatusActivity.this.finish();
+                    Log.i(TAG, "Error: " + response);
                 }
             });
         }
@@ -152,11 +155,11 @@ public class GroupStatusActivity extends AppCompatActivity {
             api.leaveGroup(UserObject.getId(), UserObject.getGroup(), new BackendAPI.HttpCallback() {
                 @Override
                 public void onFailure(String response, Exception exception) {
+                    Log.d(TAG, "Error: " + response + " " + exception);
                 }
 
                 @Override
-                public void onSuccess(String response) {
-                    GroupStatusActivity.this.finish();
+                public void onSuccess(String response) {GroupStatusActivity.this.finish();
                 }
             });
         }

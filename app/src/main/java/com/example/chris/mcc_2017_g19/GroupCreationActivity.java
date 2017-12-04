@@ -67,8 +67,6 @@ public class GroupCreationActivity extends AppCompatActivity {
                 try {
 
                     Intent groupStatus = new Intent(GroupCreationActivity.this, GroupStatusActivity.class);
-                    String group_id = response.split(":")[0];
-                    groupStatus.putExtra("GROUP_ID", group_id);
                     startActivity(groupStatus);
                     GroupCreationActivity.this.finish();
                 } catch (Exception e){

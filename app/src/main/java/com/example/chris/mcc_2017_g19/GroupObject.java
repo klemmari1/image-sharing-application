@@ -1,6 +1,7 @@
 package com.example.chris.mcc_2017_g19;
 
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class GroupObject {
@@ -8,7 +9,7 @@ public class GroupObject {
     private static String creator;
     private static String token;
     private static String expiration;
-    private static List<String> members;
+    private static List<String> members = new ArrayList<>();
 
     public GroupObject() {
 

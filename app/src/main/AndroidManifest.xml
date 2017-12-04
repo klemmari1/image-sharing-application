@@ -46,8 +46,8 @@
         <activity android:name=".PrivateGallery" />
         <activity android:name=".GroupStatusActivity" />
         <activity android:name=".QrReaderActivity"
-                  android:screenOrientation="portrait"
-                  android:configChanges="orientation|keyboardHidden" />
+            android:screenOrientation="portrait"
+            android:configChanges="keyboardHidden|orientation|screenSize" />
         <activity android:name=".Settings" />
 
         <service android:name=".BackgroundSync.FirebaseBackgroundService" />
