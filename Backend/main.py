@@ -13,33 +13,26 @@
 # limitations under the License.
 
 # [START app]
+
+import os
+import uuid
+import json
+import requests
+import logging
+from io import BytesIO
+
 import pyrebase
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import auth
-import uuid
-import logging
 from flask import Flask, redirect, render_template, request, url_for
 from google.cloud import vision
-import requests
 from PIL import Image
-from io import BytesIO
-import os
 
 #CLOUD_STORAGE_BUCKET = os.environ.get('CLOUD_STORAGE_BUCKET')
 
-serviceAcc = {
-          "type": "service_account",
-          "project_id": "mcc-fall-2017-g19",
-          "private_key_id": "key",
-          "private_key": "-----BEGIN PRIVATE KEY-----\nkey/\nIMYDVHVxNgNWsaRW1tYqQlU7Kx/4wdQ+1VhJ1PJe2UoG3QpbZoktB1ctBLHkVDRL\niuuhkDagDB5Xy2tIzTaqvH1Uqh4dX2AGfOIeaWA85BhzyRvwv2Dh9p+iQHA9EFEK\n6/Vxy7mf6Yvb7QlRyVskhSJmFTBm/JqWZ/KeEraFaGiasfJKG3uBJXQlmVmGH8Ec\n4PeDK3EOM/7ncz/lyzZDR8yU+ap8zkGnGEhekbhrtdMnEROErySxTfsrNq/BG2D8\nGqv7UTvXDkFvY9zlOzVNu2+BEASYzdv1nenfsGoFyroET8SoCR5TJd7YHShbNGIB\n+2MzOfevAgMBAAECggEADD9BoOkb+qBnUDLULeeTjJaGqBAJAyxHpxbj+Bt3bPlK\nvQQAELom8Bc9coZGdidfmaSGqq2Ykz1lM0uaHUfj8INboeTbTgF1ND2tcLuZXaO8\nuq7W3zQFehzu6XUIaaBraP8BaxUH5LB5PxVFX6/XAcaNO7xbvvnP7fHObdwyC4St\nOkou2u7CLdAHzi75rFaNEmgdk9vKo55u5xFrodjNH5tXppPWhS77v7v4dTi3EM+0\nj4f5xYBgVcRyC3kYIfYmKaGq5yp0YjP7wsBsIEvWutQn/OeGfXbCTeb5WS+Jl2/l\nGPhUHnRM+cuiBq2j3wvYEEDueNuReswR4SsVgz9h7QKBgQDlj7yYAA6HXwevUxN5\nC2YESFDYO92a36TH4vPrmmZJdYg8dR2Eg0aJ9BoBNXVKSUrWaL7Nl8aWfJS43PSk\nKZu4ZhfWwH9STjCp+g99rODUuKTrIx0FEXvAb7kl4OdRIZAUrGfrC6xO2bwDAlxe\n34pXoVTWl89wYcPnyKCeIBJJCwKBgQC3kwIQscuqq5PtIjH/22vKQBMviaZDFBZL\n2YnHCVN1iwxIecPInVt8w66g91cjLEDrt4AQEoo/Ey9J4Tf1fc0WbTC9xZckgAy/\nfhVJGR+N5JElB1am+0vj5UiadKXmP0FkAh/lN7vbE83CbamVVUgfZQwjw/jsuvUK\nVafzISlabQKBgQCs2ReF07Uc1L7ykjj9UUnVO6Yzyo/Hh1GJeCd1ZOJTuX2FGCHL\nnxTD1tqlwly4PItu+ZuBLiDHOrK4pxZFbVbk92pHttWnYVxe//weAsefJBB5RA0b\nvdhSQ01Dah6CBiV4i4ALiNSK4oMgOOzYOrTt2noIwnHdCp/5rCTUKw3ZlQKBgDgi\nM9d3BphBrxIsCq36IpPN1BANP1Hzqn23H3JFX8fppO/kjAGkXH1iONvvxi1zMsbh\nbb98a9mtvCATRlFDDpt0+BqPeRAoN722iDu5+vQgmGGCRPT6ktI1ImZYlQI7BXvX\nSnmE+WScQabacajAUzWGaJfnLQ72fEeUua6WzVZhAoGBAKhV50ZuBjYfNoehVtcw\nT23zHaup21s1leDtLKc7lAcEfz916w1kmu2aR0ICJTl0TABwTxO1M4sCeQPeEedG\nN+YCmhs+d3dxM7wYntN9p5XHmr/NTIcI3OPQAKE0U7M/sE59lOj4r2kfLTQ8ceOn\nyVcSlVTNCGNQmaBhD8B+PTHi\n-----END PRIVATE KEY-----\n",
-          "client_email": "email",
-          "client_id": "key",
-          "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-          "token_uri": "https://accounts.google.com/o/oauth2/token",
-          "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-          "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-pzipw%40mcc-fall-2017-g19.iam.gserviceaccount.com"
-        }
+
+serviceAcc = json.load(open('mcc-fall-2017-g19-firebase-adminsdk-pzipw-d092116b07.json'))
 
 firebaseConfig = {
           "apiKey": "AIzaSyBNrgNc9VQ0FuEJKYMDsocJbMnPSctix3M",
@@ -80,12 +73,8 @@ def homepage():
 def create_group():
     try:
         id_token = request.form['id_token']
-        decoded_token = auth.verify_id_token(id_token)
-        uid = decoded_token['uid']
-
         user_id = request.form['user_id']
-
-        if uid == user_id:
+        if get_uid(id_token) == user_id:
             group_name = request.form['group_name']
             group_expiration = request.form['group_expiration']
 
@@ -110,10 +99,7 @@ def create_group():
 def join_group(user_id):
     try:
         id_token = request.form['id_token']
-        decoded_token = auth.verify_id_token(id_token)
-        uid = decoded_token['uid']
-
-        if uid == user_id:
+        if get_uid(id_token) == user_id:
             user_token = request.form['token']
 
             group_id = user_token.split(":")[0]
@@ -138,10 +124,7 @@ def join_group(user_id):
 def delete_group():
     try:
         id_token = request.form['id_token']
-        decoded_token = auth.verify_id_token(id_token)
-        uid = decoded_token['uid']
-
-        if uid is not None:
+        if get_uid(id_token) is not None:
             group_id = request.form['group_id']
 
             group_members = database.child("groups").child(group_id).child("members").get()
@@ -161,10 +144,7 @@ def delete_group():
 def leave_group(user_id):
     try:
         id_token = request.form['id_token']
-        decoded_token = auth.verify_id_token(id_token)
-        uid = decoded_token['uid']
-
-        if uid == user_id:
+        if get_uid(id_token) == user_id:
             group_id = request.form['group_id']
 
             database.child("groups").child(group_id).child("members").child(user_id).remove()
@@ -174,6 +154,11 @@ def leave_group(user_id):
             return "INVALID USER TOKEN!"
     except Exception as e:
         return "Unexpected error: " + str(e)
+
+
+def get_uid(id_token):
+    decoded_token = auth.verify_id_token(id_token)
+    return decoded_token['uid']
 
 
 def set_new_token(group_id):
