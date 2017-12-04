@@ -1,5 +1,5 @@
 cron:
 - description: "daily group expiration check"
   url: /groups/expiration
-  schedule: every sunday 20:00
+  schedule: every sunday 21:30
   timezone: Europe/Helsinki

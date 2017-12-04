@@ -8,10 +8,6 @@ import android.os.Handler;
 import android.os.Looper;
 
 import java.io.IOException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -120,11 +116,8 @@ public class BackendAPI {
     }
 
     public void deleteGroup(String group_id, HttpCallback cb){
-        String url = backendUrl + "/groups";
-        RequestBody requestBody = new MultipartBody.Builder()
-                .setType(MultipartBody.FORM)
-                .addFormDataPart("group_id", group_id)
-                .build();
+        String url = backendUrl + "/groups" + group_id;
+        RequestBody requestBody = RequestBody.create(null, "");
         try{
             deleteRequest(url, requestBody, cb);
         }

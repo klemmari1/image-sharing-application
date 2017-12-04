@@ -54,10 +54,6 @@ firebase = pyrebase.initialize_app(firebaseConfig)
 database = firebase.database()
 storage = firebase.storage()
 
-# For testing purposes
-# database.child("users").child('testuserID').set({"name": "testusername"})
-# database.child("users").child('testuser2ID').set({"name": "testuser2name"})
-
 app = Flask(__name__)
 
 
@@ -115,10 +111,9 @@ def join_group(user_id):
         return "Unexpected error: " + str(e)
 
 
-@app.route('/groups', methods=['DELETE'])
-def delete_group():
+@app.route('/groups/<group_id>', methods=['DELETE'])
+def delete_group(group_id):
     try:
-        group_id = request.form['group_id']
         group_members = database.child("groups").child(group_id).child("members").get()
         for member in group_members.each():
             member_id = member.key()
@@ -148,14 +143,18 @@ def set_new_token(group_id):
     return qr_string
 
 
-@app.route('groups/expiration', methods=['GET'])
-def delete_expired_group():
-    groups = database.child("groups").get()
-    for group in groups.each():
-        expiration_time = group.child("expiration").get()
-        timestamp = datetime.strptime(expiration_time, '%Y/%m/%d %H:%M:%S')
-        if timestamp < datetime.now():
-            delete_group(group.key())
+@app.route('/groups/expiration', methods=['GET'])
+def delete_expired_groups():
+    try:
+        groups = database.child("groups")
+        for group in groups.get().each():
+            expiration_time = group.val()['expiration']
+            timestamp = datetime.strptime(expiration_time, '%Y/%m/%d %H:%M:%S')
+            if timestamp < datetime.now():
+                delete_group(group.key())
+        return "EXPIRED GROUPS DELETED"
+    except Exception as e:
+        return "Unexpected error: " + str(e)
 
 
 @app.errorhandler(500)
