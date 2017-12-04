@@ -2,6 +2,7 @@ package com.example.chris.mcc_2017_g19;
 
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -9,10 +10,19 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
 import com.example.chris.mcc_2017_g19.BackendAPI.BackendAPI;
+import com.example.chris.mcc_2017_g19.BackgroundSync.Utils;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.ValueEventListener;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class GroupStatusActivity extends AppCompatActivity {
@@ -20,6 +30,7 @@ public class GroupStatusActivity extends AppCompatActivity {
     private MemberAdapter memberAdapter;
     private boolean userIsGroupCreator;
     private boolean isFinalized;
+    List<String> members;
 
     private static final String TAG = "GroupStatusActivity";
 
@@ -29,8 +40,32 @@ public class GroupStatusActivity extends AppCompatActivity {
         setContentView(R.layout.activity_group_status);
 
         ListView memberList = (ListView) findViewById(R.id.group_status_member_list);
-        memberAdapter = new MemberAdapter(this, GroupObject.getMembers());
+        members = new ArrayList<>();
+        members = GroupObject.getMembers();
+        memberAdapter = new MemberAdapter(this, members);
         memberList.setAdapter(memberAdapter);
+
+        final DatabaseReference databaseReference = Utils.getDatabase().getReference();
+        DatabaseReference memberReference = databaseReference.child("groups").child(UserObject.getGroup()).child("members");
+        memberReference.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(final DataSnapshot snapshot) {
+                try{
+                    members.clear();
+                    for (DataSnapshot member : snapshot.getChildren()) {
+                        members.add((String) member.getValue());
+                    }
+
+                    memberAdapter.notifyDataSetChanged();
+                }
+                catch (Exception e){
+                }
+            }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                System.out.println("The read failed: " + databaseError.getMessage());
+            }
+        });
 
         displayGroupName(GroupObject.getName());
         displayGroupExpiration(GroupObject.getExpiration());

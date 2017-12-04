@@ -26,7 +26,6 @@ public class FirebaseBackgroundService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.i(TAG, "JAA");
 
         try{
             firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
@@ -39,7 +38,6 @@ public class FirebaseBackgroundService extends Service {
             userReference.addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot snapshot) {
-                    Log.i(TAG, "JAA");
 
                     UserObject.setName((String) snapshot.child("name").getValue());
                     UserObject.setGroup((String) snapshot.child("group").getValue());

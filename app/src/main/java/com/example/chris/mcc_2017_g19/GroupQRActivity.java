@@ -7,6 +7,11 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.ImageView;
 
+import com.example.chris.mcc_2017_g19.BackgroundSync.Utils;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.ValueEventListener;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.WriterException;
@@ -21,14 +26,34 @@ public class GroupQRActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_qr);
-        String token = GroupObject.getToken();
         try{
+            Bitmap bitmap = getBitmap(GroupObject.getToken(), 750);
             ImageView imageView = (ImageView) findViewById(R.id.qr_image);
-            Bitmap bitmap = getBitmap(token, 750);
             imageView.setImageBitmap(bitmap);
         }
         catch (Exception e){
         }
+
+        final DatabaseReference databaseReference = Utils.getDatabase().getReference();
+        DatabaseReference tokenReference = databaseReference.child("groups").child(UserObject.getGroup()).child("token");
+
+        tokenReference.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(final DataSnapshot snapshot) {
+                try{
+                    String token = (String)snapshot.getValue();
+                    Bitmap bitmap = getBitmap(token, 750);
+                    ImageView imageView = (ImageView) findViewById(R.id.qr_image);
+                    imageView.setImageBitmap(bitmap);
+                }
+                catch (Exception e){
+                }
+            }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                System.out.println("The read failed: " + databaseError.getMessage());
+            }
+        });
     }
 
     private Bitmap getBitmap(String str, int dim) throws WriterException {
