@@ -2,7 +2,6 @@ package com.example.chris.mcc_2017_g19;
 
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -10,7 +9,6 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -40,19 +38,28 @@ public class GroupStatusActivity extends AppCompatActivity {
         setContentView(R.layout.activity_group_status);
 
         ListView memberList = (ListView) findViewById(R.id.group_status_member_list);
+        members = new ArrayList<>();
         members = GroupObject.getMembers();
         memberAdapter = new MemberAdapter(this, members);
         memberList.setAdapter(memberAdapter);
 
+        String group_id = getIntent().getStringExtra("GROUP_ID");
+
         final DatabaseReference databaseReference = Utils.getDatabase().getReference();
-        DatabaseReference memberReference = databaseReference.child("groups").child(UserObject.getGroup()).child("members");
+        DatabaseReference memberReference = databaseReference.child("groups").child(group_id);
         memberReference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(final DataSnapshot snapshot) {
                 if(snapshot != null){
                     try{
+                        displayGroupName((String) snapshot.child("name").getValue());
+                        displayGroupExpiration((String) snapshot.child("expiration").getValue());
+                        checkIfUserIsGroupCreator((String) snapshot.child("creator").getValue());
+
+                        DataSnapshot membersSnapshot = snapshot.child("members");
+
                         members.clear();
-                        for (DataSnapshot member : snapshot.getChildren()) {
+                        for (DataSnapshot member : membersSnapshot.getChildren()) {
                             members.add((String) member.getValue());
                         }
 
@@ -67,10 +74,6 @@ public class GroupStatusActivity extends AppCompatActivity {
                 System.out.println("The read failed: " + databaseError.getMessage());
             }
         });
-
-        displayGroupName(GroupObject.getName());
-        displayGroupExpiration(GroupObject.getExpiration());
-        checkIfUserIsGroupCreator(GroupObject.getCreator());
     }
 
     public void addButton(View v) {
@@ -135,6 +138,7 @@ public class GroupStatusActivity extends AppCompatActivity {
 
     private void deleteOrLeave(){
         BackendAPI api = new BackendAPI();
+        Log.i(TAG, "ERROR? ");
 
         if(userIsGroupCreator){
             api.deleteGroup(UserObject.getGroup(), new BackendAPI.HttpCallback() {

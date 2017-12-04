@@ -154,6 +154,9 @@ public class MainActivity extends AppCompatActivity {
         }
 
         Intent intent = new Intent(MainActivity.this, activityClass);
+        if(UserObject.getGroup() != null){
+            intent.putExtra("GROUP_ID", UserObject.getGroup());
+        }
         startActivity(intent);
     }
 

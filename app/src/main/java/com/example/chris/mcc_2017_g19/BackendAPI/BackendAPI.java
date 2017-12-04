@@ -169,7 +169,7 @@ public class BackendAPI {
 
             @Override
             public void onSuccess(String response) {
-                String url = backendUrl + "/groups" + group_id;
+                String url = backendUrl + "/groups/" + group_id;
                 RequestBody requestBody = RequestBody.create(null, "");
                 try{
                     deleteRequest(url, requestBody, cb);

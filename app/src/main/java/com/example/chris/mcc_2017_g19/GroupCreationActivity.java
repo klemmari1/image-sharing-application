@@ -11,6 +11,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.example.chris.mcc_2017_g19.BackendAPI.BackendAPI;
+import com.example.chris.mcc_2017_g19.BackgroundSync.FirebaseBackgroundService;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -65,10 +66,13 @@ public class GroupCreationActivity extends AppCompatActivity {
             @Override
             public void onSuccess(String response) {
                 try {
-
-                    Intent groupStatus = new Intent(GroupCreationActivity.this, GroupStatusActivity.class);
-                    startActivity(groupStatus);
-                    GroupCreationActivity.this.finish();
+                    if(!response.contains("INVALID")){
+                        Intent groupStatus = new Intent(GroupCreationActivity.this, GroupStatusActivity.class);
+                        String group_id = response.split(":")[0];
+                        groupStatus.putExtra("GROUP_ID", group_id);
+                        startActivity(groupStatus);
+                        GroupCreationActivity.this.finish();
+                    }
                 } catch (Exception e){
                     Toast.makeText(GroupCreationActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
                 }
