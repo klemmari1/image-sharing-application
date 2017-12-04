@@ -46,8 +46,10 @@ public class GroupStatusActivity extends AppCompatActivity {
         String group_id = getIntent().getStringExtra("GROUP_ID");
 
         final DatabaseReference databaseReference = Utils.getDatabase().getReference();
-        DatabaseReference memberReference = databaseReference.child("groups").child(group_id);
-        memberReference.addValueEventListener(new ValueEventListener() {
+        DatabaseReference groupReference = databaseReference.child("groups").child(group_id);
+        groupReference.keepSynced(true);
+
+        groupReference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(final DataSnapshot snapshot) {
                 if(snapshot != null){
