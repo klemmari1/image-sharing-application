@@ -11,8 +11,6 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.example.chris.mcc_2017_g19.BackendAPI.BackendAPI;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -24,14 +22,12 @@ public class GroupCreationActivity extends AppCompatActivity {
 
     private static final String TAG = "GroupCreationActivity";
     private Button createGroupButton;
-    private FirebaseUser user;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create_group);
 
-        user = FirebaseAuth.getInstance().getCurrentUser();
         createGroupButton = (Button)findViewById(R.id.buttonCreateGroup);
         createGroupButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -60,7 +56,7 @@ public class GroupCreationActivity extends AppCompatActivity {
 
         //okhttp request: create_group
         BackendAPI api = new BackendAPI();
-        api.createGroup(groupName, expirationTimestamp, user.getUid(), new BackendAPI.HttpCallback() {
+        api.createGroup(groupName, expirationTimestamp, UserObject.getId(), new BackendAPI.HttpCallback() {
             @Override
             public void onFailure(String response, Exception exception) {
                 Log.d(TAG, "Error: " + response + " " + exception);

@@ -13,25 +13,12 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.example.chris.mcc_2017_g19.BackendAPI.BackendAPI;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 
-import java.util.ArrayList;
-import java.util.List;
 
 public class GroupStatusActivity extends AppCompatActivity {
 
-    private List<String> members;
     private MemberAdapter memberAdapter;
-    private FirebaseUser firebaseUser;
     private boolean userIsGroupCreator;
-    private String group_id;
-    private DatabaseReference databaseReference;
     private boolean isFinalized;
 
     private static final String TAG = "GroupStatusActivity";
@@ -41,45 +28,17 @@ public class GroupStatusActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_group_status);
 
-        members = new ArrayList<>();
-        firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
-        databaseReference = Utils.getDatabase().getReference();
-
         ListView memberList = (ListView) findViewById(R.id.group_status_member_list);
-        memberAdapter = new MemberAdapter(this, members);
+        memberAdapter = new MemberAdapter(this, GroupObject.getMembers());
         memberList.setAdapter(memberAdapter);
 
-        group_id = getIntent().getStringExtra("GROUP_ID");
-        DatabaseReference groupRef = databaseReference.child("groups").child(group_id);
-        groupRef.keepSynced(true);
-        groupRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                GroupObject groupObj = dataSnapshot.getValue(GroupObject.class);
-                if(groupObj != null){
-                    displayGroupName(groupObj.getName());
-                    displayGroupExpiration(groupObj.getExpiration());
-                    checkIfUserIsGroupCreator(groupObj.getCreator());
-
-                    DataSnapshot membersSnapshot = dataSnapshot.child("members");
-                    members.clear();
-                    for (DataSnapshot member : membersSnapshot.getChildren()) {
-                        members.add((String) member.getValue());
-                    }
-                    memberAdapter.notifyDataSetChanged();
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                System.out.println("The read failed: " + databaseError.getCode());
-            }
-        });
+        displayGroupName(GroupObject.getName());
+        displayGroupExpiration(GroupObject.getExpiration());
+        checkIfUserIsGroupCreator(GroupObject.getCreator());
     }
 
     public void addButton(View v) {
         Intent QRActivity = new Intent(this, GroupQRActivity.class);
-        QRActivity.putExtra("GROUP_ID", group_id);
         startActivity(QRActivity);
     }
 
@@ -105,10 +64,6 @@ public class GroupStatusActivity extends AppCompatActivity {
             menu.findItem(R.id.action_leave).setEnabled(false);
         }
         return true;
-    }
-
-    public List<String> getMembers() {
-        return members;
     }
 
     public void leaveGroup() {
@@ -146,7 +101,7 @@ public class GroupStatusActivity extends AppCompatActivity {
         BackendAPI api = new BackendAPI();
 
         if(userIsGroupCreator){
-            api.deleteGroup(group_id, new BackendAPI.HttpCallback() {
+            api.deleteGroup(UserObject.getGroup(), new BackendAPI.HttpCallback() {
                 @Override
                 public void onFailure(String response, Exception exception) {
                 }
@@ -159,7 +114,7 @@ public class GroupStatusActivity extends AppCompatActivity {
         }
         else{
 
-            api.leaveGroup(firebaseUser.getUid(), group_id, new BackendAPI.HttpCallback() {
+            api.leaveGroup(UserObject.getId(), UserObject.getGroup(), new BackendAPI.HttpCallback() {
                 @Override
                 public void onFailure(String response, Exception exception) {
                 }
@@ -173,7 +128,7 @@ public class GroupStatusActivity extends AppCompatActivity {
     }
 
     private void checkIfUserIsGroupCreator(String creator) {
-        if(creator.equals(firebaseUser.getUid())){
+        if(creator.equals(UserObject.getId())){
             userIsGroupCreator = true;
         }
     }

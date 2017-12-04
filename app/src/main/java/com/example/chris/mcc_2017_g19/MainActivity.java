@@ -5,9 +5,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.media.MediaScannerConnection;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -16,7 +14,6 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.util.SparseArray;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -25,23 +22,16 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.example.chris.mcc_2017_g19.BackgroundSync.FirebaseBackgroundService;
 import com.google.android.gms.vision.Frame;
 import com.google.android.gms.vision.barcode.Barcode;
 import com.google.android.gms.vision.barcode.BarcodeDetector;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.Random;
-
-import okhttp3.internal.Util;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -57,9 +47,6 @@ public class MainActivity extends AppCompatActivity {
     static final int MY_PERMISSIONS_REQUEST_WRITE_EXT_STORAGE = 2;
     static final int MY_PERMISSIONS_REQUEST_CAMERA = 3;
     static final int MY_PERMISSIONS_REQUEST_QR = 4;
-    private FirebaseUser firebaseUser;
-    private UserObject userObj;
-    private DatabaseReference databaseReference;
     private static final String TAG = "MainActivity";
 
 
@@ -69,22 +56,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        databaseReference = Utils.getDatabase().getReference();
-        firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
-
-        DatabaseReference userReference = databaseReference.child("users").child(firebaseUser.getUid());
-        userReference.keepSynced(true);
-
-        userReference.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot snapshot) {
-                userObj = snapshot.getValue(UserObject.class);
-            }
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                System.out.println("The read failed: " + databaseError.getMessage());
-            }
-        });
+        startService(new Intent(this, FirebaseBackgroundService.class));
 
         gallery = (ImageView) findViewById(R.id.gallery);
         gallery.setClickable(true);
@@ -141,12 +113,10 @@ public class MainActivity extends AppCompatActivity {
                 //TODO Do we need (onCompletion) listeners for these kinds of situations?
                 FirebaseAuth.getInstance().signOut();
                 startActivity(new Intent(MainActivity.this, LoginActivity.class));
-                userObj = null;
                 MainActivity.this.finish();
                 return true;
             case R.id.action_read_qr:
-                if(userObj != null){
-                    if(userObj.getGroup() == null){
+                    if(UserObject.getGroup() == null){
                         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
                                 != PackageManager.PERMISSION_GRANTED) {
                             ActivityCompat.requestPermissions(this,
@@ -155,7 +125,6 @@ public class MainActivity extends AppCompatActivity {
                             Intent intent = new Intent(MainActivity.this, QrReaderActivity.class);
                             startActivity(intent);
                         }
-
                     }
                     else{
                         AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).create();
@@ -169,7 +138,6 @@ public class MainActivity extends AppCompatActivity {
                                 });
                         alertDialog.show();
                     }
-                }
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -179,20 +147,14 @@ public class MainActivity extends AppCompatActivity {
 
     private void selectGroupManagementActivity() {
         Class activityClass;
-        String group_id = null;
-        if (userObj != null){
-            if (userObj.getGroup() == null)
-                activityClass = GroupCreationActivity.class;
-            else{
-                activityClass = GroupStatusActivity.class;
-                group_id = userObj.getGroup();
-            }
-
-            Intent intent = new Intent(MainActivity.this, activityClass);
-            if(group_id != null)
-                intent.putExtra("GROUP_ID", group_id);
-            startActivity(intent);
+        if (UserObject.getGroup() == null)
+            activityClass = GroupCreationActivity.class;
+        else{
+            activityClass = GroupStatusActivity.class;
         }
+
+        Intent intent = new Intent(MainActivity.this, activityClass);
+        startActivity(intent);
     }
 
     private void TakePictureIntent() {
