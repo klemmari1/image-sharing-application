@@ -7,12 +7,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.ImageView;
 
-import com.example.chris.mcc_2017_g19.BackendAPI.BackendAPI;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.MultiFormatWriter;
@@ -20,8 +18,6 @@ import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 
 import com.google.firebase.auth.FirebaseUser;
-
-import org.json.JSONObject;
 
 /**
  * Created by Chris on 6.11.2017.

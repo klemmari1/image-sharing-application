@@ -29,7 +29,9 @@ from firebase_admin import auth
 from flask import Flask, redirect, render_template, request, url_for
 from google.cloud import vision
 from PIL import Image
+
 from pyfcm import FCMNotification
+
 
 #CLOUD_STORAGE_BUCKET = os.environ.get('CLOUD_STORAGE_BUCKET')
 
@@ -54,8 +56,10 @@ app = Flask(__name__)
 cred = credentials.Certificate('mcc-fall-2017-g19-firebase-adminsdk-pzipw-d092116b07.json')
 default_app = firebase_admin.initialize_app(cred)
 
+
 #PyFCM Init (note: not really api_key but server_key. works.)
 push_service = FCMNotification(api_key="AAAAXcUhfw0:APA91bEKzuxetCY6h08vRpRTGbmFHTAvzuXsFkLL3-vxs3hBF9nrr1nJ7FeUIUACmRbfvMaK93suYOitRLJVU94ENxmfeLivbMtYBMXNeiHikYERHXjVrOcUrTZ6P8qCmakjsYAfPy6m")
+
 
 
 #Implement listeners
@@ -79,9 +83,7 @@ def create_group():
         if get_uid(id_token) == user_id:
             group_name = request.form['group_name']
             group_expiration = request.form['group_expiration']
-
             user_name = database.child("users").child(user_id).child("name").get().val()
-
             group_reference = database.child("groups").push({"name": group_name, "expiration" : group_expiration})
             group_key = group_reference["name"]
             database.child("groups").child(group_key).child("members").update({user_id: user_name})
@@ -123,7 +125,7 @@ def join_group(user_id):
 
 
 @app.route('/groups/<group_id>', methods=['DELETE'])
-def delete_group(group_id):
+def delete(group_id):
     try:
         id_token = request.form['id_token']
         if get_uid(id_token) is not None:
@@ -132,7 +134,7 @@ def delete_group(group_id):
                 member_id = member.key()
                 database.child("users").child(member_id).child("group").remove()
             database.child("groups").child(group_id).remove()
-
+            delete_group(group_id)
             return "GROUP DELETED"
         else:
             return "INVALID USER TOKEN!"
@@ -154,6 +156,16 @@ def leave_group(user_id):
             return "INVALID USER TOKEN!"
     except Exception as e:
         return "Unexpected error: " + str(e)
+
+
+
+def delete_group(group_id):
+    group_members = database.child("groups").child(group_id).child("members").get()
+    for member in group_members.each():
+        member_id = member.key()
+        database.child("users").child(member_id).child("group").remove()
+    database.child("groups").child(group_id).remove()
+
 
 
 def get_uid(id_token):

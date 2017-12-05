@@ -5,9 +5,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.media.MediaScannerConnection;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -16,7 +14,6 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.util.SparseArray;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -25,6 +22,7 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.example.chris.mcc_2017_g19.BackgroundSync.FirebaseBackgroundService;
 import com.google.android.gms.vision.Frame;
 import com.google.android.gms.vision.barcode.Barcode;
 import com.google.android.gms.vision.barcode.BarcodeDetector;
@@ -33,7 +31,6 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.iid.FirebaseInstanceId;
 
@@ -41,8 +38,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.Random;
-
-import okhttp3.internal.Util;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -54,13 +49,14 @@ public class MainActivity extends AppCompatActivity {
     Bitmap bitmap;
     private String imagePath;
 
+    private FirebaseUser firebaseUser;
+    private UserObject userObj;
+    private DatabaseReference databaseReference;
+
     static final int REQUEST_IMAGE_CAPTURE = 1;
     static final int MY_PERMISSIONS_REQUEST_WRITE_EXT_STORAGE = 2;
     static final int MY_PERMISSIONS_REQUEST_CAMERA = 3;
     static final int MY_PERMISSIONS_REQUEST_QR = 4;
-    private FirebaseUser firebaseUser;
-    private UserObject userObj;
-    private DatabaseReference databaseReference;
     private static final String TAG = "MainActivity";
 
 
@@ -93,6 +89,7 @@ public class MainActivity extends AppCompatActivity {
                 System.out.println("The read failed: " + databaseError.getMessage());
             }
         });
+
 
         gallery = (ImageView) findViewById(R.id.gallery);
         gallery.setClickable(true);
@@ -149,7 +146,6 @@ public class MainActivity extends AppCompatActivity {
                 //TODO Do we need (onCompletion) listeners for these kinds of situations?
                 FirebaseAuth.getInstance().signOut();
                 startActivity(new Intent(MainActivity.this, LoginActivity.class));
-                userObj = null;
                 MainActivity.this.finish();
                 return true;
             case R.id.action_read_qr:
@@ -202,6 +198,7 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
         }
     }
+
 
     private void TakePictureIntent() {
         if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
