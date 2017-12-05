@@ -143,7 +143,7 @@ def set_new_token(group_id):
     return qr_string
 
 
-@app.route('/groups/expiration', methods=['GET'])
+@app.route('/groups', methods=['GET'])
 def delete_expired_groups():
     try:
         groups = database.child("groups")
