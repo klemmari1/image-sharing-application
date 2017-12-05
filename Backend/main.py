@@ -118,16 +118,11 @@ def join_group(user_id):
 
 
 @app.route('/groups/<group_id>', methods=['DELETE'])
-def delete_group(group_id):
+def delete(group_id):
     try:
         id_token = request.form['id_token']
         if get_uid(id_token) is not None:
-            group_members = database.child("groups").child(group_id).child("members").get()
-            for member in group_members.each():
-                member_id = member.key()
-                database.child("users").child(member_id).child("group").remove()
-            database.child("groups").child(group_id).remove()
-
+            delete_group(group_id)
             return "GROUP DELETED"
         else:
             return "INVALID USER TOKEN!"
@@ -149,6 +144,14 @@ def leave_group(user_id):
             return "INVALID USER TOKEN!"
     except Exception as e:
         return "Unexpected error: " + str(e)
+
+
+def delete_group(group_id):
+    group_members = database.child("groups").child(group_id).child("members").get()
+    for member in group_members.each():
+        member_id = member.key()
+        database.child("users").child(member_id).child("group").remove()
+    database.child("groups").child(group_id).remove()
 
 
 def get_uid(id_token):
