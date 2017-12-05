@@ -2,23 +2,40 @@ package com.example.chris.mcc_2017_g19;
 
 
 public class UserObject {
-    private String name;
-    private String group;
+    private static String name;
+    private static String group;
+    private static String id;
 
     public UserObject() {
 
     }
 
-    public UserObject(String name) {
-        this.name = name;
-        this.group = null;
+    public UserObject(String username) {
+        name = username;
+        group = null;
     }
 
-    public String getName() {
-        return this.name;
+    public static String getId() {
+        return id;
     }
 
-    public String getGroup() {
-        return this.group;
-    }   
+    public static String getName() {
+        return name;
+    }
+
+    public static String getGroup() {
+        return group;
+    }
+
+    public static void setName(String username){
+        name = username;
+    }
+
+    public static void setId(String userId){
+        id = userId;
+    }
+
+    public static void setGroup(String groupId){
+        group = groupId;
+    }
 }
