@@ -52,12 +52,6 @@
 
         <service android:name=".BackgroundSync.FirebaseBackgroundService" />
 
-        <receiver android:name=".BackgroundSync.BootWithFirebase" >
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED" >
-                </action>
-            </intent-filter>
-        </receiver>
     </application>
 
 </manifest>

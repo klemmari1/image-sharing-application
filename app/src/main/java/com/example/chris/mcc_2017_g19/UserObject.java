@@ -2,9 +2,9 @@ package com.example.chris.mcc_2017_g19;
 
 
 public class UserObject {
-    private static String name;
-    private static String group;
-    private static String id;
+    private String name;
+    private String group;
+    private String id;
 
     public UserObject() {
 
@@ -15,27 +15,27 @@ public class UserObject {
         group = null;
     }
 
-    public static String getId() {
+    public String getId() {
         return id;
     }
 
-    public static String getName() {
+    public String getName() {
         return name;
     }
 
-    public static String getGroup() {
+    public String getGroup() {
         return group;
     }
 
-    public static void setName(String username){
+    public void setName(String username){
         name = username;
     }
 
-    public static void setId(String userId){
+    public void setId(String userId){
         id = userId;
     }
 
-    public static void setGroup(String groupId){
+    public void setGroup(String groupId){
         group = groupId;
     }
 }

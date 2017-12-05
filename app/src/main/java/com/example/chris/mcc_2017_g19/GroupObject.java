@@ -1,55 +1,55 @@
 package com.example.chris.mcc_2017_g19;
 
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 public class GroupObject {
-    private static String name;
-    private static String creator;
-    private static String token;
-    private static String expiration;
-    private static List<String> members = new ArrayList<>();
+    private String name;
+    private String creator;
+    private String token;
+    private String expiration;
+    private Map<String,String> members = new HashMap<>();
 
     public GroupObject() {
 
     }
 
-    public static String getName() {
+    public String getName() {
         return name;
     }
 
-    public static String getCreator() {
+    public String getCreator() {
         return creator;
     }
 
-    public static String getToken() {
+    public String getToken() {
         return token;
     }
 
-    public static String getExpiration() {
+    public String getExpiration() {
         return expiration;
     }
 
-    public static List<String> getMembers(){ return members; }
+    public Map<String,String> getMembers(){ return members; }
 
-    public static void setName(String groupName){
+    public void setName(String groupName){
         name = groupName;
     }
 
-    public static void setCreator(String creatorName){
+    public void setCreator(String creatorName){
         creator = creatorName;
     }
 
-    public static void setToken(String groupToken){
+    public void setToken(String groupToken){
         token = groupToken;
     }
 
-    public static void setExpiration(String groupExpiration){
+    public void setExpiration(String groupExpiration){
         expiration = groupExpiration;
     }
 
-    public static void setMembers(List<String> memberList){
+    public void setMembers(Map<String,String> memberList){
         members = memberList;
     }
 }

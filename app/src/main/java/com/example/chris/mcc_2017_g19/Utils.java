@@ -1,4 +1,4 @@
-package com.example.chris.mcc_2017_g19.BackgroundSync;
+package com.example.chris.mcc_2017_g19;
 
 
 import com.google.firebase.database.FirebaseDatabase;

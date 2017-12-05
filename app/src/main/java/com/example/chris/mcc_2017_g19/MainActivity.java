@@ -27,6 +27,11 @@ import com.google.android.gms.vision.Frame;
 import com.google.android.gms.vision.barcode.Barcode;
 import com.google.android.gms.vision.barcode.BarcodeDetector;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.ValueEventListener;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -43,6 +48,10 @@ public class MainActivity extends AppCompatActivity {
     Bitmap bitmap;
     private String imagePath;
 
+    private FirebaseUser firebaseUser;
+    private UserObject userObj;
+    private DatabaseReference databaseReference;
+
     static final int REQUEST_IMAGE_CAPTURE = 1;
     static final int MY_PERMISSIONS_REQUEST_WRITE_EXT_STORAGE = 2;
     static final int MY_PERMISSIONS_REQUEST_CAMERA = 3;
@@ -56,7 +65,23 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        startService(new Intent(this, FirebaseBackgroundService.class));
+        databaseReference = Utils.getDatabase().getReference();
+        firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+
+        DatabaseReference userReference = databaseReference.child("users").child(firebaseUser.getUid());
+        userReference.keepSynced(true);
+
+        userReference.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
+                userObj = snapshot.getValue(UserObject.class);
+            }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                System.out.println("The read failed: " + databaseError.getMessage());
+            }
+        });
+
 
         gallery = (ImageView) findViewById(R.id.gallery);
         gallery.setClickable(true);
@@ -116,7 +141,8 @@ public class MainActivity extends AppCompatActivity {
                 MainActivity.this.finish();
                 return true;
             case R.id.action_read_qr:
-                    if(UserObject.getGroup() == null){
+                if(userObj != null){
+                    if(userObj.getGroup() == null){
                         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
                                 != PackageManager.PERMISSION_GRANTED) {
                             ActivityCompat.requestPermissions(this,
@@ -125,6 +151,7 @@ public class MainActivity extends AppCompatActivity {
                             Intent intent = new Intent(MainActivity.this, QrReaderActivity.class);
                             startActivity(intent);
                         }
+
                     }
                     else{
                         AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).create();
@@ -138,6 +165,7 @@ public class MainActivity extends AppCompatActivity {
                                 });
                         alertDialog.show();
                     }
+                }
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -147,18 +175,22 @@ public class MainActivity extends AppCompatActivity {
 
     private void selectGroupManagementActivity() {
         Class activityClass;
-        if (UserObject.getGroup() == null)
-            activityClass = GroupCreationActivity.class;
-        else{
-            activityClass = GroupStatusActivity.class;
-        }
+        String group_id = null;
+        if (userObj != null){
+            if (userObj.getGroup() == null)
+                activityClass = GroupCreationActivity.class;
+            else{
+                activityClass = GroupStatusActivity.class;
+                group_id = userObj.getGroup();
+            }
 
-        Intent intent = new Intent(MainActivity.this, activityClass);
-        if(UserObject.getGroup() != null){
-            intent.putExtra("GROUP_ID", UserObject.getGroup());
+            Intent intent = new Intent(MainActivity.this, activityClass);
+            if(group_id != null)
+                intent.putExtra("GROUP_ID", group_id);
+            startActivity(intent);
         }
-        startActivity(intent);
     }
+
 
     private void TakePictureIntent() {
         if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {

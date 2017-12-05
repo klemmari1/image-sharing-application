@@ -170,7 +170,10 @@ public class BackendAPI {
             @Override
             public void onSuccess(String response) {
                 String url = backendUrl + "/groups/" + group_id;
-                RequestBody requestBody = RequestBody.create(null, "");
+                RequestBody requestBody = new MultipartBody.Builder()
+                        .setType(MultipartBody.FORM)
+                        .addFormDataPart("id_token", idToken)
+                        .build();
                 try{
                     deleteRequest(url, requestBody, cb);
                 }

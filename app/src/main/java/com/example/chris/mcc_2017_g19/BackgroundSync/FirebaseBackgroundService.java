@@ -1,12 +1,14 @@
 package com.example.chris.mcc_2017_g19.BackgroundSync;
 
+import android.app.Notification;
 import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
-import android.util.Log;
+import android.support.v7.app.NotificationCompat;
 
 import com.example.chris.mcc_2017_g19.GroupObject;
 import com.example.chris.mcc_2017_g19.UserObject;
+import com.example.chris.mcc_2017_g19.Utils;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -22,14 +24,17 @@ public class FirebaseBackgroundService extends Service {
     private FirebaseUser firebaseUser;
     private DatabaseReference userReference;
     private static final String TAG = "BackgroundService";
+    private static int NOTIFICATION_ID=1337;
+    private UserObject userObj;
+    private GroupObject groupObj;
 
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-
+        startForeground(NOTIFICATION_ID,
+                getNotification());
         try{
             firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
-            UserObject.setId(firebaseUser.getUid());
             final DatabaseReference databaseReference = Utils.getDatabase().getReference();
 
             userReference = databaseReference.child("users").child(firebaseUser.getUid());
@@ -39,28 +44,18 @@ public class FirebaseBackgroundService extends Service {
                 @Override
                 public void onDataChange(DataSnapshot snapshot) {
 
-                    UserObject.setName((String) snapshot.child("name").getValue());
-                    UserObject.setGroup((String) snapshot.child("group").getValue());
+                    userObj = snapshot.getValue(UserObject.class);
+                    userObj.setId(firebaseUser.getUid());
 
-                    if(UserObject.getGroup() != null){
-                        String group_id = UserObject.getGroup();
+                    if(userObj.getGroup() != null){
+                        String group_id = userObj.getGroup();
                         DatabaseReference groupRef = databaseReference.child("groups").child(group_id);
                         groupRef.keepSynced(true);
                         groupRef.addValueEventListener(new ValueEventListener() {
                             @Override
                             public void onDataChange(DataSnapshot dataSnapshot) {
                                 if(dataSnapshot != null){
-                                    GroupObject.setName((String) dataSnapshot.child("name").getValue());
-                                    GroupObject.setCreator((String) dataSnapshot.child("creator").getValue());
-                                    GroupObject.setExpiration((String) dataSnapshot.child("expiration").getValue());
-                                    GroupObject.setToken((String) dataSnapshot.child("token").getValue());
-
-                                    DataSnapshot membersSnapshot = dataSnapshot.child("members");
-                                    ArrayList<String> members = new ArrayList<>();
-                                    for (DataSnapshot member : membersSnapshot.getChildren()) {
-                                        members.add((String) member.getValue());
-                                    }
-                                    GroupObject.setMembers(members);
+                                    groupObj = dataSnapshot.getValue(GroupObject.class);
                                 }
                             }
 
@@ -83,10 +78,14 @@ public class FirebaseBackgroundService extends Service {
     }
 
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        userReference.onDisconnect();
+    private Notification getNotification() {
+        NotificationCompat.Builder b=new NotificationCompat.Builder(this);
+
+        b.setOngoing(true)
+                .setContentTitle("Syncing data")
+                .setSmallIcon(android.R.drawable.stat_sys_download);
+
+        return(b.build());
     }
 
     @Override

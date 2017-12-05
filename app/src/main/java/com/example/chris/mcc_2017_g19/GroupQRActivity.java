@@ -7,7 +7,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.ImageView;
 
-import com.example.chris.mcc_2017_g19.BackgroundSync.Utils;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -17,41 +17,47 @@ import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 
+import com.google.firebase.auth.FirebaseUser;
+
+/**
+ * Created by Chris on 6.11.2017.
+ */
 
 public class GroupQRActivity extends AppCompatActivity {
 
+    private FirebaseUser firebaseUser;
     private static final String TAG = "GroupQRActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_qr);
-        try{
-            Bitmap bitmap = getBitmap(GroupObject.getToken(), 750);
-            ImageView imageView = (ImageView) findViewById(R.id.qr_image);
-            imageView.setImageBitmap(bitmap);
-        }
-        catch (Exception e){
-        }
+        DatabaseReference databaseReference = Utils.getDatabase().getReference();
+        firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
 
-        final DatabaseReference databaseReference = Utils.getDatabase().getReference();
-        DatabaseReference tokenReference = databaseReference.child("groups").child(UserObject.getGroup()).child("token");
-
-        tokenReference.addValueEventListener(new ValueEventListener() {
+        String group_id = getIntent().getStringExtra("GROUP_ID");
+        DatabaseReference groupRef = databaseReference.child("groups").child(group_id);
+        groupRef.keepSynced(true);
+        groupRef.addValueEventListener(new ValueEventListener() {
             @Override
-            public void onDataChange(final DataSnapshot snapshot) {
-                try{
-                    String token = (String)snapshot.getValue();
-                    Bitmap bitmap = getBitmap(token, 750);
-                    ImageView imageView = (ImageView) findViewById(R.id.qr_image);
-                    imageView.setImageBitmap(bitmap);
-                }
-                catch (Exception e){
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                GroupObject groupObj = dataSnapshot.getValue(GroupObject.class);
+                if(groupObj != null){
+                    String token = groupObj.getToken();
+                    System.out.println(groupObj);
+                    try{
+                        ImageView imageView = (ImageView) findViewById(R.id.qr_image);
+                        Bitmap bitmap = getBitmap(token, 750);
+                        imageView.setImageBitmap(bitmap);
+                    }
+                    catch (Exception e){
+                    }
                 }
             }
+
             @Override
             public void onCancelled(DatabaseError databaseError) {
-                System.out.println("The read failed: " + databaseError.getMessage());
+                System.out.println("The read failed: " + databaseError.getCode());
             }
         });
     }
