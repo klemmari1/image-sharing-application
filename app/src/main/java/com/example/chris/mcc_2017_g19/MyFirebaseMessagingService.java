@@ -46,19 +46,12 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         // Check if message contains a data payload.
         if (remoteMessage.getData().size() > 0) {
             Log.d(TAG, "Message data payload: " + remoteMessage.getData());
+            sendNotification("new Data message recieved!");
         }
 
         // Check if message contains a notification payload.
         if (remoteMessage.getNotification() != null) {
             Log.d(TAG, "Message Notification Body: " + remoteMessage.getNotification().getBody());
-
-            //FIREBASE SYNC
-            //database.child("groups").child(groupID).child("images").push(data)
-            //download urls to some specific folder with given names for alessio.
-            StorageReference storageRef = storage.getReference();
-
-
-            sendNotification(remoteMessage.getNotification().getBody());
         }
 
         // Also if you intend on generating your own notifications as a result of a received FCM
