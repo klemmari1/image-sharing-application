@@ -260,8 +260,8 @@ def upload_image():
 
     database.child("groups").child(groupID).child("images").push(data)
 
-    # send notification to all group users
-    notification_upload_image(userID,groupID,maxQuality,hasFaces)
+    # send notification to all group users that new image has been uploaded
+    notification_upload_image(data)
     #return ok if everything ok
     print("upload_image() ok")
     return "upload_image() ok"  # this will be returned to android if we'll end up using 'GET' I think.
@@ -341,9 +341,10 @@ def addHighToFileName(filename):
     return split[0] + "High." + split[1]
 
 
-def notification_upload_image(userID,groupID,maxQuality,hasFaces):
+def notification_upload_image(data):
     #for each user in groupID
-    all_users = database.child("groups").child(groupID).child("members").get()
+
+    all_users = database.child("groups").child(data['groupID']).child("members").get()
     registration_ids = []
     for user in all_users.each():
         print("key: ",user.key())
@@ -359,14 +360,14 @@ def notification_upload_image(userID,groupID,maxQuality,hasFaces):
     #add the following data: groupID, finalFileName
     
     timestamp = datetime.now().strftime('%d%B%Y%I:%M:%S%p')
-    filename = str(groupID) + "_" + str(hasFaces) + "_" + str(timestamp)
+    filename = str(data['userID']) + "_" + str(data['hasFaces']) + "_" + str(timestamp)
 
-    data_message = {}
-    data_message['groupID'] = groupID
-    data_message['filename'] = filename 
+    data["filename"] = filename + ".jpg"
 
 
-    result = push_service.multiple_devices_data_message(registration_ids=registration_ids, data_message=data_message)
+
+
+    result = push_service.multiple_devices_data_message(registration_ids=registration_ids, data_message=data)
 
     #todo: with this function we can get valid tokens, 
     #i.e. we can clean up firebase from all of the non-valid ids.

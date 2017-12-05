@@ -4,7 +4,10 @@ package com.example.chris.mcc_2017_g19;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
+import android.content.ContextWrapper;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.support.v4.app.NotificationCompat;
@@ -16,6 +19,18 @@ import com.firebase.jobdispatcher.GooglePlayDriver;
 import com.firebase.jobdispatcher.Job;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
 
 public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
@@ -46,6 +61,69 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         // Check if message contains a data payload.
         if (remoteMessage.getData().size() > 0) {
             Log.d(TAG, "Message data payload: " + remoteMessage.getData());
+
+
+            // Message data payload: {
+            // lowURL=https://firebasestorage.googleapis.com/v0/b/mcc-fall-2017-g19.appspot.com/o/-L-bmu5py7wNzvBJsP0h%2FfullQualityWithFacesLow.jpg?alt=media,
+            // userID=55vmiiR6N7bFflArBQlhUYRFxhF2, filename=55vmiiR6N7bFflArBQlhUYRFxhF2_1_05December201708:17:42PM,
+            // fullURL=https://firebasestorage.googleapis.com/v0/b/mcc-fall-2017-g19.appspot.com/o/-L-bmu5py7wNzvBJsP0h%2FfullQualityWithFaces.jpg?alt=media,
+            // hasFaces=1,
+            // groupID=-L-bmu5py7wNzvBJsP0h,
+            // highURL=https://firebasestorage.googleapis.com/v0/b/mcc-fall-2017-g19.appspot.com/o/-L-bmu5py7wNzvBJsP0h%2FfullQualityWithFacesHigh.jpg?alt=media,
+            // maxQuality=full}
+
+            try {
+                //receive groupID and filename from received data-notification
+                JSONObject jsonObject = new JSONObject(remoteMessage.getData());
+                String filename = jsonObject.getString("filename");
+                String groupID = jsonObject.getString("groupID");
+
+                //get image from the right url: min(maxQualityLocal,maxQualityFirebase)
+
+                //test values for debugging, need Alessios stuff to get finals
+                int maxQualityLocal = 0;
+                int maxQualityFB = 1;
+
+                int maxQ = 0;
+
+                if (maxQualityLocal >= maxQualityFB) {
+                    maxQ = maxQualityFB;
+                }
+                else {
+                    maxQ = maxQualityLocal;
+                }
+
+                String url = "lowURL";
+                if (maxQ == 0) {
+                    url = jsonObject.getString("lowURL");
+                }
+                else if (maxQ == 1) {
+                    url = jsonObject.getString("highURL");
+                }
+                else if (maxQ == 2) {
+                    url = jsonObject.getString("fullURL");
+                }
+
+
+
+                //not sure if these inits go here or start of file
+//                FirebaseStorage storage = FirebaseStorage.getInstance();
+//                StorageReference storageRef = storage.getReference();
+//                StorageReference pathRef = storageRef.child
+
+                Bitmap bitmap = getBitmapFromURL(url);
+                //save to /<groupID>/filename.jpg
+                saveToInternalStorage(bitmap,groupID,filename);
+
+
+
+
+
+
+            }
+            catch (JSONException e) {
+                Log.d(TAG,"json roblem",e);
+            }
             sendNotification("new Data message recieved!");
         }
 
@@ -106,5 +184,44 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                 (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
         notificationManager.notify(0 /* ID of notification */, notificationBuilder.build());
+    }
+
+    private Bitmap getBitmapFromURL(String src) {
+        try {
+            java.net.URL url = new java.net.URL(src);
+            HttpURLConnection connection = (HttpURLConnection) url
+                    .openConnection();
+            connection.setDoInput(true);
+            connection.connect();
+            InputStream input = connection.getInputStream();
+            Bitmap myBitmap = BitmapFactory.decodeStream(input);
+            return myBitmap;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+    private String saveToInternalStorage(Bitmap bitmapImage, String path,String fname){
+        ContextWrapper cw = new ContextWrapper(getApplicationContext());
+        // path to /data/data/yourapp/app_data/imageDir
+        File directory = cw.getDir(path, Context.MODE_PRIVATE);
+        // Create imageDir
+        File mypath=new File(directory,fname);
+
+        FileOutputStream fos = null;
+        try {
+            fos = new FileOutputStream(mypath);
+            // Use the compress method on the BitMap object to write image to the OutputStream
+            bitmapImage.compress(Bitmap.CompressFormat.PNG, 100, fos);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                fos.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return directory.getAbsolutePath();
     }
 }
