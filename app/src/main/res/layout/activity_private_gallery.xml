@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.example.chris.mcc_2017_g19.PrivateGallery" >
+    tools:context="com.example.chris.mcc_2017_g19.pvtgallery.PrivateGallery" >
 
     <GridView
         android:id="@+id/gridView"

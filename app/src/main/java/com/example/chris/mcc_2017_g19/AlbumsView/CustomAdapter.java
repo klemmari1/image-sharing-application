@@ -1,4 +1,4 @@
-package com.example.chris.mcc_2017_g19;
+package com.example.chris.mcc_2017_g19.AlbumsView;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -7,6 +7,8 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import com.example.chris.mcc_2017_g19.R;
 
 import java.util.List;
 
@@ -47,17 +49,19 @@ public class CustomAdapter extends BaseAdapter {
             listViewHolder.textInListView = (TextView)convertView.findViewById(R.id.title);
             listViewHolder.imageInListView = (ImageView)convertView.findViewById(R.id.imageView);
             listViewHolder.imageCloudInListView = (ImageView)convertView.findViewById(R.id.imagecloud);
+            listViewHolder.textNumberPerson = (TextView)convertView.findViewById(R.id.number);
             convertView.setTag(listViewHolder);
         }else{
             listViewHolder = (ViewHolder)convertView.getTag();
         }
 
-        /* populate the basic info of each album (image,title,cloud or not)*/
+        /* populate the basic info of each album (image,title,cloud or not, number of people)*/
         listViewHolder.textInListView.setText(listStorage.get(position).getTitle());
         int imageResourceId = this.context.getResources().getIdentifier(listStorage.get(position).getImageResource(), "drawable", this.context.getPackageName());
         listViewHolder.imageInListView.setImageResource(imageResourceId);
         int imageCloudId = this.context.getResources().getIdentifier(listStorage.get(position).getCloud(), "drawable", this.context.getPackageName());
         listViewHolder.imageCloudInListView.setImageResource(imageCloudId);
+        listViewHolder.textNumberPerson.setText(listStorage.get(position).getNumber());
 
         return convertView;
     }
@@ -66,6 +70,7 @@ public class CustomAdapter extends BaseAdapter {
         TextView textInListView;
         ImageView imageInListView;
         ImageView imageCloudInListView;
+        TextView textNumberPerson;
     }
 
 }

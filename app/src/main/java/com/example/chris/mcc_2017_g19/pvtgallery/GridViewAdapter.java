@@ -86,6 +86,7 @@ public class GridViewAdapter extends ArrayAdapter<GridItem> {
                 System.out.println(url);
                 i.putExtra("image", url );
                 mContext.startActivity(i);
+
             }
         });
         return row;

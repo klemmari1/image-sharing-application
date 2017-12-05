@@ -39,13 +39,13 @@
                 android:value="barcode" />
         </activity>
         <activity android:name=".SignupActivity" />
-        <activity android:name=".AlbumsActivity" />
+        <activity android:name=".AlbumsView.AlbumsActivity" />
         <activity android:name=".GroupCreationActivity" />
         <activity
             android:name=".MainActivity"
             android:launchMode="singleInstance" />
         <activity android:name=".ResetPasswordActivity" />
-        <activity android:name=".PrivateGallery" />
+        <activity android:name=".pvtgallery.PrivateGallery" />
         <activity android:name=".GroupStatusActivity" />
         <activity
             android:name=".QrReaderActivity"

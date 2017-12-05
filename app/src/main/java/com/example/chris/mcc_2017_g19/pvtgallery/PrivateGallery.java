@@ -1,4 +1,4 @@
-package com.example.chris.mcc_2017_g19;
+package com.example.chris.mcc_2017_g19.pvtgallery;
 
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -20,6 +20,8 @@ import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.example.chris.mcc_2017_g19.MainActivity;
+import com.example.chris.mcc_2017_g19.R;
 import com.example.chris.mcc_2017_g19.pvtgallery.GridItem;
 import com.example.chris.mcc_2017_g19.pvtgallery.GridViewAdapter;
 import com.example.chris.mcc_2017_g19.pvtgallery.PvtGalleryImages;

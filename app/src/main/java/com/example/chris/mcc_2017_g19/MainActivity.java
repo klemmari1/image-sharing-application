@@ -22,7 +22,7 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-import com.example.chris.mcc_2017_g19.BackgroundSync.FirebaseBackgroundService;
+import com.example.chris.mcc_2017_g19.AlbumsView.AlbumsActivity;
 import com.google.android.gms.vision.Frame;
 import com.google.android.gms.vision.barcode.Barcode;
 import com.google.android.gms.vision.barcode.BarcodeDetector;
