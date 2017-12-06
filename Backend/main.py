@@ -232,10 +232,6 @@ def upload_image():
     urlpath = groupID + "/" + filename
     initialURL = storage.child(urlpath).get_url(0)
 
-
-
-
-
     """image_processing() function should generate lower quality pictures and upload them into STORAGE.
     returns URLs and if any people found in google-vision face detection
     """
@@ -256,6 +252,7 @@ def upload_image():
         data['lowURL'] = URLs[2]
         data['highURL'] = URLs[1]
         data['fullURL'] = URLs[0]
+    
     data['hasFaces'] = hasFaces
 
     database.child("groups").child(groupID).child("images").push(data)
@@ -347,14 +344,23 @@ def notification_upload_image(data):
     all_users = database.child("groups").child(data['groupID']).child("members").get()
     registration_ids = []
     for user in all_users.each():
-        print("key: ",user.key())
-        print("val: ",user.val())
+        print("found user key: ",user.key())
+        print("found user val: ",user.val())
         
         #get device tokens for each user from firebase /users/<uid>/deviceTokens
         tempTokens = database.child("users").child(user.key()).child("deviceTokens").get()
-        for token in tempTokens.each():
-            print("token: ",token.key())
-            registration_ids.append(token.key())
+        
+
+        if (tempTokens is None):
+            print("tempTokens = None!!!!!!!!")
+
+        try: 
+            for token in tempTokens.each():
+                print("found user token: ",token.key())
+                registration_ids.append(token.key())
+        except Exception as e:
+            print("Unexpected error in for token in tempTokens.each(): " + str(e)) 
+
 
     #send data notification to registration_ids. 
     #add the following data: groupID, finalFileName
@@ -365,6 +371,11 @@ def notification_upload_image(data):
     data["filename"] = filename + ".jpg"
 
 
+    for item in registration_ids:
+        print("pushing to notification to following devices:", item)
+
+    # message_body = "this is message body string. also data in this message!"
+    # message_title = "noti"
 
 
     result = push_service.multiple_devices_data_message(registration_ids=registration_ids, data_message=data)
@@ -372,13 +383,6 @@ def notification_upload_image(data):
     #todo: with this function we can get valid tokens, 
     #i.e. we can clean up firebase from all of the non-valid ids.
     #valid_registration_ids = push_service.clean_registration_ids(registration_ids)
-
-
-
-
-
-
-    
 
 
 
