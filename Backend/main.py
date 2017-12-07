@@ -272,14 +272,13 @@ def upload_image():
 
     # send notification to all group users that new image has been uploaded
     notification_upload_image(data)
-    #return ok if everything ok
     token = str(uuid.uuid4())
     database.child("groups").child(groupID).child("images").update({token: data})
 
     user_name = database.child("users").child(owner).child("name").get().val()
     user_name = user_name.strip("_")
     print("upload_image() ok")
-    return token + "_" + str(people) + "_" + user_name
+    return token + "_" + user_name + "_" + str(people) + "_"
 
 
 def image_processing(initialURL, maxQuality,groupID, filename):

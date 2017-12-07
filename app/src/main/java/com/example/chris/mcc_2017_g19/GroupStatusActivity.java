@@ -90,7 +90,6 @@ public class GroupStatusActivity extends AppCompatActivity {
 
     public void addButton(View v) {
         Intent QRActivity = new Intent(this, GroupQRActivity.class);
-        QRActivity.putExtra("GROUP_ID", group_id);
         startActivity(QRActivity);
     }
 
