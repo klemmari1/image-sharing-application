@@ -58,35 +58,34 @@ public class PrivateGallery extends ActionBarActivity {
         mGridAdapter = new GridViewAdapter(this, R.layout.grid_item_layout, mGridData);
         mGridView.setAdapter(mGridAdapter);
 
-
-
         //new AsyncHttpTask().execute(FEED_URL);
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-            //Get images
-            mGridData = PvtGalleryImages.getImages(this);
-            //Set images inside the adapter and check when user click to one image
-            mGridAdapter.setGridData(mGridData);
-
+            loadImages();
         } else {
             //request permission
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, RC_READ_STORAGE);
         }
-
     }
+
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == RC_READ_STORAGE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                //Get images
-                mGridData = PvtGalleryImages.getImages(this);
-                //Set images inside the adapter and check when user click to one image
-                mGridAdapter.setGridData(mGridData);
+                loadImages();
             } else {
                 Toast.makeText(this, "Storage Permission denied", Toast.LENGTH_SHORT).show();
             }
         }
+    }
+
+
+    private void loadImages(){
+        //Get images
+        mGridData = PvtGalleryImages.getImages(this);
+        //Set images inside the adapter and check when user click to one image
+        mGridAdapter.setGridData(mGridData);
     }
 
 }
