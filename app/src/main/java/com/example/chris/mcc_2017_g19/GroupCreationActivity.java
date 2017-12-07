@@ -69,12 +69,17 @@ public class GroupCreationActivity extends AppCompatActivity {
             @Override
             public void onSuccess(String response) {
                 try {
-
-                    Intent groupStatus = new Intent(GroupCreationActivity.this, GroupStatusActivity.class);
-                    String group_id = response.split(":")[0];
-                    groupStatus.putExtra("GROUP_ID", group_id);
-                    startActivity(groupStatus);
-                    GroupCreationActivity.this.finish();
+                    if(!response.contains("error")){
+                        Intent groupStatus = new Intent(GroupCreationActivity.this, GroupStatusActivity.class);
+                        String group_id = response.split(":")[0];
+                        groupStatus.putExtra("GROUP_ID", group_id);
+                        startActivity(groupStatus);
+                        GroupCreationActivity.this.finish();
+                    }
+                    else{
+                        findViewById(R.id.buttonCreateGroup).setEnabled(true);
+                        Toast.makeText(GroupCreationActivity.this, response, Toast.LENGTH_SHORT).show();
+                    }
                 } catch (Exception e){
                     Toast.makeText(GroupCreationActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
                 }

@@ -119,7 +119,7 @@ public class BackendAPI {
 
             @Override
             public void onSuccess(String response) {
-                String url = backendUrl + "/groups/members";
+                String url = backendUrl + "/groups/join";
                 RequestBody requestBody = new MultipartBody.Builder()
                         .setType(MultipartBody.FORM)
                         .addFormDataPart("id_token", idToken)

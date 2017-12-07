@@ -45,7 +45,7 @@ firebaseConfig = {
 
 
 firebase = pyrebase.initialize_app(firebaseConfig)
-#auth2 = firebase.auth()
+#auth = firebase.auth()
 database = firebase.database()
 storage = firebase.storage()
 
@@ -76,7 +76,7 @@ def create_group():
 
         user_name = database.child("users").child(user_id).child("name").get().val()
 
-        group_reference = database.child("groups").push({"name": group_name, "expiration" : group_expiration})
+        group_reference = database.child("groups").push({"name": group_name, "expiration": group_expiration})
         group_key = group_reference["name"]
         database.child("groups").child(group_key).child("members").update({user_id: user_name})
         database.child("groups").child(group_key).update({"creator": user_id})
@@ -89,7 +89,7 @@ def create_group():
         return "Unexpected error: " + str(e)
 
 
-@app.route('groups/members', methods=['POST'])
+@app.route('/groups/join', methods=['POST'])
 def join_group():
     try:
         id_token = request.form['id_token']
@@ -215,49 +215,44 @@ http://127.0.0.1:8080/upload_image?owner=Seppo&groupID=someGroupID&filename=4kIm
 @app.route('/upload_image', methods=['POST'])
 def upload_image():
     try:
-        # Get arguments
-        args = request.form
-        print(args)  # For debugging
 
-        IdToken = request.form['IdToken']
+        owner = request.form['userID']
         groupID = request.form['groupID']
         filename = request.form['filename']
         maxQuality = request.form['maxQuality']
 
-        owner = get_uid(IdToken)
-        if validate_user_in_group(owner, groupID):
-            urlpath = groupID + "/" + filename
-            initialURL = storage.child(urlpath).get_url(0)
 
+        urlpath = groupID + "/" + filename
+        initialURL = storage.child(urlpath).get_url(0)
 
-            """image_processing() function should generate lower quality pictures and upload them into STORAGE.
-            returns URLs and if any people found in google-vision face detection
-            """
-            URLs, people = image_processing(initialURL, maxQuality,groupID, filename)
+        """image_processing() function should generate lower quality pictures and upload them into STORAGE.
+        returns URLs and if any people found in google-vision face detection
+        """
+        URLs, people = image_processing(initialURL, maxQuality, groupID, filename)
 
-            '''Push to firebase
-            '''
-            data = {}
-            data['owner'] = owner
-            data['groupID'] = groupID
-            data['maxQuality'] = maxQuality
-            if (maxQuality == 'low'):
-                data['lowURL'] = URLs[0]
-            if (maxQuality == 'high'):
-                data['lowURL'] = URLs[1]
-                data['highURL'] = URLs[0]
-            if (maxQuality == 'full'):
-                data['lowURL'] = URLs[2]
-                data['highURL'] = URLs[1]
-                data['fullURL'] = URLs[0]
-            data['people'] = people
+        '''Push to firebase
+        '''
+        data = {}
+        data['owner'] = owner
+        data['groupID'] = groupID
+        data['maxQuality'] = maxQuality
+        if (maxQuality == 'low'):
+            data['lowURL'] = URLs[0]
+        if (maxQuality == 'high'):
+            data['lowURL'] = URLs[1]
+            data['highURL'] = URLs[0]
+        if (maxQuality == 'full'):
+            data['lowURL'] = URLs[2]
+            data['highURL'] = URLs[1]
+            data['fullURL'] = URLs[0]
+        data['people'] = people
 
-            database.child("groups").child(groupID).child("images").push(data)
+        token = str(uuid.uuid4())
 
-            print("upload_image() ok")
-            return "upload_image() ok"  # this will be returned to android if we'll end up using 'GET' I think.
-        else:
-            return "INVALID USER TOKEN!"
+        database.child("groups").child(groupID).update(token).push(data)
+
+        print("upload_image() ok")
+        return token + "_" + str(people) + "_" + owner
     except Exception as e:
         return "Unexpected error: " + str(e)
 

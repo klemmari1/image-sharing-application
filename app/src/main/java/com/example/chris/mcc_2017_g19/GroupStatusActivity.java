@@ -152,7 +152,6 @@ public class GroupStatusActivity extends AppCompatActivity {
 
                 @Override
                 public void onSuccess(String response) {
-                    System.out.println("JAA" + response);
                     GroupStatusActivity.this.finish();
                 }
             });
