@@ -221,7 +221,6 @@ def upload_image():
         filename = request.form['filename']
         maxQuality = request.form['maxQuality']
 
-
         urlpath = groupID + "/" + filename
         initialURL = storage.child(urlpath).get_url(0)
 
@@ -248,11 +247,11 @@ def upload_image():
         data['people'] = people
 
         token = str(uuid.uuid4())
+        database.child("groups").child(groupID).child("images").update({token: data})
 
-        database.child("groups").child(groupID).update(token).push(data)
-
-        print("upload_image() ok")
-        return token + "_" + str(people) + "_" + owner
+        user_name = database.child("users").child(owner).child("name").get().val()
+        user_name = user_name.strip("_")
+        return token + "_" + str(people) + "_" + user_name
     except Exception as e:
         return "Unexpected error: " + str(e)
 
