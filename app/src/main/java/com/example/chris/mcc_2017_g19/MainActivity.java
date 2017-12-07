@@ -65,6 +65,7 @@ public class MainActivity extends AppCompatActivity {
     static final int MY_PERMISSIONS_REQUEST_WRITE_EXT_STORAGE = 2;
     static final int MY_PERMISSIONS_REQUEST_CAMERA = 3;
     static final int MY_PERMISSIONS_REQUEST_QR = 4;
+    static final int REQUEST_CREATE_GROUP = 5;
     private static final String TAG = "MainActivity";
 
 
@@ -193,8 +194,9 @@ public class MainActivity extends AppCompatActivity {
                                 break;
                             case 1:
                                 //No button pressed: Create group
+                                setButtonStatus(false);
                                 Intent intent = new Intent(MainActivity.this, GroupCreationActivity.class);
-                                startActivity(intent);
+                                startActivityForResult(intent, REQUEST_CREATE_GROUP);
                                 break;
                         }
                     }
@@ -220,6 +222,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startCamera() {
+        setButtonStatus(false);
         Intent pictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         // Ensure that there's a camera activity to handle the intent
         if (pictureIntent.resolveActivity(getPackageManager()) != null) {
@@ -259,6 +262,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        setButtonStatus(true);
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
             if (checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
                     != PackageManager.PERMISSION_GRANTED) {
@@ -417,5 +421,12 @@ public class MainActivity extends AppCompatActivity {
         Bitmap bitmap = getImageBitmap();
         Bitmap resized = Bitmap.createScaledBitmap(bitmap,(int)(bitmap.getWidth()*factor), (int)(bitmap.getHeight()*factor), true);
         return resized;
+    }
+
+    private void setButtonStatus(boolean status){
+        findViewById(R.id.gallery).setEnabled(status);
+        findViewById(R.id.photo).setEnabled(status);
+        findViewById(R.id.group).setEnabled(status);
+        findViewById(R.id.setting).setEnabled(status);
     }
 }

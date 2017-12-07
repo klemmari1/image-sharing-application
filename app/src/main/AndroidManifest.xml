@@ -53,9 +53,7 @@
         <activity android:name=".SignupActivity" />
         <activity android:name=".AlbumsView.AlbumsActivity" />
         <activity android:name=".GroupCreationActivity" />
-        <activity
-            android:name=".MainActivity"
-            android:launchMode="singleInstance" />
+        <activity android:name=".MainActivity" />
         <activity android:name=".ResetPasswordActivity" />
         <activity android:name=".pvtgallery.PrivateGallery" />
         <activity android:name=".GroupStatusActivity" />
