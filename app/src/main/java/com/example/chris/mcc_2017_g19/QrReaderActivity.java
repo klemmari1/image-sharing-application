@@ -42,7 +42,6 @@ public class QrReaderActivity extends AppCompatActivity implements ZXingScannerV
     public void handleResult(Result rawResult) {
         try{
             String token = rawResult.getText();
-            final String group_id = token.split(":")[0];
             BackendAPI api = new BackendAPI();
             api.joinGroup(token, new BackendAPI.HttpCallback() {
                 @Override
@@ -55,7 +54,6 @@ public class QrReaderActivity extends AppCompatActivity implements ZXingScannerV
                     if(!response.contains("INVALID")){
                         try {
                             Intent groupStatus = new Intent(QrReaderActivity.this, GroupStatusActivity.class);
-                            groupStatus.putExtra("GROUP_ID", group_id);
                             startActivity(groupStatus);
                             QrReaderActivity.this.finish();
                         } catch (Exception e){

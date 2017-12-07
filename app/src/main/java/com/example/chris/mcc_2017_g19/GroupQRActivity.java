@@ -19,9 +19,6 @@ import com.google.zxing.common.BitMatrix;
 
 import com.google.firebase.auth.FirebaseUser;
 
-/**
- * Created by Chris on 6.11.2017.
- */
 
 public class GroupQRActivity extends AppCompatActivity {
 
@@ -32,33 +29,43 @@ public class GroupQRActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_qr);
-        DatabaseReference databaseReference = Utils.getDatabase().getReference();
         firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+        final DatabaseReference databaseReference = Utils.getDatabase().getReference();
 
-        String group_id = getIntent().getStringExtra("GROUP_ID");
-        DatabaseReference groupRef = databaseReference.child("groups").child(group_id);
-        groupRef.keepSynced(true);
-        groupRef.addValueEventListener(new ValueEventListener() {
+        DatabaseReference userRef = databaseReference.child("users").child(firebaseUser.getUid());
+        userRef.keepSynced(true);
+        userRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                GroupObject groupObj = dataSnapshot.getValue(GroupObject.class);
-                if(groupObj != null){
-                    String token = groupObj.getToken();
-                    System.out.println(groupObj);
-                    try{
-                        ImageView imageView = (ImageView) findViewById(R.id.qr_image);
-                        Bitmap bitmap = getBitmap(token, 750);
-                        imageView.setImageBitmap(bitmap);
-                    }
-                    catch (Exception e){
-                    }
+                String group_id = (String) dataSnapshot.child("group").getValue();
+                if(group_id != null){
+                    DatabaseReference groupRef = databaseReference.child("groups").child(group_id);
+                    groupRef.keepSynced(true);
+                    groupRef.addValueEventListener(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            GroupObject groupObj = dataSnapshot.getValue(GroupObject.class);
+                            if(groupObj != null){
+                                String token = groupObj.getToken();
+                                System.out.println(groupObj);
+                                try{
+                                    ImageView imageView = (ImageView) findViewById(R.id.qr_image);
+                                    Bitmap bitmap = getBitmap(token, 750);
+                                    imageView.setImageBitmap(bitmap);
+                                }
+                                catch (Exception e){
+                                }
+                            }
+                        }
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+                            System.out.println("The read failed: " + databaseError.getCode());
+                        }
+                    });
                 }
             }
-
             @Override
-            public void onCancelled(DatabaseError databaseError) {
-                System.out.println("The read failed: " + databaseError.getCode());
-            }
+            public void onCancelled(DatabaseError databaseError) {}
         });
     }
 

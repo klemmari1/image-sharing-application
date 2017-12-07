@@ -91,7 +91,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
                 userObj = snapshot.getValue(UserObject.class);
-                Toast.makeText(MainActivity.this, "Welcome " + userObj.getName(), Toast.LENGTH_SHORT).show();
             }
             @Override
             public void onCancelled(DatabaseError databaseError) {
@@ -206,7 +205,6 @@ public class MainActivity extends AppCompatActivity {
             }
             else{
                 Intent intent = new Intent(MainActivity.this, GroupStatusActivity.class);
-                intent.putExtra("GROUP_ID", userObj.getGroup());
                 startActivity(intent);
             }
         }
