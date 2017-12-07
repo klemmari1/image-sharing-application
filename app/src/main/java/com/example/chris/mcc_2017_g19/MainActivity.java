@@ -172,7 +172,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void TakePictureIntent() {
-        if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+        if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED || checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA}, MY_PERMISSIONS_REQUEST_CAMERA);
         } else {
             startCamera();
@@ -221,14 +221,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
 
-            Uri imageUri = Uri.fromFile(new File(imagePath));
-            Bitmap imageBitmap = null;
-            try{
-                imageBitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), imageUri);
-            }
-            catch(Exception e){
-            }
-
+            Bundle extras = data.getExtras();
+            bitmap = (Bitmap) extras.get("data");
             //SaveImage(imageBitmap);
             //save image to an imageview
             //mImageView.setImageBitmap(imageBitmap);
@@ -243,13 +237,10 @@ public class MainActivity extends AppCompatActivity {
                     != PackageManager.PERMISSION_GRANTED) {
                 requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
                         MY_PERMISSIONS_REQUEST_WRITE_EXT_STORAGE);
-
                 // We check the permission at Runtime
                 //
-                return;
             } else {
-
-                new SensibleDataTask().execute(imageBitmap);
+                new SensibleDataTask().execute();
             }
         }
     }
@@ -261,7 +252,7 @@ public class MainActivity extends AppCompatActivity {
         switch (requestCode) {
             case MY_PERMISSIONS_REQUEST_WRITE_EXT_STORAGE:
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    new SensibleDataTask().execute(bitmap);
+                    new SensibleDataTask().execute();
                 } else {
                     Toast.makeText(this, "Please grant permissions to use the app", Toast.LENGTH_SHORT).show();
                 }
@@ -288,34 +279,36 @@ public class MainActivity extends AppCompatActivity {
 
     //TODO: Check if image is sensible or not;
 
-    public class SensibleDataTask extends AsyncTask<Bitmap, Void, Bitmap> {
+    public class SensibleDataTask extends AsyncTask<Void, Void, Bitmap> {
 
-        Bitmap bit;
         Integer result = 0;
 
         @Override
-        protected Bitmap doInBackground(Bitmap... bitmaps) {
-            this.bit = bitmaps[0];
+        protected Bitmap doInBackground(Void... params) {
 
             //Create the Barcode detector and detect barcode
             BarcodeDetector detector = new BarcodeDetector.Builder(getApplicationContext()).setBarcodeFormats(Barcode.DATA_MATRIX | Barcode.QR_CODE | Barcode.EAN_13).build();
-            Frame frame = new Frame.Builder().setBitmap(bit).build();
-            SparseArray<Barcode> barcodes = detector.detect(frame);
-
-            if (barcodes.size() != 1) {
-                System.out.println("This is res: " + result);
+            Frame frame = new Frame.Builder().setBitmap(bitmap).build();
+            SparseArray<Barcode> barcodes = new SparseArray<>();
+            if(detector.isOperational()){
+                System.out.println("JAA");
+                barcodes = detector.detect(frame);
+                detector.release();
+            }
+            result = barcodes.size();
+            System.out.println("JAA: " + result);
+            if (result == 0) {
                 // If the image has no sensitive data, TODO: Call method to store in Firebase + Google App Engine
 
             } else {
-                result = 1;
                 // The image has one sensitive data, check here to know what is a sensitive data:
                 // https://developers.google.com/vision/android/barcodes-overview
 
                 // Call the method to store image in private folder
-                SaveImage(bit);
+                SaveImage();
             }
 
-            return bit;
+            return bitmap;
             //return Bitmap.createScaledBitmap(bit, width, height, true);
         }
 
@@ -334,15 +327,14 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void SaveImage(Bitmap finalBitmap) {
-
+    private void SaveImage() {
+        Bitmap finalBitmap = getImageBitmap();
         String root = Environment.getExternalStorageDirectory().toString();
         File myDir = new File(root + "/OrganizerApp");
 
         if (!myDir.exists()) {
             myDir.mkdirs();
         }
-
 
         //Creating a unique name for the picture
         Random generator = new Random();
@@ -372,5 +364,15 @@ public class MainActivity extends AppCompatActivity {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private Bitmap getImageBitmap(){
+        try{
+            Uri imageUri = Uri.fromFile(new File(imagePath));
+            return(MediaStore.Images.Media.getBitmap(this.getContentResolver(), imageUri));
+        }
+        catch(Exception e){
+        }
+        return null;
     }
 }
