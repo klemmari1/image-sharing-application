@@ -44,7 +44,7 @@ public class QrReaderActivity extends AppCompatActivity implements ZXingScannerV
             String token = rawResult.getText();
             final String group_id = token.split(":")[0];
             BackendAPI api = new BackendAPI();
-            api.joinGroup(user.getUid(), token, new BackendAPI.HttpCallback() {
+            api.joinGroup(token, new BackendAPI.HttpCallback() {
                 @Override
                 public void onFailure(String response, Exception exception) {
                     Log.d(TAG, "Error: " + response + " " + exception);

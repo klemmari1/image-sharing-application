@@ -159,7 +159,7 @@ public class GroupStatusActivity extends AppCompatActivity {
         }
         else{
 
-            api.leaveGroup(firebaseUser.getUid(), group_id, new BackendAPI.HttpCallback() {
+            api.leaveGroup(group_id, new BackendAPI.HttpCallback() {
                 @Override
                 public void onFailure(String response, Exception exception) {
                 }

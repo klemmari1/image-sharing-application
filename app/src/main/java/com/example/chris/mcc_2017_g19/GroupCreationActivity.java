@@ -60,7 +60,7 @@ public class GroupCreationActivity extends AppCompatActivity {
 
         //okhttp request: create_group
         BackendAPI api = new BackendAPI();
-        api.createGroup(groupName, expirationTimestamp, user.getUid(), new BackendAPI.HttpCallback() {
+        api.createGroup(groupName, expirationTimestamp, new BackendAPI.HttpCallback() {
             @Override
             public void onFailure(String response, Exception exception) {
                 Log.d(TAG, "Error: " + response + " " + exception);
