@@ -4,7 +4,6 @@ import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -51,7 +50,6 @@ public class MainActivity extends AppCompatActivity {
     ImageView settings;
     ImageView takepicture;
 
-    Bitmap bitmap;
     private String imagePath;
 
     static final int REQUEST_IMAGE_CAPTURE = 1;
@@ -220,19 +218,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
-
-            Bundle extras = data.getExtras();
-            bitmap = (Bitmap) extras.get("data");
-            //SaveImage(imageBitmap);
-            //save image to an imageview
-            //mImageView.setImageBitmap(imageBitmap);
-            /*ByteArrayOutputStream stream = new ByteArrayOutputStream();
-            imageBitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
-            byte[] byteArray = stream.toByteArray();
-
-            // convert byte array to Bitmap
-            bitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);*/
-
             if (checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
                     != PackageManager.PERMISSION_GRANTED) {
                 requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
@@ -285,19 +270,20 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected Bitmap doInBackground(Void... params) {
-
             //Create the Barcode detector and detect barcode
+            Bitmap bitmap = getImageBitmap();
+            Bitmap resized = Bitmap.createScaledBitmap(bitmap,(int)(bitmap.getWidth()*0.4), (int)(bitmap.getHeight()*0.4), true);
+
             BarcodeDetector detector = new BarcodeDetector.Builder(getApplicationContext()).setBarcodeFormats(Barcode.DATA_MATRIX | Barcode.QR_CODE | Barcode.EAN_13).build();
-            Frame frame = new Frame.Builder().setBitmap(bitmap).build();
+            Frame frame = new Frame.Builder().setBitmap(resized).build();
             SparseArray<Barcode> barcodes = new SparseArray<>();
             if(detector.isOperational()){
-                System.out.println("JAA");
                 barcodes = detector.detect(frame);
                 detector.release();
             }
             result = barcodes.size();
-            System.out.println("JAA: " + result);
-            if (result == 0) {
+            System.out.println("Barcodes found: " + result);
+            if(result == 0) {
                 // If the image has no sensitive data, TODO: Call method to store in Firebase + Google App Engine
 
             } else {
@@ -305,32 +291,29 @@ public class MainActivity extends AppCompatActivity {
                 // https://developers.google.com/vision/android/barcodes-overview
 
                 // Call the method to store image in private folder
-                SaveImage();
+                SaveImage("/Private");
             }
 
-            return bitmap;
+            return resized;
             //return Bitmap.createScaledBitmap(bit, width, height, true);
         }
 
         @Override
         protected void onPostExecute(Bitmap bit) {
             Integer check = 0;
-            if (result == check) {
+            if (result.equals(check)) {
                 //It is not showing the toast, I don't know why (But it is entering this :
-                Toast.makeText(MainActivity.this, "Image has been added to your shared folder!", Toast.LENGTH_LONG);
+                Toast.makeText(MainActivity.this, "Image has been added to your shared folder!", Toast.LENGTH_LONG).show();
             } else {
-                Toast.makeText(MainActivity.this, "SENSIBLE DATA! Image has been added to private folder", Toast.LENGTH_LONG);
+                Toast.makeText(MainActivity.this, "SENSIBLE DATA! Image has been added to private folder", Toast.LENGTH_LONG).show();
             }
         }
-
-
-
     }
 
-    private void SaveImage() {
+    private void SaveImage(String folder) {
         Bitmap finalBitmap = getImageBitmap();
         String root = Environment.getExternalStorageDirectory().toString();
-        File myDir = new File(root + "/OrganizerApp");
+        File myDir = new File(root + "/OrganizerApp" + folder);
 
         if (!myDir.exists()) {
             myDir.mkdirs();
