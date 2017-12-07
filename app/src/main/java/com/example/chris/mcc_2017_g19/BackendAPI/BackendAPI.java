@@ -207,6 +207,33 @@ public class BackendAPI {
         });
     }
 
+    public void uploadImage(final String user_id, final String group_id, final String filename, final String maxQuality, final HttpCallback cb){
+        getIdToken(new BackendAPI.HttpCallback() {
+            @Override
+            public void onFailure(String response, Exception exception) {
+                Log.d(TAG, "Error: " + response + " " + exception);
+            }
+
+            @Override
+            public void onSuccess(String response) {
+                String url = backendUrl + "/upload_image";
+                RequestBody requestBody = new MultipartBody.Builder()
+                        .setType(MultipartBody.FORM)
+                        .addFormDataPart("id_token", idToken)
+                        .addFormDataPart("userID", user_id)
+                        .addFormDataPart("groupID", group_id)
+                        .addFormDataPart("filename", filename)
+                        .addFormDataPart("maxQuality", maxQuality)
+                        .build();
+                try{
+                    postRequest(url, requestBody, cb);
+                }
+                catch (Exception e){
+                }
+            }
+        });
+    }
+
 
     public interface HttpCallback  {
         public void onFailure(String response, Exception exception);

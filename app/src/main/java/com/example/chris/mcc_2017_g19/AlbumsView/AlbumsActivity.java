@@ -9,6 +9,7 @@ import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.Toast;
 
+import com.example.chris.mcc_2017_g19.AlbumsView.AlbumEach.AlbumInfo;
 import com.example.chris.mcc_2017_g19.pvtgallery.PrivateGallery;
 import com.example.chris.mcc_2017_g19.R;
 
@@ -41,6 +42,13 @@ public class AlbumsActivity extends AppCompatActivity {
 
                 }
 
+                if(position == 1){
+
+                    Intent intent = new Intent(AlbumsActivity.this, AlbumInfo.class);
+                    startActivity(intent);
+                    finish();
+
+                }
             }
         });
     }

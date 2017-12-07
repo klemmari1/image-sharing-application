@@ -22,6 +22,7 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+
 import com.example.chris.mcc_2017_g19.AlbumsView.AlbumsActivity;
 import com.google.android.gms.vision.Frame;
 import com.google.android.gms.vision.barcode.Barcode;
@@ -36,6 +37,8 @@ import com.google.firebase.database.ValueEventListener;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
@@ -75,6 +78,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
                 userObj = snapshot.getValue(UserObject.class);
+                Toast.makeText(MainActivity.this, "Welcome " + userObj.getName(), Toast.LENGTH_SHORT).show();
             }
             @Override
             public void onCancelled(DatabaseError databaseError) {
@@ -140,33 +144,6 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(new Intent(MainActivity.this, LoginActivity.class));
                 MainActivity.this.finish();
                 return true;
-            case R.id.action_read_qr:
-                if(userObj != null){
-                    if(userObj.getGroup() == null){
-                        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
-                                != PackageManager.PERMISSION_GRANTED) {
-                            ActivityCompat.requestPermissions(this,
-                                    new String[]{Manifest.permission.CAMERA}, MY_PERMISSIONS_REQUEST_QR);
-                        } else {
-                            Intent intent = new Intent(MainActivity.this, QrReaderActivity.class);
-                            startActivity(intent);
-                        }
-
-                    }
-                    else{
-                        AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).create();
-                        alertDialog.setTitle("Already in a group");
-                        alertDialog.setMessage("You must leave you current group to join a new one");
-                        alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
-                                new DialogInterface.OnClickListener() {
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        dialog.dismiss();
-                                    }
-                                });
-                        alertDialog.show();
-                    }
-                }
-                return true;
             default:
                 return super.onOptionsItemSelected(item);
 
@@ -174,20 +151,51 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void selectGroupManagementActivity() {
-        Class activityClass;
-        String group_id = null;
         if (userObj != null){
-            if (userObj.getGroup() == null)
-                activityClass = GroupCreationActivity.class;
-            else{
-                activityClass = GroupStatusActivity.class;
-                group_id = userObj.getGroup();
-            }
+            if (userObj.getGroup() == null){
+                //Setup the alert builder
+                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                View customTitle = View.inflate(MainActivity.this, R.layout.dialog_title, null);
+                builder.setCustomTitle(customTitle);
+                builder.setTitle("Choose an action");
 
-            Intent intent = new Intent(MainActivity.this, activityClass);
-            if(group_id != null)
-                intent.putExtra("GROUP_ID", group_id);
-            startActivity(intent);
+                //Add options
+                List<String> actions = new ArrayList<String>();
+                actions.add("JOIN A GROUP");
+                actions.add("CREATE A GROUP");
+                DialogAdapter da = new DialogAdapter(this, actions);
+                builder.setAdapter(da, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        switch (which) {
+                            case 0:
+                                //Yes button pressed: Join a group
+                                if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CAMERA)
+                                        != PackageManager.PERMISSION_GRANTED) {
+                                    ActivityCompat.requestPermissions(MainActivity.this,
+                                            new String[]{Manifest.permission.CAMERA}, MY_PERMISSIONS_REQUEST_QR);
+                                } else {
+                                    Intent intent = new Intent(MainActivity.this, QrReaderActivity.class);
+                                    startActivity(intent);
+                                }
+                                break;
+                            case 1:
+                                //No button pressed: Create group
+                                Intent intent = new Intent(MainActivity.this, GroupCreationActivity.class);
+                                startActivity(intent);
+                                break;
+                        }
+                    }
+                });
+                //Create and show the alert dialog
+                AlertDialog dialog = builder.create();
+                dialog.show();
+            }
+            else{
+                Intent intent = new Intent(MainActivity.this, GroupStatusActivity.class);
+                intent.putExtra("GROUP_ID", userObj.getGroup());
+                startActivity(intent);
+            }
         }
     }
 
