@@ -50,6 +50,7 @@
             android:configChanges="keyboardHidden|orientation|screenSize" />
         <activity android:name=".Settings" />
 
+<<<<<<< HEAD
         <service
             android:name=".MyFirebaseInstanceIDService">
             <intent-filter>
@@ -63,8 +64,13 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT"/>
             </intent-filter>
         </service>
-        <service android:name=".BackgroundSync.FirebaseBackgroundService" />
 
+
+
+
+=======
+        <service android:name=".BackgroundSync.FirebaseBackgroundService" />
+>>>>>>> master
 
     </application>
 

@@ -36,7 +36,7 @@
             <meta-data
                 android:name="com.google.android.gms.vision.DEPENDENCIES"
                 android:value="barcode"/>
-        </activity>
+        </activity>>
         <activity android:name=".SignupActivity" />
         <activity android:name=".AlbumsActivity" />
         <activity android:name=".GroupCreationActivity" />
@@ -46,8 +46,8 @@
         <activity android:name=".PrivateGallery" />
         <activity android:name=".GroupStatusActivity" />
         <activity android:name=".QrReaderActivity"
-            android:screenOrientation="portrait"
-            android:configChanges="keyboardHidden|orientation|screenSize" />
+                  android:screenOrientation="portrait"
+                  android:configChanges="orientation|keyboardHidden" />
         <activity android:name=".Settings" />
 
         <service
@@ -63,7 +63,9 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT"/>
             </intent-filter>
         </service>
-        <service android:name=".BackgroundSync.FirebaseBackgroundService" />
+
+
+
 
 
     </application>

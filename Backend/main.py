@@ -30,6 +30,9 @@ from flask import Flask, redirect, render_template, request, url_for
 from google.cloud import vision
 from PIL import Image
 
+from pyfcm import FCMNotification
+
+
 #CLOUD_STORAGE_BUCKET = os.environ.get('CLOUD_STORAGE_BUCKET')
 
 
@@ -53,6 +56,12 @@ app = Flask(__name__)
 cred = credentials.Certificate('mcc-fall-2017-g19-firebase-adminsdk-pzipw-d092116b07.json')
 default_app = firebase_admin.initialize_app(cred)
 
+
+#PyFCM Init (note: not really api_key but server_key. works.)
+push_service = FCMNotification(api_key="AAAAXcUhfw0:APA91bEKzuxetCY6h08vRpRTGbmFHTAvzuXsFkLL3-vxs3hBF9nrr1nJ7FeUIUACmRbfvMaK93suYOitRLJVU94ENxmfeLivbMtYBMXNeiHikYERHXjVrOcUrTZ6P8qCmakjsYAfPy6m")
+
+
+
 #Implement listeners
 @app.route('/')
 def homepage():
@@ -74,9 +83,7 @@ def create_group():
         if get_uid(id_token) == user_id:
             group_name = request.form['group_name']
             group_expiration = request.form['group_expiration']
-
             user_name = database.child("users").child(user_id).child("name").get().val()
-
             group_reference = database.child("groups").push({"name": group_name, "expiration" : group_expiration})
             group_key = group_reference["name"]
             database.child("groups").child(group_key).child("members").update({user_id: user_name})
@@ -122,6 +129,11 @@ def delete(group_id):
     try:
         id_token = request.form['id_token']
         if get_uid(id_token) is not None:
+            group_members = database.child("groups").child(group_id).child("members").get()
+            for member in group_members.each():
+                member_id = member.key()
+                database.child("users").child(member_id).child("group").remove()
+            database.child("groups").child(group_id).remove()
             delete_group(group_id)
             return "GROUP DELETED"
         else:
@@ -146,12 +158,14 @@ def leave_group(user_id):
         return "Unexpected error: " + str(e)
 
 
+
 def delete_group(group_id):
     group_members = database.child("groups").child(group_id).child("members").get()
     for member in group_members.each():
         member_id = member.key()
         database.child("users").child(member_id).child("group").remove()
     database.child("groups").child(group_id).remove()
+
 
 
 def get_uid(id_token):
@@ -197,54 +211,59 @@ input: group-id, user-id, filename, maxQUality
 output: group-id, owner, URLs, maxQuality, people 
 
 example urls
-http://127.0.0.1:8080/upload_image?owner=Seppo&groupID=someGroupID&filename=anImageUploadedFromAndroid.jpg&maxQuality=high
-http://127.0.0.1:8080/upload_image?owner=Seppo&groupID=someGroupID&filename=4kImage.jpg&maxQuality=full
+http://127.0.0.1:8080/upload_image?userID=Seppo&groupID=someGroupID&filename=anImageUploadedFromAndroid.jpg&maxQuality=high
+
+
+HTTP POST TO: http://127.0.0.1:8080/upload_image
+with paremeters:
+userID=<userID>&groupID=<groupID>&filename=<filename>&maxQuality=<low/full/high>
 '''
 @app.route('/upload_image', methods=['POST'])
 def upload_image():
-    try:
-        # Get arguments
-        args = request.form
-        print(args)  # For debugging
 
-        owner = request.form['userID']
-        groupID = request.form['groupID']
-        filename = request.form['filename']
-        maxQuality = request.form['maxQuality']
+    # Get arguments
+    args = request.form
+    print(args)  # For debugging
+    userID = request.form['userID']
+    groupID = request.form['groupID']
+    filename = request.form['filename']
+    maxQuality = request.form['maxQuality']
 
-        urlpath = groupID + "/" + filename
-        initialURL = storage.child(urlpath).get_url(0)
+    urlpath = groupID + "/" + filename
+    initialURL = storage.child(urlpath).get_url(0)
+
+    """image_processing() function should generate lower quality pictures and upload them into STORAGE.
+    returns URLs and if any people found in google-vision face detection
+    """
+    URLs, hasFaces = image_processing(initialURL, maxQuality,groupID, filename)
+
+    '''Push to firebase
+    '''
+    data = {}
+    data['userID'] = userID
+    data['groupID'] = groupID
+    data['maxQuality'] = maxQuality
+    if (maxQuality == 'low'):
+        data['lowURL'] = URLs[0]
+    if (maxQuality == 'high'):
+        data['lowURL'] = URLs[1]
+        data['highURL'] = URLs[0]
+    if (maxQuality == 'full'):
+        data['lowURL'] = URLs[2]
+        data['highURL'] = URLs[1]
+        data['fullURL'] = URLs[0]
+    
+    data['hasFaces'] = hasFaces
+
+    database.child("groups").child(groupID).child("images").push(data)
+
+    # send notification to all group users that new image has been uploaded
+    notification_upload_image(data)
+    #return ok if everything ok
+    print("upload_image() ok")
+    return "upload_image() ok"  # this will be returned to android if we'll end up using 'GET' I think.
 
 
-
-        """image_processing() function should generate lower quality pictures and upload them into STORAGE.
-        returns URLs and if any people found in google-vision face detection
-        """
-        URLs, people = image_processing(initialURL, maxQuality,groupID, filename)
-
-        '''Push to firebase
-        '''
-        data = {}
-        data['owner'] = owner
-        data['groupID'] = groupID
-        data['maxQuality'] = maxQuality
-        if (maxQuality == 'low'):
-            data['lowURL'] = URLs[0]
-        if (maxQuality == 'high'):
-            data['lowURL'] = URLs[1]
-            data['highURL'] = URLs[0]
-        if (maxQuality == 'full'):
-            data['lowURL'] = URLs[2]
-            data['highURL'] = URLs[1]
-            data['fullURL'] = URLs[0]
-        data['people'] = people
-
-        database.child("groups").child(groupID).child("images").push(data)
-
-        print("upload_image() ok")
-        return "upload_image() ok"  # this will be returned to android if we'll end up using 'GET' I think.
-    except Exception as e:
-        return "Unexpected error: " + str(e)
 
 
 def image_processing(initialURL, maxQuality,groupID, filename):
@@ -253,7 +272,7 @@ def image_processing(initialURL, maxQuality,groupID, filename):
     if (maxQuality == 'low'):
         URLs.append(initialURL)
     else:
-        r = requests.get(initialURL)
+        r = requests.get(initialURL,verify=False)
         pilImage = Image.open(BytesIO(r.content))
         #pilImage.mode = 'RGBA'
 
@@ -302,6 +321,7 @@ def check_for_faces(url):
     request = {
     'source': {'image_uri': url},
     }
+
     response = client.face_detection(request)
 
     if (len(response.face_annotations) > 0):
@@ -316,6 +336,54 @@ def addLowToFileName(filename):
 def addHighToFileName(filename):
     split = filename.split(".")
     return split[0] + "High." + split[1]
+
+
+def notification_upload_image(data):
+    #for each user in groupID
+
+    all_users = database.child("groups").child(data['groupID']).child("members").get()
+    registration_ids = []
+    for user in all_users.each():
+        print("found user key: ",user.key())
+        print("found user val: ",user.val())
+        
+        #get device tokens for each user from firebase /users/<uid>/deviceTokens
+        tempTokens = database.child("users").child(user.key()).child("deviceTokens").get()
+        
+
+        if (tempTokens is None):
+            print("tempTokens = None!!!!!!!!")
+
+        try: 
+            for token in tempTokens.each():
+                print("found user token: ",token.key())
+                registration_ids.append(token.key())
+        except Exception as e:
+            print("Unexpected error in for token in tempTokens.each(): " + str(e)) 
+
+
+    #send data notification to registration_ids. 
+    #add the following data: groupID, finalFileName
+    
+    timestamp = datetime.now().strftime('%d%B%Y%I:%M:%S%p')
+    filename = str(data['userID']) + "_" + str(data['hasFaces']) + "_" + str(timestamp)
+
+    data["filename"] = filename + ".jpg"
+
+
+    for item in registration_ids:
+        print("pushing to notification to following devices:", item)
+
+    # message_body = "this is message body string. also data in this message!"
+    # message_title = "noti"
+
+
+    result = push_service.multiple_devices_data_message(registration_ids=registration_ids, data_message=data)
+
+    #todo: with this function we can get valid tokens, 
+    #i.e. we can clean up firebase from all of the non-valid ids.
+    #valid_registration_ids = push_service.clean_registration_ids(registration_ids)
+
 
 
 if __name__ == '__main__':
