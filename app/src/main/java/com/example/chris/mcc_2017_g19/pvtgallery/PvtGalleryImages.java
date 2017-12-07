@@ -26,7 +26,7 @@ public class PvtGalleryImages {
     }
 
     //method to get images
-    public static List<PvtGalleryItem> getImages(Context context) {
+    public static ArrayList<GridItem> getImages(Context context) {
         final String[] projection = {MediaStore.Images.Media.DISPLAY_NAME, MediaStore.Images.Media.DATA};
         final String selection = MediaStore.Images.Media.BUCKET_ID + " = ?";
         final String[] selectionArgs = {PvtGalleryImages.getBucketId(CAMERA_IMAGE_BUCKET_NAME)};
@@ -35,12 +35,12 @@ public class PvtGalleryImages {
                 selection,
                 selectionArgs,
                 null);
-        ArrayList<PvtGalleryItem> result = new ArrayList<PvtGalleryItem>(cursor.getCount());
+        ArrayList<GridItem> result = new ArrayList<GridItem>(cursor.getCount());
         if (cursor.moveToFirst()) {
             final int dataColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
 
             do {
-                PvtGalleryItem galleryItem = new PvtGalleryItem(cursor.getString(dataColumn));
+                GridItem galleryItem = new GridItem(cursor.getString(dataColumn));
                 result.add(galleryItem);
             } while (cursor.moveToNext());
         }

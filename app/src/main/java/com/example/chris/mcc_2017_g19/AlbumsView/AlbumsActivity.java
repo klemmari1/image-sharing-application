@@ -1,4 +1,4 @@
-package com.example.chris.mcc_2017_g19;
+package com.example.chris.mcc_2017_g19.AlbumsView;
 
 
 import android.content.Intent;
@@ -8,6 +8,10 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.Toast;
+
+import com.example.chris.mcc_2017_g19.AlbumsView.AlbumEach.AlbumInfo;
+import com.example.chris.mcc_2017_g19.pvtgallery.PrivateGallery;
+import com.example.chris.mcc_2017_g19.R;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,10 +38,15 @@ public class AlbumsActivity extends AppCompatActivity {
 
                     Intent intent = new Intent(AlbumsActivity.this, PrivateGallery.class);
                     startActivity(intent);
-                    finish();
 
                 }
 
+                if(position == 1){
+
+                    Intent intent = new Intent(AlbumsActivity.this, AlbumInfo.class);
+                    startActivity(intent);
+
+                }
             }
         });
     }
@@ -46,11 +55,11 @@ public class AlbumsActivity extends AppCompatActivity {
     private List<ItemObject> getAllItemObject(){
         ItemObject itemObject = null;
         List<ItemObject> items = new ArrayList<>();
-        items.add(new ItemObject("Image One", "one", "cloud"));
-        items.add(new ItemObject("Image Two", "two", "cloud"));
-        items.add(new ItemObject("Image Three", "three","cloud"));
-        items.add(new ItemObject("Image Four", "four", "cloud"));
-        items.add(new ItemObject("Image Five", "five", "cloud"));
+        items.add(new ItemObject("Private", "one", "cloudoff", ""));
+        items.add(new ItemObject("Image Two", "two", "cloud", "1"));
+        items.add(new ItemObject("Image Three", "three","cloud","1"));
+        items.add(new ItemObject("Image Four", "four", "cloud", "1"));
+        items.add(new ItemObject("Image Five", "five", "cloud", "1"));
 
         return items;
     }
