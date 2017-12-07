@@ -48,7 +48,7 @@ firebaseConfig = {
 
 
 firebase = pyrebase.initialize_app(firebaseConfig)
-#auth2 = firebase.auth()
+#auth = firebase.auth()
 database = firebase.database()
 storage = firebase.storage()
 
@@ -79,61 +79,59 @@ def homepage():
 def create_group():
     try:
         id_token = request.form['id_token']
-        user_id = request.form['user_id']
-        if get_uid(id_token) == user_id:
-            group_name = request.form['group_name']
-            group_expiration = request.form['group_expiration']
+        user_id = get_uid(id_token)
+        group_name = request.form['group_name']
+        group_expiration = request.form['group_expiration']
+
+        user_name = database.child("users").child(user_id).child("name").get().val()
+
+        group_reference = database.child("groups").push({"name": group_name, "expiration": group_expiration})
+        group_key = group_reference["name"]
+        database.child("groups").child(group_key).child("members").update({user_id: user_name})
+        database.child("groups").child(group_key).update({"creator": user_id})
+        database.child("users").child(user_id).update({"group": group_key})
+
+        token = set_new_token(group_key)
+        return token
+    except Exception as e:
+        return "Unexpected error: " + str(e)
+
+
+@app.route('/groups/join', methods=['POST'])
+def join_group():
+    try:
+        id_token = request.form['id_token']
+        user_token = request.form['token']
+        group_id = user_token.split(":")[0]
+        user_id = get_uid(id_token)
+        group_token = database.child("groups").child(group_id).child("token").get().val()
+
+        if user_token == group_token:
             user_name = database.child("users").child(user_id).child("name").get().val()
-            group_reference = database.child("groups").push({"name": group_name, "expiration" : group_expiration})
-            group_key = group_reference["name"]
-            database.child("groups").child(group_key).child("members").update({user_id: user_name})
-            database.child("groups").child(group_key).update({"creator": user_id})
-
-            database.child("users").child(user_id).update({"group": group_key})
-
-            token = set_new_token(group_key)
-            return token
+            database.child("groups").child(group_id).child("members").update({user_id: user_name})
+            database.child("users").child(user_id).update({"group": group_id})
+            set_new_token(group_id)
+            return "JOINED GROUP"
         else:
             return "INVALID USER TOKEN!"
     except Exception as e:
         return "Unexpected error: " + str(e)
 
 
-@app.route('/users/<user_id>/group', methods=['POST'])
-def join_group(user_id):
+@app.route('/groups', methods=['DELETE'])
+def creator_deletes_group():
     try:
         id_token = request.form['id_token']
-        if get_uid(id_token) == user_id:
-            user_token = request.form['token']
+        group_id = request.form['group_id']
+        user_id = get_uid(id_token)
 
-            group_id = user_token.split(":")[0]
-            group_token = database.child("groups").child(group_id).child("token").get().val()
-
-            if user_token == group_token:
-                user_name = database.child("users").child(user_id).child("name").get().val()
-                database.child("groups").child(group_id).child("members").update({user_id: user_name})
-                database.child("users").child(user_id).update({"group": group_id})
-
-                set_new_token(group_id)
-                return "JOINED GROUP"
-            else:
-                return "INVALID GROUP TOKEN"
-        else:
-            return "INVALID USER TOKEN!"
-    except Exception as e:
-        return "Unexpected error: " + str(e)
-
-
-@app.route('/groups/<group_id>', methods=['DELETE'])
-def delete(group_id):
-    try:
-        id_token = request.form['id_token']
-        if get_uid(id_token) is not None:
+        if validate_user_group_creator(user_id, group_id):
             group_members = database.child("groups").child(group_id).child("members").get()
             for member in group_members.each():
                 member_id = member.key()
                 database.child("users").child(member_id).child("group").remove()
             database.child("groups").child(group_id).remove()
+
             delete_group(group_id)
             return "GROUP DELETED"
         else:
@@ -142,13 +140,13 @@ def delete(group_id):
         return "Unexpected error: " + str(e)
 
 
-@app.route('/users/<user_id>/group', methods=['DELETE'])
-def leave_group(user_id):
+@app.route('/groups/<group_id>/members', methods=['DELETE'])
+def leave_group(group_id):
     try:
         id_token = request.form['id_token']
-        if get_uid(id_token) == user_id:
-            group_id = request.form['group_id']
+        user_id = get_uid(id_token)
 
+        if get_uid(id_token) == user_id:
             database.child("groups").child(group_id).child("members").child(user_id).remove()
             database.child("users").child(user_id).child("group").remove()
             return "LEFT GROUP"
@@ -171,6 +169,22 @@ def delete_group(group_id):
 def get_uid(id_token):
     decoded_token = auth.verify_id_token(id_token)
     return decoded_token['uid']
+
+
+def validate_user_in_group(user_id, group_id):
+    group = database.child("users").child(user_id).child("group").get().val()
+    if group == group_id:
+        return True
+    else:
+        return False
+
+
+def validate_user_group_creator(user_id, group_id):
+    creator_id = database.child("groups").child(group_id).child("creator").get().val()
+    if creator_id == user_id:
+        return True
+    else:
+        return False
 
 
 def set_new_token(group_id):
@@ -220,7 +234,6 @@ userID=<userID>&groupID=<groupID>&filename=<filename>&maxQuality=<low/full/high>
 '''
 @app.route('/upload_image', methods=['POST'])
 def upload_image():
-
     # Get arguments
     args = request.form
     print(args)  # For debugging
@@ -252,7 +265,7 @@ def upload_image():
         data['lowURL'] = URLs[2]
         data['highURL'] = URLs[1]
         data['fullURL'] = URLs[0]
-    
+
     data['hasFaces'] = hasFaces
 
     database.child("groups").child(groupID).child("images").push(data)
@@ -260,10 +273,13 @@ def upload_image():
     # send notification to all group users that new image has been uploaded
     notification_upload_image(data)
     #return ok if everything ok
+    token = str(uuid.uuid4())
+    database.child("groups").child(groupID).child("images").update({token: data})
+
+    user_name = database.child("users").child(owner).child("name").get().val()
+    user_name = user_name.strip("_")
     print("upload_image() ok")
-    return "upload_image() ok"  # this will be returned to android if we'll end up using 'GET' I think.
-
-
+    return token + "_" + str(people) + "_" + user_name
 
 
 def image_processing(initialURL, maxQuality,groupID, filename):

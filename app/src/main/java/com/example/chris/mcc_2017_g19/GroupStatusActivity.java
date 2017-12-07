@@ -152,14 +152,13 @@ public class GroupStatusActivity extends AppCompatActivity {
 
                 @Override
                 public void onSuccess(String response) {
-                    System.out.println("JAA" + response);
                     GroupStatusActivity.this.finish();
                 }
             });
         }
         else{
 
-            api.leaveGroup(firebaseUser.getUid(), group_id, new BackendAPI.HttpCallback() {
+            api.leaveGroup(group_id, new BackendAPI.HttpCallback() {
                 @Override
                 public void onFailure(String response, Exception exception) {
                 }
