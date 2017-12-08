@@ -2,8 +2,10 @@ package com.example.chris.mcc_2017_g19.AlbumsView;
 
 
 import android.content.Intent;
+import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.GridView;
@@ -13,10 +15,16 @@ import com.example.chris.mcc_2017_g19.AlbumsView.AlbumEach.AlbumInfo;
 import com.example.chris.mcc_2017_g19.pvtgallery.PrivateGallery;
 import com.example.chris.mcc_2017_g19.R;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
 public class AlbumsActivity extends AppCompatActivity {
+
+    private static final String TAG = "AlbumsActivity";
+    private final String testFolderRoot = "Test";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,8 +59,20 @@ public class AlbumsActivity extends AppCompatActivity {
 
 
     private List<ItemObject> getAllItemObject(){
-        ItemObject itemObject = null;
         List<ItemObject> items = new ArrayList<>();
+        File albumFolder = new File(Environment.getExternalStorageDirectory() + File.separator + testFolderRoot);
+
+        boolean success = false;
+        if (!albumFolder.exists())
+            success = albumFolder.mkdirs();
+        if (!success)
+            Log.d(TAG, "Unexpected error: could not create folder for albums");
+
+        createTestFolders(albumFolder);
+        createTestFiles(new File(albumFolder + File.separator + "testalbum1"));
+        createTestFiles(new File(albumFolder + File.separator + "testalbum2"));
+        createTestFiles(new File(albumFolder + File.separator + "testalbum3"));
+
         items.add(new ItemObject("Private", "one", "cloudoff", ""));
         items.add(new ItemObject("Image Two", "two", "cloud", "1"));
         items.add(new ItemObject("Image Three", "three","cloud","1"));
@@ -60,5 +80,49 @@ public class AlbumsActivity extends AppCompatActivity {
         items.add(new ItemObject("Image Five", "five", "cloud", "1"));
 
         return items;
+    }
+
+
+    private void createTestFolders(File albumRoot) {
+        File album1 = new File(albumRoot + File.separator + "testalbum1");
+        File album2 = new File(albumRoot + File.separator + "testalbum2");
+        File album3 = new File(albumRoot + File.separator + "testalbum3");
+
+        boolean success = false;
+        if (!album1.exists())
+            success = album1.mkdirs();
+        if (!success)
+            Log.d(TAG, "Unexpected error: could not create folder for albums");
+
+        if (!album2.exists())
+            success = album2.mkdirs();
+        if (!success)
+            Log.d(TAG, "Unexpected error: could not create folder for albums");
+
+        if (!album3.exists())
+            success = album3.mkdirs();
+        if (!success)
+            Log.d(TAG, "Unexpected error: could not create folder for albums");
+
+    }
+
+    private void createTestFiles(File album) {
+        try {
+            for (int x=0; x < 10; x++) {
+                File f = new File(album + "/test" + x + ".txt");
+                if (f.exists()) {
+                    f.delete();
+                }
+                f.createNewFile();
+
+                FileOutputStream out = new FileOutputStream(f);
+
+                out.flush();
+                out.close();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 }
