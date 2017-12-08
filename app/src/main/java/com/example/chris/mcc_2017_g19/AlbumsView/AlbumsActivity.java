@@ -12,6 +12,7 @@ import android.widget.GridView;
 import android.widget.Toast;
 
 import com.example.chris.mcc_2017_g19.AlbumsView.AlbumEach.AlbumInfo;
+import com.example.chris.mcc_2017_g19.Utils;
 import com.example.chris.mcc_2017_g19.pvtgallery.PrivateGallery;
 import com.example.chris.mcc_2017_g19.R;
 
@@ -24,7 +25,6 @@ import java.util.List;
 public class AlbumsActivity extends AppCompatActivity {
 
     private static final String TAG = "AlbumsActivity";
-    private final String testFolderRoot = "Test";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,14 +60,8 @@ public class AlbumsActivity extends AppCompatActivity {
 
     private List<ItemObject> getAllItemObject(){
         List<ItemObject> items = new ArrayList<>();
-        File albumsFolder = new File(Environment.getExternalStorageDirectory() + File.separator + testFolderRoot);
-
-        boolean success = false;
-        if (!albumsFolder.exists())
-            success = albumsFolder.mkdirs();
-        if (!success)
-            Log.d(TAG, "Unexpected error: could not create folder for albums");
-
+        File albumsFolder = Utils.getAlbumsRoot(getApplicationContext());
+        
         createTestFolders(albumsFolder);
         createTestFiles(new File(albumsFolder + File.separator + "testalbum1"));
         createTestFiles(new File(albumsFolder + File.separator + "testalbum2"));

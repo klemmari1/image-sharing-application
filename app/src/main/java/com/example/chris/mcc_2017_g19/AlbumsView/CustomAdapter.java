@@ -66,7 +66,7 @@ public class CustomAdapter extends BaseAdapter {
         return convertView;
     }
 
-    static class ViewHolder{
+    static class ViewHolder {
         TextView textInListView;
         ImageView imageInListView;
         ImageView imageCloudInListView;
