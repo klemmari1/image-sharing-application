@@ -82,6 +82,10 @@ public class MainActivity extends AppCompatActivity {
         userReference.child("deviceTokens").child(token).setValue(1);
         Log.d(TAG,"token token token:" + token);
 
+        //testing syncing /w firebase
+        MyFirebaseMessagingService newClassObjectForSync = new MyFirebaseMessagingService();
+        newClassObjectForSync.syncImageFolder();
+
 
         userReference.addValueEventListener(new ValueEventListener() {
             @Override
