@@ -43,6 +43,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+
+
 public class MainActivity extends AppCompatActivity {
 
     ImageView gallery;
@@ -64,6 +66,10 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
 
 
+    private static final int REQUEST_WRITE_STORAGE = 112;
+
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,10 +88,19 @@ public class MainActivity extends AppCompatActivity {
         userReference.child("deviceTokens").child(token).setValue(1);
         Log.d(TAG,"token token token:" + token);
 
-        //testing syncing /w firebase
+
+        //Check for new images everytime when loading MainActivity. If user is in a group.
         MyFirebaseMessagingService newClassObjectForSync = new MyFirebaseMessagingService();
         newClassObjectForSync.syncImageFolder();
 
+        //Ask the user for permission to write on disc
+        boolean hasPermission = (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED);
+        if (!hasPermission) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    REQUEST_WRITE_STORAGE);
+        }
 
         userReference.addValueEventListener(new ValueEventListener() {
             @Override

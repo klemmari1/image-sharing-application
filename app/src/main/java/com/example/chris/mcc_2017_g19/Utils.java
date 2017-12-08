@@ -9,7 +9,8 @@ public class Utils {
     public static FirebaseDatabase getDatabase() {
         if (firebaseDatabase == null) {
             firebaseDatabase = FirebaseDatabase.getInstance();
-            firebaseDatabase.setPersistenceEnabled(true);
+            //TODO: testing without caching
+            //firebaseDatabase.setPersistenceEnabled(true);
         }
         return firebaseDatabase;
     }

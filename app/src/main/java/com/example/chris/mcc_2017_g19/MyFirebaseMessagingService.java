@@ -49,7 +49,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
 
     UserObject userObj;
-
+    DatabaseReference databaseReference;
 
     private static final String TAG = "MyFirebaseMsgService";
 
@@ -94,7 +94,10 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                 JSONObject jsonObject = new JSONObject(remoteMessage.getData());
                 String filename = jsonObject.getString("filename");
                 String groupID = jsonObject.getString("groupID");
+                String photographer = jsonObject.getString("photographer");
 
+
+                sendNotification("New image from "+ photographer);
                 syncImageFolder();
                 Log.d(TAG,"Data MSG in. (no new data nessesarily)");
             }
@@ -143,6 +146,8 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
      * @param messageBody FCM message body received.
      */
     private void sendNotification(String messageBody) {
+        //TODO Intent crashes
+
         Intent intent = new Intent(this, MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0 /* Request code */, intent,
@@ -220,7 +225,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         //get remote image ids: 1. get group id of current user, 2. get all image ids
 
 
-        final DatabaseReference databaseReference = Utils.getDatabase().getReference();
+        databaseReference = Utils.getDatabase().getReference();
         FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
         String uid = firebaseUser.getUid();
 
@@ -234,87 +239,107 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                 Log.d(TAG,"found groupID in the begining of syncImageFolder(): " + groupID);
 
                 //2. get all image ids from groups/groupID/images
-                DatabaseReference imagesReference = databaseReference.child("groups").child(groupID);
 
-                imagesReference.addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot groupSnapshot) {
+                if (groupID != null) {
+                    DatabaseReference imagesReference = databaseReference.child("groups").child(groupID);
 
-                        //get local imageIDs first:
-                        String groupName = (String) groupSnapshot.child("name").getValue();
-                        List<String> localImageIdList = getLocalImageIDs(groupID,groupName);
+                    imagesReference.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(final DataSnapshot groupSnapshot) {
 
-                        List<String> remoteImageIdList = new ArrayList<String>();
-                        for (DataSnapshot imageSnapshot: groupSnapshot.child("images").getChildren()) {
-                            remoteImageIdList.add(imageSnapshot.getKey());
-                            Log.d(TAG,"added to remote image list: " + imageSnapshot.getKey() + ":"+groupID);
-                        }
+                            //get local imageIDs first:
+                            final String groupName = (String) groupSnapshot.child("name").getValue();
+                            List<String> localImageIdList = getLocalImageIDs(groupID,groupName);
 
-                        //loop through remote imageIDs and download if new found
-                        for (final String remoteImageID : remoteImageIdList) {
-                            if (localImageIdList.contains(remoteImageID) != true) {
-                                Log.d(TAG,"Found new remote image to be synced! remoteImageID: wasnt found locally " + remoteImageID);
+                            List<String> remoteImageIdList = new ArrayList<String>();
+                            for (DataSnapshot imageSnapshot: groupSnapshot.child("images").getChildren()) {
+                                remoteImageIdList.add(imageSnapshot.getKey());
+                                Log.d(TAG,"added to remote image list: " + imageSnapshot.getKey() + ":"+groupID);
+                            }
 
-                                //get url based on quality min(localMaxQ,remoteMaxQ)
-                                ////get max quality as int
-                                String remoteMaxQ = (String) groupSnapshot.child("images").child(remoteImageID).child("maxQuality").getValue();
-                                //TODO: get local max Quality from Alessio / Kristian
-                                String localMaxQ = "full";
-                                String finalQ;
-                                if (qualityAsInt(localMaxQ) >= qualityAsInt(remoteMaxQ)) {
-                                    finalQ = remoteMaxQ;
-                                }
-                                else {
-                                    finalQ = localMaxQ;
-                                }
+                            //loop through remote imageIDs and download if new found
+                            for (final String remoteImageID : remoteImageIdList) {
+                                if (localImageIdList.contains(remoteImageID) != true) {
+                                    Log.d(TAG,"Found new remote image to be synced! remoteImageID: wasnt found locally " + remoteImageID);
 
-                                //get url for the image
-                                String url = (String) groupSnapshot.child("images").child(remoteImageID).child((String) finalQ + "URL").getValue();
+                                    //get url based on quality min(localMaxQ,remoteMaxQ)
+                                    ////get max quality as int
+                                    String remoteMaxQ = (String) groupSnapshot.child("images").child(remoteImageID).child("maxQuality").getValue();
+                                    //TODO: get local max Quality from Alessio / Kristian
+                                    String localMaxQ = "full";
+                                    String finalQ;
+                                    if (qualityAsInt(localMaxQ) >= qualityAsInt(remoteMaxQ)) {
+                                        finalQ = remoteMaxQ;
+                                    }
+                                    else {
+                                        finalQ = localMaxQ;
+                                    }
 
-                                //download from url as bitmap
-                                //Bitmap newBitmap = getBitmapFromURL(url); this doesnt work, mainthread röplem
+                                    //get url for the image
+                                    String url = (String) groupSnapshot.child("images").child(remoteImageID).child((String) finalQ + "URL").getValue();
 
-                                FirebaseStorage storage = FirebaseStorage.getInstance();
-                                StorageReference httpsReference = storage.getReferenceFromUrl(url);
+                                    //download from url as bitmap
+                                    //Bitmap newBitmap = getBitmapFromURL(url); this doesnt work, mainthread röplem
 
-                                final long MAX_SIZE = 50*1024*1024;
+                                    FirebaseStorage storage = FirebaseStorage.getInstance();
+                                    final StorageReference httpsReference = storage.getReferenceFromUrl(url);
 
-                                String photoOwnerID = (String) groupSnapshot.child("images").child(remoteImageID).child("userID").getValue();
-                                //TODO get photoOwner name /w photoOwner ID (probably best way is to just add another firebase query.)
-                                String photoOwner = photoOwnerID;
-                                long hasFaces = (long) groupSnapshot.child("images").child(remoteImageID).child("hasFaces").getValue();
-                                String fname = remoteImageID + "_" + photoOwner + "_" + hasFaces + "_.jpg";
+                                    final long MAX_SIZE = 50*1024*1024;
 
+                                    String photoOwnerID = (String) groupSnapshot.child("images").child(remoteImageID).child("userID").getValue();
+                                    //TODO get photoOwner name /w photoOwner ID (probably best way is to just add another firebase query.)
 
-                                String path = "PhotoOrganizer/"+groupID+ "_" + groupName;
-                                File sdCardRoot = Environment.getExternalStorageDirectory();
-                                //String path = "/PhotoOrganizer/" + groupID + "_" + groupName;
-                                File directory = new File(sdCardRoot, path);
-
-                                try {
-                                    //File localFile = File.createTempFile(fname,"jpg",directory);
-                                    File newFile = new File(directory, fname);
-                                    httpsReference.getFile(newFile).addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
+                                    DatabaseReference photographerUserRef = databaseReference.child("users").child(photoOwnerID);
+                                    photographerUserRef.addListenerForSingleValueEvent(new ValueEventListener() {
                                         @Override
-                                        public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
-                                            //Local temp (?) file has been created
-                                            Log.d(TAG,"Downloaded an image! /w ID: " + remoteImageID);
-                                            //sendNotification("Downloaded a new image!");
+                                        public void onDataChange(DataSnapshot userSnapshot) {
+                                            String photoOwner = (String) userSnapshot.child("name").getValue();
+                                            long hasFaces = (long) groupSnapshot.child("images").child(remoteImageID).child("hasFaces").getValue();
+                                            String fname = remoteImageID + "_" + photoOwner + "_" + hasFaces + "_.jpg";
+
+
+                                            //TODO: check that app has permisions
+
+
+                                            String path = "PhotoOrganizer/"+groupID+ "_" + groupName;
+                                            File sdCardRoot = Environment.getExternalStorageDirectory();
+                                            File directory = new File(sdCardRoot, path);
+
+
+                                            //sendNotification("New image from " + photoOwner);
+                                            try {
+                                                //File localFile = File.createTempFile(fname,"jpg",directory);
+                                                File newFile = new File(directory, fname);
+                                                httpsReference.getFile(newFile).addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
+                                                    @Override
+                                                    public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
+                                                        Log.d(TAG,"Downloaded an image! /w ID: " + remoteImageID);
+                                                    }
+                                                });
+                                            } catch (Exception e) {
+                                                Log.d(TAG,e.getMessage());
+                                            }
+
+                                        }
+
+                                        @Override
+                                        public void onCancelled(DatabaseError databaseError) {
+                                            Log.d(TAG,"error in getting photographer name" + databaseError.getDetails() + databaseError.getMessage());
                                         }
                                     });
-                                } catch (Exception e) {
-                                    Log.d(TAG,e.getMessage());
                                 }
                             }
+
                         }
 
-                    }
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
 
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
+                        }
+                    });
+                }
 
-                    }
-                });
+
 
 
             }
@@ -383,9 +408,6 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         else
             return 2;
     }
-
-
-
 
 
 }

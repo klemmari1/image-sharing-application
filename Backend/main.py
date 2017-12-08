@@ -352,7 +352,6 @@ def notification_upload_image(data):
             #get device tokens for each user from firebase /users/<uid>/deviceTokens
             tempTokens = database.child("users").child(user.key()).child("deviceTokens").get()
             
-
             if (tempTokens is None):
                 print("tempTokens = None!!!!!!!!")
 
@@ -373,6 +372,7 @@ def notification_upload_image(data):
     filename = str(data['userID']) + "_" + str(data['hasFaces']) + "_" + str(timestamp)
 
     data["filename"] = filename + ".jpg"
+    data["photographer"] = database.child("users").child(user.key()).child("name").get()
 
 
     for item in registration_ids:
