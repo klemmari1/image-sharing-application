@@ -63,8 +63,8 @@ public class CustomAdapter extends BaseAdapter {
 
         /* populate the basic info of each album (image,title,cloud or not, number of people)*/
         listViewHolder.textInListView.setText(listStorage.get(position).getTitle());
-        String albumAndFile = listStorage.get(position).getTitle() + File.separator + listStorage.get(position).getImageResource();
-        File image = new File(Utils.getAlbumsRoot(this.context).toString() + File.separator + albumAndFile);
+        String albumAndFile = listStorage.get(position).getWholeName() + File.separator + listStorage.get(position).getImageResource();
+        File image = new File(Utils.getAlbumsRoot(this.context) + File.separator + albumAndFile);
         Picasso.with(context).load(image).resize(500, 500).into(listViewHolder.imageInListView);
 
         int imageCloudId = this.context.getResources().getIdentifier(listStorage.get(position).getCloud(), "drawable", this.context.getPackageName());

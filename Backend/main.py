@@ -334,24 +334,27 @@ def notification_upload_image(data):
 
     all_users = database.child("groups").child(data['groupID']).child("members").get()
     registration_ids = []
-    for user in all_users.each():
-        print("found user key: ",user.key())
-        print("found user val: ",user.val())
-        
-        #get device tokens for each user from firebase /users/<uid>/deviceTokens
-        tempTokens = database.child("users").child(user.key()).child("deviceTokens").get()
-        
 
-        if (tempTokens is None):
-            print("tempTokens = None!!!!!!!!")
+    try:
+        for user in all_users.each():
+            print("found user key: ",user.key())
+            print("found user val: ",user.val())
+            
+            #get device tokens for each user from firebase /users/<uid>/deviceTokens
+            tempTokens = database.child("users").child(user.key()).child("deviceTokens").get()
+            
+            if (tempTokens is None):
+                print("tempTokens = None!!!!!!!!")
 
-        try: 
-            for token in tempTokens.each():
-                print("found user token: ",token.key())
-                registration_ids.append(token.key())
-        except Exception as e:
-            print("Unexpected error in for token in tempTokens.each(): " + str(e)) 
-
+            try: 
+                for token in tempTokens.each():
+                    print("found user token: ",token.key())
+                    registration_ids.append(token.key())
+            except Exception as e:
+                print("Unexpected error in for token in tempTokens.each(): " + str(e)) 
+    except Exception as e:
+        print("no members found from groups/", data['groupID'],"members")
+        print(str(e))
 
     #send data notification to registration_ids. 
     #add the following data: groupID, finalFileName
@@ -360,6 +363,8 @@ def notification_upload_image(data):
     filename = str(data['userID']) + "_" + str(data['hasFaces']) + "_" + str(timestamp)
 
     data["filename"] = filename + ".jpg"
+    photographer = database.child("users").child(data['userID']).child("name").get()
+    data["photographer"] = photographer.val()
 
 
     for item in registration_ids:

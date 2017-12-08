@@ -1,7 +1,6 @@
 package com.example.chris.mcc_2017_g19;
 
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.res.Resources;
 import android.os.Environment;
@@ -17,22 +16,25 @@ public class Utils {
     public static FirebaseDatabase getDatabase() {
         if (firebaseDatabase == null) {
             firebaseDatabase = FirebaseDatabase.getInstance();
-            firebaseDatabase.setPersistenceEnabled(true);
+            //TODO: testing without caching
+            //firebaseDatabase.setPersistenceEnabled(true);
         }
         return firebaseDatabase;
     }
 
-    public static File getAlbumsRoot(Context context) {
+    public static String getAlbumsRoot(Context context) {
         Resources resources = context.getResources();
         String appName = resources.getString(R.string.app_name);
         String albumsFolder = resources.getString(R.string.albums_name);
+        String path = Environment.getExternalStorageDirectory() + File.separator + appName + File.separator + albumsFolder;
 
-        File albumsRoot = new File(Environment.getExternalStorageDirectory() + File.separator + appName + File.separator + albumsFolder);
+        File albumsRoot = new File(path);
         boolean success = false;
-        if (!albumsRoot.exists())
+        if (!albumsRoot.exists()){
             success = albumsRoot.mkdirs();
-        if (!success)
-            Log.d("Utils", "Unexpected error: could not create folder for albums");
-        return albumsRoot;
+            if (!success)
+                Log.d("Utils", "Unexpected error: could not create folder for albums");
+        }
+        return path;
     }
 }

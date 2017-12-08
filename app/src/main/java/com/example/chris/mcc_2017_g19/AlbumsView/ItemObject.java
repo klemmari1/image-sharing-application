@@ -7,15 +7,14 @@ package com.example.chris.mcc_2017_g19.AlbumsView;
 public class ItemObject {
 
     private String title;
+    private String wholeName;
     private String imageResource;
     private String cloud;
-
-
-
     private String number;
 
-    public ItemObject(String title, String imageResource, String cloud, String number) {
+    public ItemObject(String title, String wname, String imageResource, String cloud, String number) {
         this.title = title;
+        this.wholeName = wname;
         this.imageResource = imageResource;
         this.cloud = cloud;
         this.number = number;
@@ -23,6 +22,10 @@ public class ItemObject {
 
     public String getTitle() {
         return title;
+    }
+
+    public String getWholeName() {
+        return wholeName;
     }
 
     public void setTitle(String title) {
