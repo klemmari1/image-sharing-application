@@ -74,7 +74,7 @@ public class GridAlbumInfoViewAdapter extends RecyclerView.Adapter<AlbumInfoHold
         final String uri = mItemList.get(position).getItemTitle();
         //ADD PICTURES IN GRIDVIEW
         File imageFile = new File(uri);
-        Picasso.with(mContext).load(imageFile).error(R.drawable.cloudoff).into(p);
+        Picasso.with(mContext).load(imageFile).resize(500, 500).error(R.drawable.cloudoff).into(p);
 
         final ImageItem element = mItemList.get(position);
         holder.itemView.setOnClickListener(new View.OnClickListener() {
