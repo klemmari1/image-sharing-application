@@ -11,7 +11,7 @@ import com.google.firebase.database.FirebaseDatabase;
 
 import java.io.File;
 
-public class Utils extends Activity {
+public class Utils {
     private static FirebaseDatabase firebaseDatabase;
 
     public static FirebaseDatabase getDatabase() {
