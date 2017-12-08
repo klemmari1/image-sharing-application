@@ -299,7 +299,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                                         public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
                                             //Local temp (?) file has been created
                                             Log.d(TAG,"Downloaded an image! /w ID: " + remoteImageID);
-                                            sendNotification("Downloaded a new image!");
+                                            //sendNotification("Downloaded a new image!");
                                         }
                                     });
                                 } catch (Exception e) {
