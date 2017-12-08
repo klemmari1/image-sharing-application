@@ -110,12 +110,6 @@ def creator_deletes_group():
         user_id = get_uid(id_token)
 
         if validate_user_group_creator(user_id, group_id):
-            group_members = database.child("groups").child(group_id).child("members").get()
-            for member in group_members.each():
-                member_id = member.key()
-                database.child("users").child(member_id).child("group").remove()
-            database.child("groups").child(group_id).remove()
-
             delete_group(group_id)
             return "GROUP DELETED"
         else:
