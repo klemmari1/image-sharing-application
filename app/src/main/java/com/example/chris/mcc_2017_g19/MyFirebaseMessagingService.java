@@ -99,7 +99,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                 //String photographer = jsonObject.getString("photographer");
 
 
-                sendNotification("New image from "+ photographer);
+                //sendNotification("New image from " + photographer);
                 syncImageFolder();
                 Log.d(TAG,"Data MSG in. (no new data nessesarily)");
             }
@@ -198,7 +198,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 //        // Create imageDir
 //
 //        File sdCardRoot = Environment.getExternalStorageDirectory();
-//        //String path = "/PhotoOrganizer/" + groupID + "_" + groupName;
+//        //String path ="/PhotoOrganizer/Albums" + groupName + "_" + groupID;
 //        File directory = new File(sdCardRoot, path);
 //
 //
@@ -299,11 +299,10 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                                             long hasFaces = (long) groupSnapshot.child("images").child(remoteImageID).child("hasFaces").getValue();
                                             String fname = remoteImageID + "_" + photoOwner + "_" + hasFaces + "_.jpg";
 
-
                                             //TODO: check that app has permisions
 
 
-                                            String path = "PhotoOrganizer/"+groupID+ "_" + groupName;
+                                            String path =  "PhotoOrganizer/Albums/" + groupName + "_" + groupID;
                                             File sdCardRoot = Environment.getExternalStorageDirectory();
                                             File directory = new File(sdCardRoot, path);
 
@@ -319,7 +318,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                                                     }
                                                 });
                                             } catch (Exception e) {
-                                                Log.d(TAG,e.getMessage());
+                                                Log.d(TAG, e.getMessage());
                                             }
 
                                         }
@@ -356,14 +355,14 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
 
 
-        //if something not in local: 1. get url, 2. download to /root/PhotoOrganizer/<groupID>/
+        //if something not in local: 1. get url, 2. download to /root/PhotoOrganizer/Albums/<albumName>/
 
     }
 
     public List<String> getLocalImageIDs(String groupID, String groupName) {
 
         File sdCardRoot = Environment.getExternalStorageDirectory();
-        String path = "/PhotoOrganizer/" + groupID + "_" + groupName;
+        String path = "/PhotoOrganizer/Albums/" + groupName + "_" + groupID;
         File yourDir = new File(sdCardRoot + path);
 
         Log.d(TAG,"yourDIr path is: "+ yourDir.getAbsolutePath());
