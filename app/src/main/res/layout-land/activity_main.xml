@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#ffffff"
+    android:padding="10dp" >
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight=".5"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:background="@drawable/roundedblocks"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight=".5"
+            android:orientation="vertical"
+            android:layout_marginRight="5dp"
+            android:layout_marginBottom="5dp"
+            android:gravity="center">
+
+            <ImageView
+                android:id="@+id/gallery"
+                android:layout_width="fill_parent"
+                android:layout_height="100dp"
+                android:src="@mipmap/gallery" />
+            <TextView
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:text="Gallery" />
+
+        </LinearLayout>
+        <LinearLayout
+            android:background="@drawable/roundedblocks"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight=".5"
+            android:orientation="vertical"
+            android:layout_marginLeft="5dp"
+            android:layout_marginBottom="5dp"
+            android:gravity="center">
+
+            <ImageView
+                android:id="@+id/photo"
+                android:layout_width="fill_parent"
+                android:layout_height="100dp"
+                android:src="@mipmap/photo" />
+            <TextView
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:text="Take photo" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight=".5"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:background="@drawable/roundedblocks"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight=".5"
+            android:orientation="vertical"
+            android:layout_marginRight="5dp"
+            android:layout_marginTop="5dp"
+            android:gravity="center"
+            >
+
+            <ImageView
+                android:id="@+id/group"
+                android:layout_width="fill_parent"
+                android:layout_height="100dp"
+                android:src="@mipmap/group" />
+            <TextView
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:text="Group management" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:background="@drawable/roundedblocks"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight=".5"
+            android:orientation="vertical"
+            android:layout_marginLeft="5dp"
+            android:layout_marginTop="5dp"
+            android:gravity="center">
+
+            <ImageView
+                android:id="@+id/setting"
+                android:layout_width="fill_parent"
+                android:layout_height="100dp"
+                android:src="@mipmap/settings" />
+            <TextView
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:text="Settings" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>
