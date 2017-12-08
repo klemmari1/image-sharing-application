@@ -8,3 +8,5 @@ Group: timestamp
 Questions/Problems:
 	- After new user creation, crash when trying to enter group creation (user not ready in database?)	
 	- Rules for database/storage?
+	- Backend security: block user from modifying groups he's not in
+	- Prevent user from getting to group status if group expired? (or just block adding members?)

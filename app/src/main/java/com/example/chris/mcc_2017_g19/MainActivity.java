@@ -226,6 +226,8 @@ public class MainActivity extends AppCompatActivity {
                 userGroupObj = dataSnapshot.getValue(GroupObject.class);
                 if (!userGroupObj.isExpired())
                     TakePictureIntent();
+                else
+                    Log.d(TAG, "Group expired!");
             }
             @Override
             public void onCancelled(DatabaseError databaseError) {
