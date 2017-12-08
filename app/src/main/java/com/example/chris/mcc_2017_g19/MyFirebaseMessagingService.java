@@ -94,7 +94,9 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                 JSONObject jsonObject = new JSONObject(remoteMessage.getData());
                 String filename = jsonObject.getString("filename");
                 String groupID = jsonObject.getString("groupID");
-                String photographer = jsonObject.getString("photographer");
+
+                //TODO: photogrpaher for notification
+                //String photographer = jsonObject.getString("photographer");
 
 
                 sendNotification("New image from "+ photographer);
