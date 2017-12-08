@@ -37,7 +37,6 @@ public class GridViewAdapter extends ArrayAdapter<GridItem> {
         this.layoutResourceId = layoutResourceId;
         this.mContext = mContext;
         this.mGridData = mGridData;
-
     }
 
     /**
@@ -53,7 +52,6 @@ public class GridViewAdapter extends ArrayAdapter<GridItem> {
     @Override
     public View getView(final int position, View convertView, ViewGroup parent) {
         View row = convertView;
-        ImageView imageView;
         ViewHolder holder;
 
         if (row == null) {

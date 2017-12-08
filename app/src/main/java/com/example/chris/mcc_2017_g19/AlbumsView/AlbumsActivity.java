@@ -33,7 +33,7 @@ public class AlbumsActivity extends AppCompatActivity {
 
         GridView gridview = (GridView) findViewById(R.id.gridview);
 
-        List<ItemObject> allItems = getAllItemObject();
+        final List<ItemObject> allItems = getAllItemObject();
         CustomAdapter customAdapter = new CustomAdapter(AlbumsActivity.this, allItems);
         gridview.setAdapter(customAdapter);
 
@@ -42,15 +42,16 @@ public class AlbumsActivity extends AppCompatActivity {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Toast.makeText(AlbumsActivity.this, "Position: " + position, Toast.LENGTH_SHORT);
 
-                if(position == 0){
+                if(allItems.get(position).getWholeName().equals("Private")){
 
                     Intent intent = new Intent(AlbumsActivity.this, PrivateGallery.class);
                     startActivity(intent);
 
                 }
                 else{
+                    String path = allItems.get(position).getWholeName();
                     Intent intent = new Intent(AlbumsActivity.this, AlbumInfo.class);
-                    intent.putExtra( "PATH", "testalbum1");
+                    intent.putExtra( "PATH", path);
                     startActivity(intent);
                 }
             }
@@ -59,17 +60,10 @@ public class AlbumsActivity extends AppCompatActivity {
 
     private List<ItemObject> getAllItemObject(){
         List<ItemObject> items = new ArrayList<>();
-        File albumsFolder = Utils.getAlbumsRoot(getApplicationContext());
-
-        //For testing
-//        createTestFolders(albumsFolder);
-//        createTestFiles(new File(albumsFolder + File.separator + "testalbum1"));
-//        createTestFiles(new File(albumsFolder + File.separator + "testalbum2"));
-//        createTestFiles(new File(albumsFolder + File.separator + "testalbum3"));
+        File albumsFolder = new File(Utils.getAlbumsRoot(getApplicationContext()));
 
         List<ItemObject> albums = getAlbumData(albumsFolder);
-        for (ItemObject item : albums)
-            items.add(item);
+        items.addAll(albums);
 
         return items;
     }
@@ -77,34 +71,37 @@ public class AlbumsActivity extends AppCompatActivity {
 
     private List<ItemObject> getAlbumData(File albumsFolder) {
         List<ItemObject> albumsList = new ArrayList<>();
-        Log.d(TAG, "Albums in path: " + albumsFolder.listFiles().length);
+        if(albumsFolder.listFiles() != null){
+            Log.d(TAG, "Albums in path: " + albumsFolder.listFiles().length);
 
-        File[] albums = albumsFolder.listFiles();
-        for (int i=0; i < albums.length; i++) {
-            File album = albums[i];
+            File[] albums = albumsFolder.listFiles();
+            for(File album: albums) {
+                if (album.isDirectory()) {
+                    Log.d(TAG, "Album: " + album.getName());
 
-            if (album.isDirectory()) {
-                Log.d(TAG, "Album: " + album.getName());
+                    String albumName = album.getName();
+                    int picturesInAlbum = 0;
+                    String labelImage = null;
 
-                String albumName = album.getName();
-                int picturesInAlbum = 0;
-                String labelImage = null;
-
-                File[] files = album.listFiles();
-                for (int j=0; j < files.length; j++) {
-                    File file = files[j];
-                    if (fileIsValid(file)) {
-                        picturesInAlbum++;
-                        if (j == 0) {
-                            labelImage = file.getName();
+                    File[] files = album.listFiles();
+                    for (int j=0; j < files.length; j++) {
+                        File file = files[j];
+                        if (fileIsValid(file)) {
+                            picturesInAlbum++;
+                            if (j == 0) {
+                                labelImage = file.getName();
+                            }
                         }
+
                     }
+                    String cloud = "cloud";
+                    if(albumName.equals("Private"))
+                        cloud = "cloudoff";
+                    albumsList.add(new ItemObject(albumName.split("_")[0], albumName, labelImage, cloud, String.valueOf(picturesInAlbum)));
 
+                } else {
+                    Log.d(TAG, "Unexpected error: Found file instead of a folder");
                 }
-                albumsList.add(new ItemObject(albumName, labelImage, "cloud", String.valueOf(picturesInAlbum)));
-
-            } else {
-                Log.d(TAG, "Unexpected error: Found file instead of a folder");
             }
         }
 

@@ -21,11 +21,10 @@ import java.util.ArrayList;
 public class GalleryImages {
 
     //Define bucket name from which you want to take images Example '/DCIM/Camera' for camera images
-    private static String CAMERA_IMAGE_BUCKET_NAME = Environment.getExternalStorageDirectory().toString() + "/OrganizerApp";
+    private static String CAMERA_IMAGE_BUCKET_NAME;
 
     public GalleryImages(String path, Context context){
-        CAMERA_IMAGE_BUCKET_NAME = Utils.getAlbumsRoot(context).toString() + File.separator + path;
-        Log.d("GalleryImages", CAMERA_IMAGE_BUCKET_NAME);
+        CAMERA_IMAGE_BUCKET_NAME = Utils.getAlbumsRoot(context) + File.separator + path;
     }
 
     //method to get id of image bucket from path

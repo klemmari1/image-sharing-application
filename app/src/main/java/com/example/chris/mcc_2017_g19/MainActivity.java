@@ -386,8 +386,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void SaveImage(String folder) {
         Bitmap finalBitmap = getImageBitmap();
-        String root = Environment.getExternalStorageDirectory().toString();
-        File myDir = new File(root + "/OrganizerApp" + folder);
+        File myDir = new File(Utils.getAlbumsRoot(getApplicationContext()) + folder);
 
         if (!myDir.exists()) {
             myDir.mkdirs();

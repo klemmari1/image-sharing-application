@@ -44,8 +44,6 @@ public class PrivateGallery extends ActionBarActivity {
     private GridViewAdapter mGridAdapter;
     private ArrayList<GridItem> mGridData;
     private String FEED_URL = "http://api.themoviedb.org/3/movie/157336/images?api_key=8496be0b2149805afa458ab8ec27560c";
-    public static final String CAMERA_IMAGE_BUCKET_NAME = Environment.getExternalStorageDirectory().toString() + "/OrganizerApp";
-
     private static final int RC_READ_STORAGE = 5;
 
     @Override
