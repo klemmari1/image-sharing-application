@@ -60,18 +60,20 @@ public class AlbumsActivity extends AppCompatActivity {
 
     private List<ItemObject> getAllItemObject(){
         List<ItemObject> items = new ArrayList<>();
-        File albumFolder = new File(Environment.getExternalStorageDirectory() + File.separator + testFolderRoot);
+        File albumsFolder = new File(Environment.getExternalStorageDirectory() + File.separator + testFolderRoot);
 
         boolean success = false;
-        if (!albumFolder.exists())
-            success = albumFolder.mkdirs();
+        if (!albumsFolder.exists())
+            success = albumsFolder.mkdirs();
         if (!success)
             Log.d(TAG, "Unexpected error: could not create folder for albums");
 
-        createTestFolders(albumFolder);
-        createTestFiles(new File(albumFolder + File.separator + "testalbum1"));
-        createTestFiles(new File(albumFolder + File.separator + "testalbum2"));
-        createTestFiles(new File(albumFolder + File.separator + "testalbum3"));
+        createTestFolders(albumsFolder);
+        createTestFiles(new File(albumsFolder + File.separator + "testalbum1"));
+        createTestFiles(new File(albumsFolder + File.separator + "testalbum2"));
+        createTestFiles(new File(albumsFolder + File.separator + "testalbum3"));
+
+        List<File> albums = getAlbumData(albumsFolder);
 
         items.add(new ItemObject("Private", "one", "cloudoff", ""));
         items.add(new ItemObject("Image Two", "two", "cloud", "1"));
@@ -80,6 +82,33 @@ public class AlbumsActivity extends AppCompatActivity {
         items.add(new ItemObject("Image Five", "five", "cloud", "1"));
 
         return items;
+    }
+
+
+    private List<File> getAlbumData(File albumsFolder) {
+        List<File> albumsList = new ArrayList<>();
+        Log.d(TAG, "Albums in path: " + albumsFolder.listFiles().length);
+
+        File[] albums = albumsFolder.listFiles();
+        for (int i=0; i < albums.length; i++) {
+            File album = albums[i];
+            if (album.isDirectory()) {
+                Log.d(TAG, "Album: " + album.getName());
+                File[] files = album.listFiles();
+                for (int j=0; j < files.length; j++) {
+                    File file = files[j];
+                    if (file.isFile()) {
+                        Log.d(TAG, "File: " + file.getName());
+                    } else {
+                        Log.d(TAG, "Unexpected error: Found folder instead of a file");
+                    }
+                }
+            } else {
+                Log.d(TAG, "Unexpected error: Found file instead of a folder");
+            }
+        }
+
+        return albumsList;
     }
 
 
