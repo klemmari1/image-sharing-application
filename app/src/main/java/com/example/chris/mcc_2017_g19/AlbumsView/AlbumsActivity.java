@@ -2,21 +2,29 @@ package com.example.chris.mcc_2017_g19.AlbumsView;
 
 
 import android.content.Intent;
+import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.Toast;
 
 import com.example.chris.mcc_2017_g19.AlbumsView.AlbumEach.AlbumInfo;
+import com.example.chris.mcc_2017_g19.Utils;
 import com.example.chris.mcc_2017_g19.pvtgallery.PrivateGallery;
 import com.example.chris.mcc_2017_g19.R;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
 public class AlbumsActivity extends AppCompatActivity {
+
+    private static final String TAG = "AlbumsActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,23 +60,122 @@ public class AlbumsActivity extends AppCompatActivity {
                 }
                 else{
                     Intent intent = new Intent(AlbumsActivity.this, AlbumInfo.class);
-                    intent.putExtra( "PATH", "/Test");
+                    intent.putExtra( "PATH", "testalbum1");
                     startActivity(intent);
                 }
             }
         });
     }
 
-
     private List<ItemObject> getAllItemObject(){
-        ItemObject itemObject = null;
         List<ItemObject> items = new ArrayList<>();
-        items.add(new ItemObject("Private", "one", "cloudoff", ""));
-        items.add(new ItemObject("Image Two", "two", "cloud", "1"));
-        items.add(new ItemObject("Image Three", "three","cloud","1"));
-        items.add(new ItemObject("Image Four", "four", "cloud", "1"));
-        items.add(new ItemObject("Image Five", "five", "cloud", "1"));
+        File albumsFolder = Utils.getAlbumsRoot(getApplicationContext());
+
+        //For testing
+//        createTestFolders(albumsFolder);
+//        createTestFiles(new File(albumsFolder + File.separator + "testalbum1"));
+//        createTestFiles(new File(albumsFolder + File.separator + "testalbum2"));
+//        createTestFiles(new File(albumsFolder + File.separator + "testalbum3"));
+
+        List<ItemObject> albums = getAlbumData(albumsFolder);
+        for (ItemObject item : albums)
+            items.add(item);
 
         return items;
+    }
+
+
+    private List<ItemObject> getAlbumData(File albumsFolder) {
+        List<ItemObject> albumsList = new ArrayList<>();
+        Log.d(TAG, "Albums in path: " + albumsFolder.listFiles().length);
+
+        File[] albums = albumsFolder.listFiles();
+        for (int i=0; i < albums.length; i++) {
+            File album = albums[i];
+
+            if (album.isDirectory()) {
+                Log.d(TAG, "Album: " + album.getName());
+
+                String albumName = album.getName();
+                int picturesInAlbum = 0;
+                String labelImage = null;
+
+                File[] files = album.listFiles();
+                for (int j=0; j < files.length; j++) {
+                    File file = files[j];
+                    if (fileIsValid(file)) {
+                        picturesInAlbum++;
+                        if (j == 0) {
+                            labelImage = file.getName();
+                        }
+                    }
+
+                }
+                albumsList.add(new ItemObject(albumName, labelImage, "cloud", String.valueOf(picturesInAlbum)));
+
+            } else {
+                Log.d(TAG, "Unexpected error: Found file instead of a folder");
+            }
+        }
+
+        return albumsList;
+    }
+
+
+    private boolean fileIsValid(File image) {
+        if (image.isFile()) {
+            String filename = image.getName();
+            Log.d(TAG, "File: " + filename);
+            int extensionStart = filename.lastIndexOf('.');
+            if (extensionStart > 0 && filename.substring(extensionStart + 1).equals("jpg"))
+                return true;
+        }
+
+        return false;
+    }
+
+    private void createTestFolders(File albumRoot) {
+        File album1 = new File(albumRoot + File.separator + "testalbum1");
+        File album2 = new File(albumRoot + File.separator + "testalbum2");
+        File album3 = new File(albumRoot + File.separator + "testalbum3");
+
+        boolean success = false;
+        if (!album1.exists())
+            success = album1.mkdirs();
+        if (!success)
+            Log.d(TAG, "Unexpected error: could not create folder for albums");
+
+        if (!album2.exists())
+            success = album2.mkdirs();
+        if (!success)
+            Log.d(TAG, "Unexpected error: could not create folder for albums");
+
+        if (!album3.exists())
+            success = album3.mkdirs();
+        if (!success)
+            Log.d(TAG, "Unexpected error: could not create folder for albums");
+
+    }
+
+
+    //fileformat: imageid_username_faces_.jpg
+    private void createTestFiles(File album) {
+        try {
+            for (int x=0; x < 10; x++) {
+                File f = new File(album + "/" + x + "_user_1_.jpg");
+                if (f.exists()) {
+                    f.delete();
+                }
+                f.createNewFile();
+
+                FileOutputStream out = new FileOutputStream(f);
+
+                out.flush();
+                out.close();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 }

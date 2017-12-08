@@ -1,6 +1,9 @@
 package com.example.chris.mcc_2017_g19.AlbumsView;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.net.Uri;
+import android.provider.MediaStore;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,7 +12,10 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.chris.mcc_2017_g19.R;
+import com.example.chris.mcc_2017_g19.Utils;
+import com.squareup.picasso.Picasso;
 
+import java.io.File;
 import java.util.List;
 
 public class CustomAdapter extends BaseAdapter {
@@ -57,8 +63,10 @@ public class CustomAdapter extends BaseAdapter {
 
         /* populate the basic info of each album (image,title,cloud or not, number of people)*/
         listViewHolder.textInListView.setText(listStorage.get(position).getTitle());
-        int imageResourceId = this.context.getResources().getIdentifier(listStorage.get(position).getImageResource(), "drawable", this.context.getPackageName());
-        listViewHolder.imageInListView.setImageResource(imageResourceId);
+        String albumAndFile = listStorage.get(position).getTitle() + File.separator + listStorage.get(position).getImageResource();
+        File image = new File(Utils.getAlbumsRoot(this.context).toString() + File.separator + albumAndFile);
+        Picasso.with(context).load(image).resize(500, 500).into(listViewHolder.imageInListView);
+
         int imageCloudId = this.context.getResources().getIdentifier(listStorage.get(position).getCloud(), "drawable", this.context.getPackageName());
         listViewHolder.imageCloudInListView.setImageResource(imageCloudId);
         listViewHolder.textNumberPerson.setText(listStorage.get(position).getNumber());
@@ -66,7 +74,7 @@ public class CustomAdapter extends BaseAdapter {
         return convertView;
     }
 
-    static class ViewHolder{
+    static class ViewHolder {
         TextView textInListView;
         ImageView imageInListView;
         ImageView imageCloudInListView;
