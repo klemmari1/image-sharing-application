@@ -173,7 +173,7 @@ def delete_expired_groups():
         for group in groups.get().each():
             expiration_time = group.val()['expiration']
             timestamp = datetime.strptime(expiration_time, '%Y/%m/%d %H:%M:%S')
-            if timestamp < datetime.now():
+            if timestamp < datetime.utcnow():
                 delete_group(group.key())
         return "EXPIRED GROUPS DELETED"
     except Exception as e:

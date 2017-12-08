@@ -20,8 +20,12 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.ValueEventListener;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
+import java.util.TimeZone;
 
 public class GroupStatusActivity extends AppCompatActivity {
 
@@ -185,6 +189,17 @@ public class GroupStatusActivity extends AppCompatActivity {
 
     private void displayGroupExpiration(String expiration) {
         TextView groupExpirationField = (TextView) findViewById(R.id.group_status_expiration_value);
-        groupExpirationField.setText(expiration);
+        Calendar cal = Calendar.getInstance();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+        try {
+            cal.setTime(sdf.parse(expiration));
+        } catch (ParseException pe)
+        {
+            pe.printStackTrace();
+        }
+        int tz = TimeZone.getDefault().getRawOffset();
+        if (tz != 0)
+            cal.add(Calendar.MILLISECOND, tz);
+        groupExpirationField.setText(sdf.format(cal.getTime()));
     }
 }

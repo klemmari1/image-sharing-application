@@ -1,7 +1,11 @@
 package com.example.chris.mcc_2017_g19;
 
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 public class GroupObject {
@@ -51,5 +55,19 @@ public class GroupObject {
 
     public void setMembers(Map<String,String> memberList){
         members = memberList;
+    }
+
+    public boolean isExpired() {
+        Calendar groupCalendar = Calendar.getInstance();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+        try {
+            groupCalendar.setTime(sdf.parse(this.expiration));
+        } catch (ParseException pe){
+            pe.printStackTrace();
+        }
+        Calendar currentTimeCalendar = Calendar.getInstance();
+        if (groupCalendar.compareTo(currentTimeCalendar) < 0)
+            return true;
+        return false;
     }
 }

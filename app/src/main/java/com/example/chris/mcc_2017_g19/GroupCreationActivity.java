@@ -97,7 +97,6 @@ public class GroupCreationActivity extends AppCompatActivity {
 
     private String generateTimestamp(int duration) {
         DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-        dateFormat.setTimeZone(TimeZone.getTimeZone("Europe/Helsinki"));
         Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.MINUTE, duration);
         return dateFormat.format(calendar.getTime());

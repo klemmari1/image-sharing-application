@@ -50,6 +50,7 @@ public class MainActivity extends AppCompatActivity {
 
     private FirebaseUser firebaseUser;
     private UserObject userObj;
+    private GroupObject userGroupObj;
     private DatabaseReference databaseReference;
 
     static final int REQUEST_IMAGE_CAPTURE = 1;
@@ -118,7 +119,12 @@ public class MainActivity extends AppCompatActivity {
         takepicture.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+//                final String userGroup = userObj.getGroup();
+//                if (userGroup == null) {
+//                    errorToast("Join or create a group to take pictures");
+//                } else {
+//                    cameraButtonAction(userGroup);
+//                }
                 TakePictureIntent();
             }
         });
@@ -190,6 +196,26 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
         }
     }
+
+
+//    private void cameraButtonAction(String group) throws IllegalArgumentException {
+//        DatabaseReference userGroupReference = databaseReference.child("groups").child(group);
+//        userGroupReference.addListenerForSingleValueEvent(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(DataSnapshot dataSnapshot) {
+//                userGroupObj = dataSnapshot.getValue(GroupObject.class);
+//                if (!userGroupObj.isExpired())
+//                    TakePictureIntent();
+//            }
+//            @Override
+//            public void onCancelled(DatabaseError databaseError) {
+//            }
+//        });
+//    }
+
+//    private void errorToast(String errorMessage) {
+//        Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show();
+//    }
 
 
     private void TakePictureIntent() {
