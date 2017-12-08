@@ -96,10 +96,10 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                 String groupID = jsonObject.getString("groupID");
 
                 //TODO: photogrpaher for notification
-                //String photographer = jsonObject.getString("photographer");
+                String photographer = jsonObject.getString("photographer");
 
 
-                //sendNotification("New image from " + photographer);
+                sendNotification("New image from " + photographer);
                 syncImageFolder();
                 Log.d(TAG,"Data MSG in. (no new data nessesarily)");
             }
@@ -383,7 +383,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                     IDs.add(filename.split("_")[0]);
                     //IDs.add(filename);
 
-                    Log.d(TAG, filename);
+                    Log.d(TAG, filename.split("_")[0);
                 }
             }
 

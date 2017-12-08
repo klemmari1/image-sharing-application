@@ -363,7 +363,8 @@ def notification_upload_image(data):
     filename = str(data['userID']) + "_" + str(data['hasFaces']) + "_" + str(timestamp)
 
     data["filename"] = filename + ".jpg"
-    #data["photographer"] = database.child("users").child(user.key()).child("name").get()
+    photographer = database.child("users").child(data['userID']).child("name").get()
+    data["photographer"] = photographer.val()
 
 
     for item in registration_ids:
