@@ -1,19 +1,3 @@
-# Copyright 2017 Google Inc. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-# [START app]
-
 import os
 import uuid
 import json
@@ -126,12 +110,6 @@ def creator_deletes_group():
         user_id = get_uid(id_token)
 
         if validate_user_group_creator(user_id, group_id):
-            group_members = database.child("groups").child(group_id).child("members").get()
-            for member in group_members.each():
-                member_id = member.key()
-                database.child("users").child(member_id).child("group").remove()
-            database.child("groups").child(group_id).remove()
-
             delete_group(group_id)
             return "GROUP DELETED"
         else:
@@ -268,17 +246,15 @@ def upload_image():
 
     data['hasFaces'] = hasFaces
 
-    database.child("groups").child(groupID).child("images").push(data)
-
-    # send notification to all group users that new image has been uploaded
-    notification_upload_image(data)
     token = str(uuid.uuid4())
     database.child("groups").child(groupID).child("images").update({token: data})
 
-    user_name = database.child("users").child(owner).child("name").get().val()
+    # send notification to all group users that new image has been uploaded
+    notification_upload_image(data)
+
+    user_name = database.child("users").child(userID).child("name").get().val()
     user_name = user_name.strip("_")
-    print("upload_image() ok")
-    return token + "_" + user_name + "_" + str(people) + "_"
+    return token + "_" + user_name + "_" + str(hasFaces) + "_"
 
 
 def image_processing(initialURL, maxQuality,groupID, filename):
