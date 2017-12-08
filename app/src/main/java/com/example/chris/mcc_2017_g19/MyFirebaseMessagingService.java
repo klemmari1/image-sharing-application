@@ -71,23 +71,12 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         // messages. For more see: https://firebase.google.com/docs/cloud-messaging/concept-options
         // [END_EXCLUDE]
 
-        // TODO(developer): Handle FCM messages here.
-        // Not getting messages here? See why this may be: https://goo.gl/39bRNJ
+
         Log.d(TAG, "From: " + remoteMessage.getFrom());
 
         // Check if message contains a data payload.
         if (remoteMessage.getData().size() > 0) {
             Log.d(TAG, "Message data payload: " + remoteMessage.getData());
-
-
-            // Message data payload: {
-            // lowURL=https://firebasestorage.googleapis.com/v0/b/mcc-fall-2017-g19.appspot.com/o/-L-bmu5py7wNzvBJsP0h%2FfullQualityWithFacesLow.jpg?alt=media,
-            // userID=55vmiiR6N7bFflArBQlhUYRFxhF2, filename=55vmiiR6N7bFflArBQlhUYRFxhF2_1_05December201708:17:42PM,
-            // fullURL=https://firebasestorage.googleapis.com/v0/b/mcc-fall-2017-g19.appspot.com/o/-L-bmu5py7wNzvBJsP0h%2FfullQualityWithFaces.jpg?alt=media,
-            // hasFaces=1,
-            // groupID=-L-bmu5py7wNzvBJsP0h,
-            // highURL=https://firebasestorage.googleapis.com/v0/b/mcc-fall-2017-g19.appspot.com/o/-L-bmu5py7wNzvBJsP0h%2FfullQualityWithFacesHigh.jpg?alt=media,
-            // maxQuality=full}
 
             try {
                 //receive groupID and filename from received data-notification
@@ -95,7 +84,6 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                 String filename = jsonObject.getString("filename");
                 String groupID = jsonObject.getString("groupID");
 
-                //TODO: photogrpaher for notification
                 String photographer = jsonObject.getString("photographer");
 
 
@@ -119,21 +107,6 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         // Also if you intend on generating your own notifications as a result of a received FCM
         // message, here is where that should be initiated. See sendNotification method below.
     }
-    // [END receive_message]
-
-//    /**
-//     * Schedule a job using FirebaseJobDispatcher.
-//     */
-//    private void scheduleJob() {
-//        // [START dispatch_job]
-//        FirebaseJobDispatcher dispatcher = new FirebaseJobDispatcher(new GooglePlayDriver(this));
-//        Job myJob = dispatcher.newJobBuilder()
-//                .setService(    MyJobService.class)
-//                .setTag("my-job-tag")
-//                .build();
-//        dispatcher.schedule(myJob);
-//        // [END dispatch_job]
-//    }
 
     /**
      * Handle time allotted to BroadcastReceivers.
@@ -148,8 +121,6 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
      * @param messageBody FCM message body received.
      */
     private void sendNotification(String messageBody) {
-        //TODO Intent crashes
-
         Intent intent = new Intent(this, MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0 /* Request code */, intent,
@@ -171,61 +142,10 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
         notificationManager.notify(0 /* ID of notification */, notificationBuilder.build());
     }
-//
-//    private Bitmap getBitmapFromURL(String src) {
-//        try {
-//            java.net.URL url = new java.net.URL(src);
-//            HttpURLConnection connection = (HttpURLConnection) url
-//                    .openConnection();
-//            connection.setDoInput(true);
-//            connection.connect();
-//            InputStream input = connection.getInputStream();
-//            Bitmap myBitmap = BitmapFactory.decodeStream(input);
-//            return myBitmap;
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//            return null;
-//        }
-//
-//
-//
-//    }
-//    private String saveToInternalStorage(Bitmap bitmapImage, String path,String fname){
-//        ContextWrapper cw = new ContextWrapper(getApplicationContext());
-//        //TODO VAIHDA PATH
-//        // path to /data/data/yourapp/app_data/imageDir
-//        //File directory = cw.getDir(path, Context.MODE_PRIVATE);
-//        // Create imageDir
-//
-//        File sdCardRoot = Environment.getExternalStorageDirectory();
-//        //String path ="/PhotoOrganizer/Albums" + groupName + "_" + groupID;
-//        File directory = new File(sdCardRoot, path);
-//
-//
-//        File mypath=new File(directory,fname);
-//
-//        FileOutputStream fos = null;
-//        try {
-//            fos = new FileOutputStream(mypath);
-//            // Use the compress method on the BitMap object to write image to the OutputStream
-//            bitmapImage.compress(Bitmap.CompressFormat.PNG, 100, fos);
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        } finally {
-//            try {
-//                fos.close();
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//        }
-//
-//        Log.d(TAG,"ACTUALLY SAVED SOMETHING TO" + mypath.getAbsolutePath());
-//        return directory.getAbsolutePath();
-//    }
 
+    //TODO in syncImageFolder(): access control between android and firebase
     public void syncImageFolder() {
         //get remote image ids: 1. get group id of current user, 2. get all image ids
-
 
         databaseReference = Utils.getDatabase().getReference();
         FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
@@ -267,8 +187,9 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                                     //get url based on quality min(localMaxQ,remoteMaxQ)
                                     ////get max quality as int
                                     String remoteMaxQ = (String) groupSnapshot.child("images").child(remoteImageID).child("maxQuality").getValue();
+                                    Log.d(TAG, "remoteMaxQ: " + remoteMaxQ);
                                     //TODO: get local max Quality from Alessio / Kristian
-                                    String localMaxQ = "full";
+                                    String localMaxQ = "high";
                                     String finalQ;
                                     if (qualityAsInt(localMaxQ) >= qualityAsInt(remoteMaxQ)) {
                                         finalQ = remoteMaxQ;
@@ -289,27 +210,20 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                                     final long MAX_SIZE = 50*1024*1024;
 
                                     String photoOwnerID = (String) groupSnapshot.child("images").child(remoteImageID).child("userID").getValue();
-                                    //TODO get photoOwner name /w photoOwner ID (probably best way is to just add another firebase query.)
 
                                     DatabaseReference photographerUserRef = databaseReference.child("users").child(photoOwnerID);
                                     photographerUserRef.addListenerForSingleValueEvent(new ValueEventListener() {
                                         @Override
                                         public void onDataChange(DataSnapshot userSnapshot) {
+
                                             String photoOwner = (String) userSnapshot.child("name").getValue();
                                             long hasFaces = (long) groupSnapshot.child("images").child(remoteImageID).child("hasFaces").getValue();
                                             String fname = remoteImageID + "_" + photoOwner + "_" + hasFaces + "_.jpg";
-
-                                            //TODO: check that app has permisions
-
-
                                             String path =  "PhotoOrganizer/Albums/" + groupName + "_" + groupID;
                                             File sdCardRoot = Environment.getExternalStorageDirectory();
                                             File directory = new File(sdCardRoot, path);
 
-
-                                            //sendNotification("New image from " + photoOwner);
                                             try {
-                                                //File localFile = File.createTempFile(fname,"jpg",directory);
                                                 File newFile = new File(directory, fname);
                                                 httpsReference.getFile(newFile).addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
                                                     @Override
@@ -320,9 +234,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                                             } catch (Exception e) {
                                                 Log.d(TAG, e.getMessage());
                                             }
-
                                         }
-
                                         @Override
                                         public void onCancelled(DatabaseError databaseError) {
                                             Log.d(TAG,"error in getting photographer name" + databaseError.getDetails() + databaseError.getMessage());
@@ -335,28 +247,16 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
                         @Override
                         public void onCancelled(DatabaseError databaseError) {
-
+                            Log.d(TAG,"database error: " + databaseError.getDetails() + databaseError.getMessage());
                         }
                     });
                 }
-
-
-
-
             }
             @Override
             public void onCancelled(DatabaseError databaseError) {
                 System.out.println("The read failed: " + databaseError.getMessage());
             }
-
-
         });
-
-
-
-
-        //if something not in local: 1. get url, 2. download to /root/PhotoOrganizer/Albums/<albumName>/
-
     }
 
     public List<String> getLocalImageIDs(String groupID, String groupName) {
@@ -394,19 +294,20 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         return IDs;
     }
 
-
-    //getUrl
-    public void getUrl(String remoteImageID, String groupID, String finalQ) {
-        //get url
-    }
-
     public int qualityAsInt(String someQuality) {
-        if (someQuality == "low")
+        if (someQuality.equals("low")) {
             return 0;
-        else if (someQuality == "high")
+        }
+        else if (someQuality.equals("high")) {
             return 1;
-        else
+        }
+        else if (someQuality.equals("full")) {
             return 2;
+        }
+        else {
+            Log.d(TAG,"ERROR IN qualityAsInt function: someQuality: " + someQuality);
+            return 0;
+        }
     }
 
 
