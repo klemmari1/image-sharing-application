@@ -18,18 +18,6 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-
-        <provider
-            android:name="android.support.v4.content.FileProvider"
-            android:authorities="com.example.android.fileprovider"
-            android:exported="false"
-            android:grantUriPermissions="true">
-            <meta-data
-                android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/file_paths"></meta-data>
-        </provider>
-
-
         <activity android:name=".LoginActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -41,28 +29,28 @@
             android:name=".GroupQRActivity"
             android:parentActivityName=".GroupStatusActivity">
 
-            <!-- The meta-data tag is required if you support API level 15 and lower -->
-            ;
+            <!-- The meta-data tag is required if you support API level 15 and lower -->;
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".GroupStatusActivity" />
             <meta-data
                 android:name="com.google.android.gms.vision.DEPENDENCIES"
-                android:value="barcode" />
+                android:value="barcode"/>
         </activity>
         <activity android:name=".SignupActivity" />
-        <activity android:name=".AlbumsView.AlbumsActivity" />
+        <activity android:name=".AlbumsActivity" />
         <activity android:name=".GroupCreationActivity" />
-        <activity android:name=".MainActivity" />
+        <activity android:name=".MainActivity"
+            android:launchMode = "singleInstance" />
         <activity android:name=".ResetPasswordActivity" />
-        <activity android:name=".pvtgallery.PrivateGallery" />
+        <activity android:name=".PrivateGallery" />
         <activity android:name=".GroupStatusActivity" />
-        <activity
-            android:name=".QrReaderActivity"
-            android:configChanges="keyboardHidden|orientation|screenSize"
-            android:screenOrientation="portrait" />
+        <activity android:name=".QrReaderActivity"
+            android:screenOrientation="portrait"
+            android:configChanges="keyboardHidden|orientation|screenSize" />
         <activity android:name=".Settings" />
 
+<<<<<<< HEAD
         <service
             android:name=".MyFirebaseInstanceIDService">
             <intent-filter>
@@ -76,9 +64,14 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT"/>
             </intent-filter>
         </service>
+
+
+
+
+=======
         <service android:name=".BackgroundSync.FirebaseBackgroundService" />
-        <activity android:name=".pvtgallery.FullImage" />
-        <activity android:name=".AlbumsView.AlbumEach.AlbumInfo"></activity>
+>>>>>>> master
+
     </application>
 
 </manifest>

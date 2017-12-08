@@ -1,4 +1,4 @@
-package com.example.chris.mcc_2017_g19.pvtgallery;
+package com.example.chris.mcc_2017_g19.AlbumsView.AlbumEach.model;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -6,7 +6,6 @@ import android.os.Environment;
 import android.provider.MediaStore;
 
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by alessiospallino on 18/11/2017.
@@ -15,37 +14,40 @@ import java.util.List;
  *
  */
 
-public class PvtGalleryImages {
+public class GalleryImages {
 
     //Define bucket name from which you want to take images Example '/DCIM/Camera' for camera images
-    public static final String CAMERA_IMAGE_BUCKET_NAME = Environment.getExternalStorageDirectory().toString() + "/OrganizerApp";
+    private static String CAMERA_IMAGE_BUCKET_NAME = Environment.getExternalStorageDirectory().toString() + "/OrganizerApp";
+
+    public GalleryImages(String path){
+        CAMERA_IMAGE_BUCKET_NAME = Environment.getExternalStorageDirectory().toString() + "/OrganizerApp" + path;
+    }
 
     //method to get id of image bucket from path
-    public static String getBucketId(String path) {
+    private static String getBucketId(String path) {
         return String.valueOf(path.toLowerCase().hashCode());
     }
 
     //method to get images
-    public static ArrayList<GridItem> getImages(Context context) {
+    public ArrayList<GridImageItem> getImages(Context context) {
         final String[] projection = {MediaStore.Images.Media.DISPLAY_NAME, MediaStore.Images.Media.DATA};
         final String selection = MediaStore.Images.Media.BUCKET_ID + " = ?";
-        final String[] selectionArgs = {PvtGalleryImages.getBucketId(CAMERA_IMAGE_BUCKET_NAME)};
+        final String[] selectionArgs = {GalleryImages.getBucketId(CAMERA_IMAGE_BUCKET_NAME)};
         final Cursor cursor = context.getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
                 projection,
                 selection,
                 selectionArgs,
                 null);
-        ArrayList<GridItem> result = new ArrayList<GridItem>(cursor.getCount());
+        ArrayList<GridImageItem> result = new ArrayList<GridImageItem>(cursor.getCount());
         if (cursor.moveToFirst()) {
             final int dataColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
 
             do {
-                GridItem galleryItem = new GridItem(cursor.getString(dataColumn));
+                GridImageItem galleryItem = new GridImageItem(cursor.getString(dataColumn));
                 result.add(galleryItem);
             } while (cursor.moveToNext());
         }
         cursor.close();
         return result;
-
     }
 }

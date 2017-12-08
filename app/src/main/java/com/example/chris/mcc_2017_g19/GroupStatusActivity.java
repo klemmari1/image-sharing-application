@@ -52,37 +52,48 @@ public class GroupStatusActivity extends AppCompatActivity {
         memberAdapter = new MemberAdapter(this, members);
         memberList.setAdapter(memberAdapter);
 
-        group_id = getIntent().getStringExtra("GROUP_ID");
-        DatabaseReference groupRef = databaseReference.child("groups").child(group_id);
-        groupRef.keepSynced(true);
-        groupRef.addValueEventListener(new ValueEventListener() {
+
+        DatabaseReference userRef = databaseReference.child("users").child(firebaseUser.getUid());
+        userRef.keepSynced(true);
+        userRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                GroupObject groupObj = dataSnapshot.getValue(GroupObject.class);
-                if(groupObj != null){
-                    displayGroupName(groupObj.getName());
-                    displayGroupExpiration(groupObj.getExpiration());
-                    checkIfUserIsGroupCreator(groupObj.getCreator());
+                group_id = (String) dataSnapshot.child("group").getValue();
+                if(group_id != null){
+                    DatabaseReference groupRef = databaseReference.child("groups").child(group_id);
+                    groupRef.keepSynced(true);
+                    groupRef.addValueEventListener(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            GroupObject groupObj = dataSnapshot.getValue(GroupObject.class);
+                            if(groupObj != null){
+                                displayGroupName(groupObj.getName());
+                                displayGroupExpiration(groupObj.getExpiration());
+                                checkIfUserIsGroupCreator(groupObj.getCreator());
 
-                    DataSnapshot membersSnapshot = dataSnapshot.child("members");
-                    members.clear();
-                    for (DataSnapshot member : membersSnapshot.getChildren()) {
-                        members.add((String) member.getValue());
-                    }
-                    memberAdapter.notifyDataSetChanged();
+                                DataSnapshot membersSnapshot = dataSnapshot.child("members");
+                                members.clear();
+                                for (DataSnapshot member : membersSnapshot.getChildren()) {
+                                    members.add((String) member.getValue());
+                                }
+                                memberAdapter.notifyDataSetChanged();
+                            }
+                        }
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+                            System.out.println("The read failed: " + databaseError.getCode());
+                        }
+                    });
                 }
             }
-
             @Override
-            public void onCancelled(DatabaseError databaseError) {
-                System.out.println("The read failed: " + databaseError.getCode());
-            }
+            public void onCancelled(DatabaseError databaseError) {}
         });
+
     }
 
     public void addButton(View v) {
         Intent QRActivity = new Intent(this, GroupQRActivity.class);
-        QRActivity.putExtra("GROUP_ID", group_id);
         startActivity(QRActivity);
     }
 
@@ -156,14 +167,13 @@ public class GroupStatusActivity extends AppCompatActivity {
 
                 @Override
                 public void onSuccess(String response) {
-                    System.out.println("JAA" + response);
                     GroupStatusActivity.this.finish();
                 }
             });
         }
         else{
 
-            api.leaveGroup(firebaseUser.getUid(), group_id, new BackendAPI.HttpCallback() {
+            api.leaveGroup(group_id, new BackendAPI.HttpCallback() {
                 @Override
                 public void onFailure(String response, Exception exception) {
                 }

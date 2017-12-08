@@ -1,15 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--Define Gallery RecyclerView-->
-
-<android.support.v7.widget.RecyclerView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/recyclerViewGallery"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:scrollbars="vertical"
-    tools:context="com.example.chris.mcc_2017_g19.PrivateGallery"
-    tools:showIn="@layout/activity_main">
+    tools:context="com.example.chris.mcc_2017_g19.pvtgallery.PrivateGallery" >
 
+    <GridView
+        android:id="@+id/gridView"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:numColumns="3"
 
-</android.support.v7.widget.RecyclerView>
+        android:columnWidth="115dp"
+        android:gravity="center"
+        android:focusable="true"
+        android:clickable="true"
+
+        android:scrollbarStyle="outsideOverlay"
+        android:verticalScrollbarPosition="right"
+        android:scrollbars="vertical"
+        />
+</RelativeLayout>
