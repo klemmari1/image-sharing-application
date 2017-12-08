@@ -57,11 +57,10 @@ public class AlbumsActivity extends AppCompatActivity {
         });
     }
 
-
     private List<ItemObject> getAllItemObject(){
         List<ItemObject> items = new ArrayList<>();
         File albumsFolder = Utils.getAlbumsRoot(getApplicationContext());
-        
+
         createTestFolders(albumsFolder);
         createTestFiles(new File(albumsFolder + File.separator + "testalbum1"));
         createTestFiles(new File(albumsFolder + File.separator + "testalbum2"));
@@ -129,10 +128,12 @@ public class AlbumsActivity extends AppCompatActivity {
 
     }
 
+
+    //fileformat: imageid_username_faces_.jpg
     private void createTestFiles(File album) {
         try {
             for (int x=0; x < 10; x++) {
-                File f = new File(album + "/test" + x + ".txt");
+                File f = new File(album + "/" + x + "_user_1_.jpg");
                 if (f.exists()) {
                     f.delete();
                 }
