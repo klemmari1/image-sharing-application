@@ -50,7 +50,7 @@ public class AlbumsActivity extends AppCompatActivity {
                 }
                 else{
                     Intent intent = new Intent(AlbumsActivity.this, AlbumInfo.class);
-                    intent.putExtra( "PATH", "/Test");
+                    intent.putExtra( "PATH", "testalbum1");
                     startActivity(intent);
                 }
             }
@@ -62,10 +62,10 @@ public class AlbumsActivity extends AppCompatActivity {
         File albumsFolder = Utils.getAlbumsRoot(getApplicationContext());
 
         //For testing
-        createTestFolders(albumsFolder);
-        createTestFiles(new File(albumsFolder + File.separator + "testalbum1"));
-        createTestFiles(new File(albumsFolder + File.separator + "testalbum2"));
-        createTestFiles(new File(albumsFolder + File.separator + "testalbum3"));
+//        createTestFolders(albumsFolder);
+//        createTestFiles(new File(albumsFolder + File.separator + "testalbum1"));
+//        createTestFiles(new File(albumsFolder + File.separator + "testalbum2"));
+//        createTestFiles(new File(albumsFolder + File.separator + "testalbum3"));
 
         List<ItemObject> albums = getAlbumData(albumsFolder);
         for (ItemObject item : albums)
@@ -82,32 +82,47 @@ public class AlbumsActivity extends AppCompatActivity {
         File[] albums = albumsFolder.listFiles();
         for (int i=0; i < albums.length; i++) {
             File album = albums[i];
-            String albumName = album.getName();
-            int picturesInAlbum = 0;
-            String labelImage = null; //TODO get e.g. first picture from album
+
             if (album.isDirectory()) {
                 Log.d(TAG, "Album: " + album.getName());
+
+                String albumName = album.getName();
+                int picturesInAlbum = 0;
+                String labelImage = null;
+
                 File[] files = album.listFiles();
                 for (int j=0; j < files.length; j++) {
                     File file = files[j];
-                    if (file.isFile()) {
-                        String filename = file.getName();
-                        Log.d(TAG, "File: " + filename);
-                        int extensionStart = filename.lastIndexOf('.');
-                        if (extensionStart > 0 && filename.substring(extensionStart + 1).equals("jpg"))
-                            picturesInAlbum++;
+                    if (fileIsValid(file)) {
+                        picturesInAlbum++;
+                        if (j == 0) {
+                            labelImage = file.getName();
+                        }
                     }
-                    //ignore otherwise
+
                 }
+                albumsList.add(new ItemObject(albumName, labelImage, "cloud", String.valueOf(picturesInAlbum)));
+
             } else {
                 Log.d(TAG, "Unexpected error: Found file instead of a folder");
             }
-            albumsList.add(new ItemObject(albumName, "one", "cloud", String.valueOf(picturesInAlbum)));
         }
 
         return albumsList;
     }
 
+
+    private boolean fileIsValid(File image) {
+        if (image.isFile()) {
+            String filename = image.getName();
+            Log.d(TAG, "File: " + filename);
+            int extensionStart = filename.lastIndexOf('.');
+            if (extensionStart > 0 && filename.substring(extensionStart + 1).equals("jpg"))
+                return true;
+        }
+
+        return false;
+    }
 
     private void createTestFolders(File albumRoot) {
         File album1 = new File(albumRoot + File.separator + "testalbum1");

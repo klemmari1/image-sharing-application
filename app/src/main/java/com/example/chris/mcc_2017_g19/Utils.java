@@ -1,6 +1,7 @@
 package com.example.chris.mcc_2017_g19;
 
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.res.Resources;
 import android.os.Environment;
@@ -10,7 +11,7 @@ import com.google.firebase.database.FirebaseDatabase;
 
 import java.io.File;
 
-public class Utils {
+public class Utils extends Activity {
     private static FirebaseDatabase firebaseDatabase;
 
     public static FirebaseDatabase getDatabase() {

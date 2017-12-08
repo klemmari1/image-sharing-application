@@ -134,7 +134,7 @@ public class AlbumInfo extends AppCompatActivity {
 
 
     private void loadImages(){
-        GalleryImages gi = new GalleryImages(path);
+        GalleryImages gi = new GalleryImages(path, getApplicationContext());
         mGridImageItemList = gi.getImages(this);
         if(sorting == Sorting.PEOPLE)
             loadByPeople();

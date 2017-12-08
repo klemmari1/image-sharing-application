@@ -4,7 +4,11 @@ import android.content.Context;
 import android.database.Cursor;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.util.Log;
 
+import com.example.chris.mcc_2017_g19.Utils;
+
+import java.io.File;
 import java.util.ArrayList;
 
 /**
@@ -19,8 +23,9 @@ public class GalleryImages {
     //Define bucket name from which you want to take images Example '/DCIM/Camera' for camera images
     private static String CAMERA_IMAGE_BUCKET_NAME = Environment.getExternalStorageDirectory().toString() + "/OrganizerApp";
 
-    public GalleryImages(String path){
-        CAMERA_IMAGE_BUCKET_NAME = Environment.getExternalStorageDirectory().toString() + "/OrganizerApp" + path;
+    public GalleryImages(String path, Context context){
+        CAMERA_IMAGE_BUCKET_NAME = Utils.getAlbumsRoot(context).toString() + File.separator + path;
+        Log.d("GalleryImages", CAMERA_IMAGE_BUCKET_NAME);
     }
 
     //method to get id of image bucket from path
