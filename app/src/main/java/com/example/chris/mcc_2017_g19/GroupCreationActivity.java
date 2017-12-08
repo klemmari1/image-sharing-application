@@ -99,8 +99,10 @@ public class GroupCreationActivity extends AppCompatActivity {
     }
 
     private String generateTimestamp(int duration) {
+        TimeZone timeZone = TimeZone.getTimeZone("UTC");
+        Calendar calendar = Calendar.getInstance(timeZone);
         DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-        Calendar calendar = Calendar.getInstance();
+        dateFormat.setTimeZone(timeZone);
         calendar.add(Calendar.MINUTE, duration);
         return dateFormat.format(calendar.getTime());
     }
