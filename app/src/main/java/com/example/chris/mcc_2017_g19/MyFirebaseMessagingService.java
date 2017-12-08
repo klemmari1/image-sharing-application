@@ -378,11 +378,10 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             Log.d(TAG, "local image id list:");
             for (File f : yourDir.listFiles()) {
                 if (f.isFile()) {
-                    filename = f.getName().substring(0,20);
+                    filename = f.getName();
                     //1234_a.b@c.com_0_.jpg
-                    //IDs.add(filename.split("_")[0]);
-                    //TODO: this is just a workaround for _s in ids
-                    IDs.add(filename);
+                    IDs.add(filename.split("_")[0]);
+                    //IDs.add(filename);
 
                     Log.d(TAG, filename);
                 }

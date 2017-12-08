@@ -9,6 +9,7 @@ import android.util.Log;
 import com.example.chris.mcc_2017_g19.Utils;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.util.ArrayList;
 
 /**
@@ -34,24 +35,29 @@ public class GalleryImages {
 
     //method to get images
     public ArrayList<GridImageItem> getImages(Context context) {
-        final String[] projection = {MediaStore.Images.Media.DISPLAY_NAME, MediaStore.Images.Media.DATA};
-        final String selection = MediaStore.Images.Media.BUCKET_ID + " = ?";
-        final String[] selectionArgs = {GalleryImages.getBucketId(CAMERA_IMAGE_BUCKET_NAME)};
-        final Cursor cursor = context.getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                projection,
-                selection,
-                selectionArgs,
-                null);
-        ArrayList<GridImageItem> result = new ArrayList<GridImageItem>(cursor.getCount());
-        if (cursor.moveToFirst()) {
-            final int dataColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+        final String[] EXTENSIONS = new String[]{
+                "jpg"
+        };
+        // filter to identify images based on their extensions
+        final FilenameFilter IMAGE_FILTER = new FilenameFilter() {
 
-            do {
-                GridImageItem galleryItem = new GridImageItem(cursor.getString(dataColumn));
-                result.add(galleryItem);
-            } while (cursor.moveToNext());
+            @Override
+            public boolean accept(final File dir, final String name) {
+                for (final String ext : EXTENSIONS) {
+                    if (name.endsWith("." + ext)) {
+                        return (true);
+                    }
+                }
+                return (false);
+            }
+        };
+        ArrayList<GridImageItem> result = new ArrayList<GridImageItem>();
+        File dir = new File(CAMERA_IMAGE_BUCKET_NAME);
+        File[] filelist = dir.listFiles(IMAGE_FILTER );
+        for (File f : filelist)
+        {
+            result.add(new GridImageItem(f.toString()));
         }
-        cursor.close();
         return result;
     }
 }
