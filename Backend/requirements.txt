@@ -6,3 +6,4 @@ google-cloud-datastore==1.4.0
 Pillow==4.3.0
 Pyrebase==3.0.27
 firebase-admin==2.5.0
+pyfcm==1.4.3

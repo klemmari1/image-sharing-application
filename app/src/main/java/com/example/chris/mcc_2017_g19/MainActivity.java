@@ -6,14 +6,17 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.media.MediaScannerConnection;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.util.SparseArray;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -33,12 +36,16 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.iid.FirebaseInstanceId;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
@@ -48,17 +55,18 @@ public class MainActivity extends AppCompatActivity {
     ImageView settings;
     ImageView takepicture;
 
-    Bitmap bitmap;
     private String imagePath;
 
     private FirebaseUser firebaseUser;
     private UserObject userObj;
+    private GroupObject userGroupObj;
     private DatabaseReference databaseReference;
 
     static final int REQUEST_IMAGE_CAPTURE = 1;
     static final int MY_PERMISSIONS_REQUEST_WRITE_EXT_STORAGE = 2;
     static final int MY_PERMISSIONS_REQUEST_CAMERA = 3;
     static final int MY_PERMISSIONS_REQUEST_QR = 4;
+    static final int REQUEST_CREATE_GROUP = 5;
     private static final String TAG = "MainActivity";
 
 
@@ -74,11 +82,17 @@ public class MainActivity extends AppCompatActivity {
         DatabaseReference userReference = databaseReference.child("users").child(firebaseUser.getUid());
         userReference.keepSynced(true);
 
+        //testing notification stuff (fcm)
+        String token = FirebaseInstanceId.getInstance().getToken();
+
+        userReference.child("deviceTokens").child(token).setValue(1);
+        Log.d(TAG,"token token token:" + token);
+
+
         userReference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
                 userObj = snapshot.getValue(UserObject.class);
-                Toast.makeText(MainActivity.this, "Welcome " + userObj.getName(), Toast.LENGTH_SHORT).show();
             }
             @Override
             public void onCancelled(DatabaseError databaseError) {
@@ -122,8 +136,12 @@ public class MainActivity extends AppCompatActivity {
         takepicture.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
-                TakePictureIntent();
+                final String userGroup = userObj.getGroup();
+                if (userGroup == null) {
+                    errorToast("Join or create a group to take pictures");
+                } else {
+                    cameraButtonAction(userGroup);
+                }
             }
         });
     }
@@ -181,8 +199,9 @@ public class MainActivity extends AppCompatActivity {
                                 break;
                             case 1:
                                 //No button pressed: Create group
+                                setButtonStatus(false);
                                 Intent intent = new Intent(MainActivity.this, GroupCreationActivity.class);
-                                startActivity(intent);
+                                startActivityForResult(intent, REQUEST_CREATE_GROUP);
                                 break;
                         }
                     }
@@ -193,53 +212,93 @@ public class MainActivity extends AppCompatActivity {
             }
             else{
                 Intent intent = new Intent(MainActivity.this, GroupStatusActivity.class);
-                intent.putExtra("GROUP_ID", userObj.getGroup());
                 startActivity(intent);
             }
         }
     }
 
 
+    private void cameraButtonAction(String group) throws IllegalArgumentException {
+        DatabaseReference userGroupReference = databaseReference.child("groups").child(group);
+        userGroupReference.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                userGroupObj = dataSnapshot.getValue(GroupObject.class);
+                if (!userGroupObj.isExpired())
+                    TakePictureIntent();
+                else
+                    Log.d(TAG, "Group expired!");
+            }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+            }
+        });
+    }
+
+    private void errorToast(String errorMessage) {
+        Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show();
+    }
+
+
     private void TakePictureIntent() {
-        if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+        if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED || checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA}, MY_PERMISSIONS_REQUEST_CAMERA);
         } else {
-            Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-            startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+            startCamera();
         }
+    }
+
+    private void startCamera() {
+        setButtonStatus(false);
+        Intent pictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        // Ensure that there's a camera activity to handle the intent
+        if (pictureIntent.resolveActivity(getPackageManager()) != null) {
+            // Create the File where the photo should go
+            File photoFile = null;
+            try {
+                photoFile = createImageFile();
+            } catch (IOException ex) {
+                // Error occurred while creating the File
+            }
+            // Continue only if the File was successfully created
+            if (photoFile != null) {
+                Uri photoURI = FileProvider.getUriForFile(this,
+                        "com.example.android.fileprovider",
+                        photoFile);
+                pictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+                startActivityForResult(pictureIntent, REQUEST_IMAGE_CAPTURE);
+            }
+        }
+    }
+
+    private File createImageFile() throws IOException {
+        // Create an image file name
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String imageFileName = "JPEG_" + timeStamp + "_";
+        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        File image = File.createTempFile(
+                imageFileName,  /* prefix */
+                ".jpg",         /* suffix */
+                storageDir      /* directory */
+        );
+
+        // Save a file: path for use with ACTION_VIEW intents
+        imagePath = image.getAbsolutePath();
+        return image;
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        setButtonStatus(true);
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
-
-
-            //this bundle is giving back an image with bad resolution
-            //TODO:this bundle is giving back an image with bad resolution
-            Bundle extras = data.getExtras();
-            Bitmap imageBitmap = (Bitmap) extras.get("data");
-
-            //SaveImage(imageBitmap);
-            //save image to an imageview
-            //mImageView.setImageBitmap(imageBitmap);
-            /*ByteArrayOutputStream stream = new ByteArrayOutputStream();
-            imageBitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
-            byte[] byteArray = stream.toByteArray();
-
-            // convert byte array to Bitmap
-            bitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);*/
-
             if (checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
                     != PackageManager.PERMISSION_GRANTED) {
                 requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
                         MY_PERMISSIONS_REQUEST_WRITE_EXT_STORAGE);
-
                 // We check the permission at Runtime
                 //
-                return;
             } else {
-
-                new SensibleDataTask().execute(imageBitmap);
+                new SensibleDataTask().execute();
             }
         }
     }
@@ -251,15 +310,14 @@ public class MainActivity extends AppCompatActivity {
         switch (requestCode) {
             case MY_PERMISSIONS_REQUEST_WRITE_EXT_STORAGE:
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    new SensibleDataTask().execute(bitmap);
+                    new SensibleDataTask().execute();
                 } else {
                     Toast.makeText(this, "Please grant permissions to use the app", Toast.LENGTH_SHORT).show();
                 }
                 break;
             case MY_PERMISSIONS_REQUEST_CAMERA:
                 if (grantResults.length > 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
-                    Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                    startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+                    startCamera();
                 } else {
                     Toast.makeText(this, "Please grant permissions to use the Camera", Toast.LENGTH_SHORT).show();
                 }
@@ -279,61 +337,61 @@ public class MainActivity extends AppCompatActivity {
 
     //TODO: Check if image is sensible or not;
 
-    public class SensibleDataTask extends AsyncTask<Bitmap, Void, Bitmap> {
+    public class SensibleDataTask extends AsyncTask<Void, Void, Bitmap> {
 
-        Bitmap bit;
         Integer result = 0;
 
         @Override
-        protected Bitmap doInBackground(Bitmap... bitmaps) {
-            this.bit = bitmaps[0];
-
+        protected Bitmap doInBackground(Void... params) {
             //Create the Barcode detector and detect barcode
-            BarcodeDetector detector = new BarcodeDetector.Builder(getApplicationContext()).setBarcodeFormats(Barcode.DATA_MATRIX | Barcode.QR_CODE | Barcode.EAN_13).build();
-            Frame frame = new Frame.Builder().setBitmap(bit).build();
-            SparseArray<Barcode> barcodes = detector.detect(frame);
+            Bitmap resized = getLowResolutionBitmap(0.4);
 
-            if (barcodes.size() != 1) {
-                System.out.println("This is res: " + result);
+            BarcodeDetector detector = new BarcodeDetector.Builder(getApplicationContext()).setBarcodeFormats(Barcode.DATA_MATRIX | Barcode.QR_CODE | Barcode.EAN_13).build();
+            Frame frame = new Frame.Builder().setBitmap(resized).build();
+            SparseArray<Barcode> barcodes = new SparseArray<>();
+            if(detector.isOperational()){
+                barcodes = detector.detect(frame);
+                detector.release();
+            }
+            result = barcodes.size();
+            System.out.println("Barcodes found: " + result);
+            if(result == 0) {
                 // If the image has no sensitive data, TODO: Call method to store in Firebase + Google App Engine
 
             } else {
-                result = 1;
                 // The image has one sensitive data, check here to know what is a sensitive data:
                 // https://developers.google.com/vision/android/barcodes-overview
 
                 // Call the method to store image in private folder
-                SaveImage(bit);
+                SaveImage("/Private");
             }
 
-            return bit;
+            removeTempPicture();
+
+            return resized;
             //return Bitmap.createScaledBitmap(bit, width, height, true);
         }
 
         @Override
         protected void onPostExecute(Bitmap bit) {
             Integer check = 0;
-            if (result == check) {
+            if (result.equals(check)) {
                 //It is not showing the toast, I don't know why (But it is entering this :
-                Toast.makeText(MainActivity.this, "Image has been added to your shared folder!", Toast.LENGTH_LONG);
+                Toast.makeText(MainActivity.this, "Image has been added to your shared folder!", Toast.LENGTH_LONG).show();
             } else {
-                Toast.makeText(MainActivity.this, "SENSIBLE DATA! Image has been added to private folder", Toast.LENGTH_LONG);
+                Toast.makeText(MainActivity.this, "SENSIBLE DATA! Image has been added to private folder", Toast.LENGTH_LONG).show();
             }
         }
-
-
-
     }
 
-    private void SaveImage(Bitmap finalBitmap) {
-
+    private void SaveImage(String folder) {
+        Bitmap finalBitmap = getImageBitmap();
         String root = Environment.getExternalStorageDirectory().toString();
-        File myDir = new File(root + "/OrganizerApp");
+        File myDir = new File(root + "/OrganizerApp" + folder);
 
         if (!myDir.exists()) {
             myDir.mkdirs();
         }
-
 
         //Creating a unique name for the picture
         Random generator = new Random();
@@ -348,7 +406,6 @@ public class MainActivity extends AppCompatActivity {
             MediaScannerConnection.scanFile(getApplicationContext(), new String[]{file.getPath()}, new String[]{"Image/*"}, null);
             System.out.println(file);
 
-            //TODO: This part has to be solved. Images are losing quality and apparently there is no solution for it
             //FileOutputStream out = new FileOutputStream(file);
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             finalBitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
@@ -364,5 +421,39 @@ public class MainActivity extends AppCompatActivity {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void removeTempPicture(){
+        File file_to_delete = new File(imagePath);
+        if (file_to_delete.exists()) {
+            if (file_to_delete.delete()) {
+                System.out.println("file Deleted :" + file_to_delete.getPath());
+            } else {
+                System.out.println("file not Deleted :" + file_to_delete.getPath());
+            }
+        }
+    }
+
+    private Bitmap getImageBitmap(){
+        try{
+            Uri imageUri = Uri.fromFile(new File(imagePath));
+            return(MediaStore.Images.Media.getBitmap(this.getContentResolver(), imageUri));
+        }
+        catch(Exception e){
+        }
+        return null;
+    }
+
+    private Bitmap getLowResolutionBitmap(double factor){
+        Bitmap bitmap = getImageBitmap();
+        Bitmap resized = Bitmap.createScaledBitmap(bitmap,(int)(bitmap.getWidth()*factor), (int)(bitmap.getHeight()*factor), true);
+        return resized;
+    }
+
+    private void setButtonStatus(boolean status){
+        findViewById(R.id.gallery).setEnabled(status);
+        findViewById(R.id.photo).setEnabled(status);
+        findViewById(R.id.group).setEnabled(status);
+        findViewById(R.id.setting).setEnabled(status);
     }
 }

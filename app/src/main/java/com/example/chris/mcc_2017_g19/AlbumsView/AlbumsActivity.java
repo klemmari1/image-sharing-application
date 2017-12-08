@@ -42,22 +42,18 @@ public class AlbumsActivity extends AppCompatActivity {
         gridview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Toast.makeText(AlbumsActivity.this, "Position: " + position, Toast.LENGTH_SHORT).show();
+                Toast.makeText(AlbumsActivity.this, "Position: " + position, Toast.LENGTH_SHORT);
 
                 if(position == 0){
 
                     Intent intent = new Intent(AlbumsActivity.this, PrivateGallery.class);
                     startActivity(intent);
-                    finish();
 
                 }
-
-                if(position == 1){
-
+                else{
                     Intent intent = new Intent(AlbumsActivity.this, AlbumInfo.class);
+                    intent.putExtra( "PATH", "/Test");
                     startActivity(intent);
-                    finish();
-
                 }
             }
         });

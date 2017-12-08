@@ -1,31 +1,22 @@
 package com.example.chris.mcc_2017_g19.AlbumsView.AlbumEach;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.chris.mcc_2017_g19.AlbumsView.AlbumEach.model.ImageItem;
 import com.example.chris.mcc_2017_g19.R;
 import com.example.chris.mcc_2017_g19.pvtgallery.FullImage;
-import com.example.chris.mcc_2017_g19.pvtgallery.GridItem;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -57,17 +48,15 @@ public class GridAlbumInfoViewAdapter extends RecyclerView.Adapter<AlbumInfoHold
 
     @Override
     public AlbumInfoHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
-
         View view;
-
         if(viewType == 0){
             view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.header_albuminfo_type_layout, viewGroup, false);
         }else{
             view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.grid_albuminfo_type_layout, viewGroup, false);
         }
-
         return new AlbumInfoHolder(view);
     }
+
 
     @Override
     public void onBindViewHolder(AlbumInfoHolder holder, int position) {
@@ -82,13 +71,25 @@ public class GridAlbumInfoViewAdapter extends RecyclerView.Adapter<AlbumInfoHold
     private void bindGridItem(AlbumInfoHolder holder, int position) {
         //System.out.println(Uri.parse(mItemList.get(position).getItemTitle()));
         ImageView p = (ImageView) holder.itemView.findViewById(R.id.album_photo);
-        String url = mItemList.get(position).getItemTitle();
-        System.out.println(url);
+        final String uri = mItemList.get(position).getItemTitle();
         //ADD PICTURES IN GRIDVIEW
-        Picasso.with(mContext).load(url).error(R.drawable.cloudoff).into(p);
+        File imageFile = new File(uri);
+        Picasso.with(mContext).load(imageFile).error(R.drawable.cloudoff).into(p);
 
+        final ImageItem element = mItemList.get(position);
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Sending image url to FullImage activity
+                Intent i = new Intent(mContext, FullImage.class);
 
+                System.out.println(uri);
+                i.putExtra("image", uri );
+                mContext.startActivity(i);
+            }
+        });
     }
+
 
     private void bindHeaderItem(AlbumInfoHolder holder, int position) {
         System.out.println(Uri.parse(mItemList.get(position).getItemTitle()));
@@ -97,15 +98,18 @@ public class GridAlbumInfoViewAdapter extends RecyclerView.Adapter<AlbumInfoHold
         title.setText(mItemList.get(position).getItemTitle());
     }
 
+
     @Override
     public int getItemViewType(int position) {
         return mItemList.get(position).getItemType() == ImageItem.HEADER_ITEM_TYPE ? 0 : 1;
     }
 
+
     @Override
     public int getItemCount() {
         return mItemList.size();
     }
+
 
     public void addItem(ImageItem item){
         mItemList.add(item);
@@ -122,5 +126,8 @@ public class GridAlbumInfoViewAdapter extends RecyclerView.Adapter<AlbumInfoHold
         notifyDataSetChanged();
     }
 
-
+    public void clear(){
+        mItemList.clear();
+        notifyDataSetChanged();
+    }
 }

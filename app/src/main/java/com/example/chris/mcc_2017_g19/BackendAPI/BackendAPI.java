@@ -110,7 +110,7 @@ public class BackendAPI {
     }
 
     //API functions
-    public void joinGroup(final String userID, final String token, final HttpCallback cb){
+    public void joinGroup(final String token, final HttpCallback cb){
         getIdToken(new BackendAPI.HttpCallback() {
             @Override
             public void onFailure(String response, Exception exception) {
@@ -119,7 +119,7 @@ public class BackendAPI {
 
             @Override
             public void onSuccess(String response) {
-                String url = backendUrl + "/users/" + userID + "/group";
+                String url = backendUrl + "/groups/join";
                 RequestBody requestBody = new MultipartBody.Builder()
                         .setType(MultipartBody.FORM)
                         .addFormDataPart("id_token", idToken)
@@ -134,7 +134,7 @@ public class BackendAPI {
         });
     }
 
-    public void createGroup(final String groupName, final String expirationTimestamp, final String userID, final HttpCallback cb){
+    public void createGroup(final String groupName, final String expirationTimestamp, final HttpCallback cb){
         getIdToken(new BackendAPI.HttpCallback() {
             @Override
             public void onFailure(String response, Exception exception) {
@@ -149,7 +149,6 @@ public class BackendAPI {
                         .addFormDataPart("id_token", idToken)
                         .addFormDataPart("group_name", groupName)
                         .addFormDataPart("group_expiration", expirationTimestamp)
-                        .addFormDataPart("user_id", userID)
                         .build();
                 try{
                     postRequest(url, requestBody, cb);
@@ -169,9 +168,10 @@ public class BackendAPI {
 
             @Override
             public void onSuccess(String response) {
-                String url = backendUrl + "/groups/" + group_id;
+                String url = backendUrl + "/groups";
                 RequestBody requestBody = new MultipartBody.Builder()
                         .setType(MultipartBody.FORM)
+                        .addFormDataPart("group_id", group_id)
                         .addFormDataPart("id_token", idToken)
                         .build();
                 try{
@@ -183,7 +183,7 @@ public class BackendAPI {
         });
     }
 
-    public void leaveGroup(final String user_id, final String group_id, final HttpCallback cb){
+    public void leaveGroup(final String group_id, final HttpCallback cb){
         getIdToken(new BackendAPI.HttpCallback() {
             @Override
             public void onFailure(String response, Exception exception) {
@@ -192,7 +192,7 @@ public class BackendAPI {
 
             @Override
             public void onSuccess(String response) {
-                String url = backendUrl + "/users/" + user_id + "/group";
+                String url = backendUrl + "/groups/" + group_id + "/members";
                 RequestBody requestBody = new MultipartBody.Builder()
                         .setType(MultipartBody.FORM)
                         .addFormDataPart("id_token", idToken)
@@ -207,7 +207,7 @@ public class BackendAPI {
         });
     }
 
-    public void uploadImage(final String user_id, final String group_id, final String filename, final String maxQuality, final HttpCallback cb){
+    public void uploadImage(final String group_id, final String filename, final String maxQuality, final HttpCallback cb){
         getIdToken(new BackendAPI.HttpCallback() {
             @Override
             public void onFailure(String response, Exception exception) {
@@ -220,7 +220,6 @@ public class BackendAPI {
                 RequestBody requestBody = new MultipartBody.Builder()
                         .setType(MultipartBody.FORM)
                         .addFormDataPart("id_token", idToken)
-                        .addFormDataPart("userID", user_id)
                         .addFormDataPart("groupID", group_id)
                         .addFormDataPart("filename", filename)
                         .addFormDataPart("maxQuality", maxQuality)
