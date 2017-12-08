@@ -383,7 +383,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                     IDs.add(filename.split("_")[0]);
                     //IDs.add(filename);
 
-                    Log.d(TAG, filename.split("_")[0);
+                    Log.d(TAG, filename.split("_")[0]);
                 }
             }
 
