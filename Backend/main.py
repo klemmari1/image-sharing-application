@@ -195,6 +195,21 @@ def server_error(e):
     """.format(e), 500
 
 
+@app.route('/updateDeviceToken', methods=['POST'])
+def updateDeviceToken():
+    try:
+        args = request.form
+    print(args)  # For debugging
+    userToken = request.form['userToken']
+    deviceToken = request.form['deviceToken']
+    userID = get_uid(userToken)
+
+    database.child("users").child(userID).child("deviceTokens").child(deviceToken).set("1");
+    return "updateDeviceToken() worked in backend!"
+
+    except Exception as e:
+        return "Error in updateDeviceToken(): " + str(e)
+
 
 '''
 UPLOAD IMAGE
