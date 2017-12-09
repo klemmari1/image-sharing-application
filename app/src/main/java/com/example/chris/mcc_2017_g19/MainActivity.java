@@ -114,7 +114,8 @@ public class MainActivity extends AppCompatActivity {
             public void onDataChange(DataSnapshot snapshot) {
                 userObj = snapshot.getValue(UserObject.class);
                 MyFirebaseMessagingService newClassObjectForSync = new MyFirebaseMessagingService();
-                newClassObjectForSync.syncImageFolder(userObj.getGroup());
+                if(userObj.getGroup() != null)
+                    newClassObjectForSync.syncImageFolder(userObj.getGroup());
             }
             @Override
             public void onCancelled(DatabaseError databaseError) {
@@ -359,7 +360,7 @@ public class MainActivity extends AppCompatActivity {
                 // We check the permission at Runtime
                 //
             } else {
-                new SensibleDataTask().execute();
+                checkSensiblePictures();
             }
         }
     }
@@ -371,7 +372,7 @@ public class MainActivity extends AppCompatActivity {
         switch (requestCode) {
             case MY_PERMISSIONS_REQUEST_WRITE_EXT_STORAGE:
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    new SensibleDataTask().execute();
+                    checkSensiblePictures();
                 } else {
                     Toast.makeText(this, "Please grant permissions to use the app", Toast.LENGTH_SHORT).show();
                 }
@@ -396,58 +397,41 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    //TODO: Check if image is sensible or not;
 
-    public class SensibleDataTask extends AsyncTask<Void, Void, Bitmap> {
+    private void checkSensiblePictures() {
+        //Create the Barcode detector and detect barcode
+        Bitmap bitmap = getImageBitmap();
+        BarcodeDetector detector = new BarcodeDetector.Builder(getApplicationContext()).setBarcodeFormats(Barcode.DATA_MATRIX | Barcode.QR_CODE | Barcode.EAN_13).build();
+        Frame frame = new Frame.Builder().setBitmap(bitmap).build();
+        SparseArray<Barcode> barcodes = new SparseArray<>();
+        if(detector.isOperational()){
+            barcodes = detector.detect(frame);
+            detector.release();
+        }
+        int result = barcodes.size();
+        System.out.println("Barcodes found: " + result);
+        if(result == 0) {
 
-        Integer result = 0;
+            CheckSettings();
 
-        @Override
-        protected Bitmap doInBackground(Void... params) {
-            //Create the Barcode detector and detect barcode
-            Bitmap bitmap = getImageBitmap();
+        } else {
 
-            BarcodeDetector detector = new BarcodeDetector.Builder(getApplicationContext()).setBarcodeFormats(Barcode.DATA_MATRIX | Barcode.QR_CODE | Barcode.EAN_13).build();
-            Frame frame = new Frame.Builder().setBitmap(bitmap).build();
-            SparseArray<Barcode> barcodes = new SparseArray<>();
-            if(detector.isOperational()){
-                barcodes = detector.detect(frame);
-                detector.release();
-            }
-            result = barcodes.size();
-            System.out.println("Barcodes found: " + result);
-            if(result == 0) {
-                //
-                // TODO: Call method to store in Firebase + Google App Engine
+            //Creating a unique name for the picture
+            Random generator = new Random();
+            int n = 1000;
+            n = generator.nextInt(n);
+            String fname = "Image-" + n + ".jpg";
 
-                CheckSettings();
-
-            } else {
-
-                //Creating a unique name for the picture
-                Random generator = new Random();
-                int n = 1000;
-                n = generator.nextInt(n);
-                String fname = "Image-" + n + ".jpg";
-
-
-                // Call the method to store image in private folder
-                SaveImage("Private", fname);
-            }
-
-            return bitmap;
-            //return Bitmap.createScaledBitmap(bit, width, height, true);
+            // Call the method to store image in private folder
+            SaveImage("Private", fname);
         }
 
-        @Override
-        protected void onPostExecute(Bitmap bit) {
-            Integer check = 0;
-            if (result.equals(check)) {
-                //It is not showing the toast, I don't know why (But it is entering this :
-                Toast.makeText(MainActivity.this, "Image has been added to your shared folder!", Toast.LENGTH_LONG).show();
-            } else {
-                Toast.makeText(MainActivity.this, "SENSIBLE DATA! Image has been added to private folder", Toast.LENGTH_LONG).show();
-            }
+        //return Bitmap.createScaledBitmap(bit, width, height, true);
+        if (result == 0) {
+            //It is not showing the toast, I don't know why (But it is entering this :
+            Toast.makeText(MainActivity.this, "Image has been added to your shared folder!", Toast.LENGTH_LONG).show();
+        } else {
+            Toast.makeText(MainActivity.this, "SENSIBLE DATA! Image has been added to private folder", Toast.LENGTH_LONG).show();
         }
     }
 
@@ -459,7 +443,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         try{
-            File file_a =new File(imagePath);
+            File file_a = new File(imagePath);
 
             if(file_a.renameTo(new File(myDir + File.separator + filename))){
                 System.out.println("Temp image moved successfully!");
@@ -535,7 +519,7 @@ public class MainActivity extends AppCompatActivity {
         uploadImageFirebase(FirebaseBitmap);
     }
 
-        public void uploadImageFirebase(Bitmap FirebaseBitmap){
+    public void uploadImageFirebase(Bitmap FirebaseBitmap){
         //Get a reference from our storage:
         FirebaseStorage storage = FirebaseStorage.getInstance();
 
@@ -566,7 +550,6 @@ public class MainActivity extends AppCompatActivity {
                     public void onFailure(String response, Exception exception) {
                         Log.d(TAG, "Error: " + response + " " + exception);
                     }
-
                     @Override
                     public void onSuccess(final String response) {
                         try {
@@ -576,7 +559,8 @@ public class MainActivity extends AppCompatActivity {
                                     @Override
                                     public void onDataChange(DataSnapshot dataSnapshot) {
                                         GroupObject groupObj = dataSnapshot.getValue(GroupObject.class);
-                                        SaveImage(groupObj.getName() + "_" + userObj.getGroup(), response + ".jpg");
+                                        if(groupObj != null)
+                                            SaveImage(groupObj.getName() + "_" + userObj.getGroup(), response + ".jpg");
                                     }
                                     @Override
                                     public void onCancelled(DatabaseError databaseError) {
@@ -605,13 +589,6 @@ public class MainActivity extends AppCompatActivity {
         catch(Exception e){
         }
         return null;
-    }
-
-
-    private Bitmap getLowResolutionBitmap(double factor){
-        Bitmap bitmap = getImageBitmap();
-        Bitmap resized = Bitmap.createScaledBitmap(bitmap,(int)(bitmap.getWidth()*factor), (int)(bitmap.getHeight()*factor), true);
-        return resized;
     }
 
 
