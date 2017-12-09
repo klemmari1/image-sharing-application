@@ -1,6 +1,7 @@
 package com.example.chris.mcc_2017_g19;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
@@ -22,10 +23,13 @@ public class Settings extends Activity implements AdapterView.OnItemSelectedList
     Spinner spinner, spinnerwifi;
     SharedPreferences prefs;
 
+
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
+
 
         TextView imagequality = (TextView) findViewById(R.id.iq);
         // Spinner element
@@ -93,6 +97,9 @@ public class Settings extends Activity implements AdapterView.OnItemSelectedList
             }
     }
 
+
+
+
     public void uploaddefaultspinnervalue(){
         SharedPreferences.Editor prefEditor = prefs.edit();
         prefEditor.putString("LTEpicturevalue", spinner.getSelectedItem().toString());
@@ -103,7 +110,6 @@ public class Settings extends Activity implements AdapterView.OnItemSelectedList
 
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-        // TODO: On selecting a spinner item we change the one setted on the db
         String item = parent.getItemAtPosition(position).toString();
         // Showing selected spinner item
         Toast.makeText(parent.getContext(), "Selected: " + item, Toast.LENGTH_SHORT).show();
@@ -121,4 +127,6 @@ public class Settings extends Activity implements AdapterView.OnItemSelectedList
     public void onNothingSelected(AdapterView<?> arg0) {
         // TODO Auto-generated method stub
     }
+
+
 }

@@ -1,6 +1,7 @@
 package com.example.chris.mcc_2017_g19;
 
 import android.Manifest;
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -9,7 +10,9 @@ import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Environment;
+import android.preference.PreferenceManager;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
@@ -27,6 +30,10 @@ import android.widget.Toast;
 
 
 import com.example.chris.mcc_2017_g19.AlbumsView.AlbumsActivity;
+import com.example.chris.mcc_2017_g19.BackendAPI.BackendAPI;
+import com.example.chris.mcc_2017_g19.Connectivity.Connectivity;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.vision.Frame;
 import com.google.android.gms.vision.barcode.Barcode;
 import com.google.android.gms.vision.barcode.BarcodeDetector;
@@ -37,10 +44,17 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageMetadata;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
+
+import org.json.JSONException;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.io.IOException;
@@ -75,7 +89,8 @@ public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_WRITE_STORAGE = 112;
 
 
-
+    private ProgressDialog progressDialog;
+    private String maxQuality;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -155,12 +170,19 @@ public class MainActivity extends AppCompatActivity {
         takepicture.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                final String userGroup = userObj.getGroup();
+
+                /*if(!userObj.equals(null)){
+                    final String userGroup = userObj.getGroup();
+                }
+
+
                 if (userGroup == null) {
                     errorToast("Join or create a group to take pictures");
                 } else {
                     cameraButtonAction(userGroup);
-                }
+                }*/
+
+                TakePictureIntent();
             }
         });
     }
@@ -363,7 +385,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected Bitmap doInBackground(Void... params) {
             //Create the Barcode detector and detect barcode
-            Bitmap resized = getLowResolutionBitmap(0.4);
+            Bitmap resized = getLowResolutionBitmap(0.05);
 
             BarcodeDetector detector = new BarcodeDetector.Builder(getApplicationContext()).setBarcodeFormats(Barcode.DATA_MATRIX | Barcode.QR_CODE | Barcode.EAN_13).build();
             Frame frame = new Frame.Builder().setBitmap(resized).build();
@@ -375,14 +397,22 @@ public class MainActivity extends AppCompatActivity {
             result = barcodes.size();
             System.out.println("Barcodes found: " + result);
             if(result == 0) {
-                // If the image has no sensitive data, TODO: Call method to store in Firebase + Google App Engine
+                //
+                // TODO: Call method to store in Firebase + Google App Engine
+
+                CheckSettings();
 
             } else {
-                // The image has one sensitive data, check here to know what is a sensitive data:
-                // https://developers.google.com/vision/android/barcodes-overview
+
+                //Creating a unique name for the picture
+                Random generator = new Random();
+                int n = 1000;
+                n = generator.nextInt(n);
+                String fname = "Image-" + n + ".jpeg";
+
 
                 // Call the method to store image in private folder
-                SaveImage("/Private");
+                SaveImage("/Private",fname);
             }
 
             removeTempPicture();
@@ -403,7 +433,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void SaveImage(String folder) {
+    private void SaveImage(String folder, String filename) {
         Bitmap finalBitmap = getImageBitmap();
         File myDir = new File(Utils.getAlbumsRoot(getApplicationContext()) + folder);
 
@@ -411,13 +441,7 @@ public class MainActivity extends AppCompatActivity {
             myDir.mkdirs();
         }
 
-        //Creating a unique name for the picture
-        Random generator = new Random();
-        int n = 1000;
-        n = generator.nextInt(n);
-        String fname = "Image-" + n + ".jpeg";
-
-        File file = new File(myDir, fname);
+        File file = new File(myDir, filename);
 
 
         try {
@@ -440,6 +464,129 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
     }
+
+    private void CheckSettings() {
+
+        if(Connectivity.isConnectedMobile(getApplicationContext())){
+            //Create the bitmap that is going to be scaled
+            Bitmap FirebaseBitmapLTE = getImageBitmap();
+
+
+            //Check which one is the setting (low/high/full) and tranform the bitmap
+            if(getWIFISettings().toLowerCase().contains("high")){
+
+                //Check if the image has been taken in landscape or not:
+                if(getImageBitmap().getWidth() < 1280){
+                    FirebaseBitmapLTE = Bitmap.createScaledBitmap(getImageBitmap(), 960, 1280, false);
+                }else{
+                    FirebaseBitmapLTE = Bitmap.createScaledBitmap(getImageBitmap(), 1280, 960, false);
+                }
+
+                maxQuality = "high";
+
+            }else if(getWIFISettings().toLowerCase().contains("low")){
+
+                //Check if the image has been taken in landscape or not:
+                if(getImageBitmap().getWidth() < 640){
+                    FirebaseBitmapLTE = Bitmap.createScaledBitmap(getImageBitmap(), 480, 640, false);
+                }else{
+                    FirebaseBitmapLTE = Bitmap.createScaledBitmap(getImageBitmap(), 640, 480, false);
+                }
+
+                maxQuality = "low";
+
+            }else{
+                maxQuality = "full";
+            }
+
+            uploadImageFirebase(FirebaseBitmapLTE);
+
+        }
+        if(Connectivity.isConnectedWifi(getApplicationContext())){
+            //Create the bitmap that is going to be scaled
+            Bitmap FirebaseBitmapWIFI = getImageBitmap();
+
+            //Check which one is the setting (low/high/full) and tranform the bitmap
+            if(getWIFISettings().toLowerCase().contains("high")){
+
+                //Check if the image has been taken in landscape or not:
+                if(getImageBitmap().getWidth() < 1280){
+                    FirebaseBitmapWIFI = Bitmap.createScaledBitmap(getImageBitmap(), 960, 1280, false);
+                }else{
+                    FirebaseBitmapWIFI = Bitmap.createScaledBitmap(getImageBitmap(), 1280, 960, false);
+                }
+
+                maxQuality = "high";
+            }else if(getWIFISettings().toLowerCase().contains("low")){
+
+                //Check if the image has been taken in landscape or not:
+                if(getImageBitmap().getWidth() < 640){
+                    FirebaseBitmapWIFI = Bitmap.createScaledBitmap(getImageBitmap(), 480, 640, false);
+                }else{
+                    FirebaseBitmapWIFI = Bitmap.createScaledBitmap(getImageBitmap(), 640, 480, false);
+                }
+
+                maxQuality = "low";
+            }else{
+                maxQuality = "full";
+            }
+
+            uploadImageFirebase(FirebaseBitmapWIFI);
+        }
+    }
+
+    public void uploadImageFirebase(Bitmap firebasebitmap){
+        //Get a reference from our storage:
+        FirebaseStorage storage = FirebaseStorage.getInstance();
+
+        Long tsLong = System.currentTimeMillis()/1000;
+        final String imagename = tsLong.toString();
+        StorageReference storageReference = storage.getReferenceFromUrl("gs://mcc-fall-2017-g19.appspot.com/" + userObj.getGroup())
+                .child(imagename + ".jpg");
+
+        //Upload to Firebase using puBytes
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        firebasebitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+        byte[] data = baos.toByteArray();
+
+        UploadTask uploadTask = storageReference.putBytes(data);
+        uploadTask.addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                // Handle unsuccessful uploads
+            }
+        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+
+                //Call the backend API and send data
+                BackendAPI api = new BackendAPI();
+                api.uploadImage(userObj.getGroup(), imagename+ ".jpg", maxQuality, new BackendAPI.HttpCallback() {
+                    @Override
+                    public void onFailure(String response, Exception exception) {
+                        Log.d(TAG, "Error: " + response + " " + exception);
+                    }
+
+                    @Override
+                    public void onSuccess(String response) {
+                        try {
+                            if(!response.contains("error")){
+                                SaveImage(userObj.getName()+ "_" + userObj.getGroup(), response);
+                            }
+                            else{
+                                Toast.makeText(MainActivity.this, response, Toast.LENGTH_SHORT).show();
+                                System.out.println("abccddd"+ response);
+                            }
+                        } catch (Exception e){
+                            Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+
+            }
+        });
+    }
+
 
     private void removeTempPicture(){
         File file_to_delete = new File(imagePath);
@@ -473,5 +620,32 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.photo).setEnabled(status);
         findViewById(R.id.group).setEnabled(status);
         findViewById(R.id.setting).setEnabled(status);
+    }
+
+
+    public String getLTESettings(){
+
+        String LTEpicturevalue = PreferenceManager
+                .getDefaultSharedPreferences(getApplicationContext())
+                .getString("LTEpicturevalue","");
+
+        return LTEpicturevalue;
+    }
+
+    public String getWIFISettings(){
+
+        String WIFIpicturevalue =PreferenceManager
+                .getDefaultSharedPreferences(getApplicationContext())
+                .getString("WIFIpicturevalue","");
+
+        return WIFIpicturevalue;
+    }
+
+    protected void showProgressDialog(String title, String msg) {
+        progressDialog = ProgressDialog.show(this, title, msg, true);
+    }
+
+    protected void dismissProgressDialog() {
+        progressDialog.dismiss();
     }
 }
