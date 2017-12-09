@@ -10,11 +10,14 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.RingtoneManager;
 import android.net.Uri;
+import android.os.Bundle;
 import android.os.Environment;
+import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.example.chris.mcc_2017_g19.Connectivity.Connectivity;
 import com.firebase.jobdispatcher.Constraint;
 import com.firebase.jobdispatcher.FirebaseJobDispatcher;
 import com.firebase.jobdispatcher.GooglePlayDriver;
@@ -51,7 +54,12 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     UserObject userObj;
     DatabaseReference databaseReference;
 
-    private static final String TAG = "MyFirebaseMsgService";
+    private final Context mContext;
+    public MyFirebaseMessagingService(Context ctx)
+    {
+        mContext = ctx.getApplicationContext(); }
+
+        private static final String TAG = "MyFirebaseMsgService";
 
     /**
      * Called when message is received.
@@ -88,6 +96,8 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
 
                 sendNotification("New image from " + photographer);
+
+
                 syncImageFolder();
                 Log.d(TAG,"Data MSG in. (no new data nessesarily)");
             }
@@ -189,7 +199,32 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                                     String remoteMaxQ = (String) groupSnapshot.child("images").child(remoteImageID).child("maxQuality").getValue();
                                     Log.d(TAG, "remoteMaxQ: " + remoteMaxQ);
                                     //TODO: get local max Quality from Alessio / Kristian
-                                    String localMaxQ = "high";
+
+                                    String localMaxQ = "full";
+                                    MainActivity mActivity= new MainActivity();
+
+
+                                    String LTE = PreferenceManager
+                                            .getDefaultSharedPreferences(mContext)
+                                            .getString("LTEpicturevalue","");
+
+                                    String WIFI =PreferenceManager
+                                            .getDefaultSharedPreferences(mContext)
+                                            .getString("WIFIpicturevalue","");
+
+                                    Log.d(TAG, "Current WIFI setting: " + WIFI);
+                                    Log.d(TAG, "Current LTE setting: " + LTE);
+
+                                    if (Connectivity.isConnectedMobile(mContext)) {
+                                        localMaxQ = LTE;
+                                    }
+                                    else if (Connectivity.isConnectedMobile(mContext)) {
+                                        localMaxQ = WIFI;
+                                    }
+                                    else {
+                                        Log.d(TAG,"ERROR IN GETTING LOCAL MAX Q");
+                                    }
+
                                     String finalQ;
                                     if (qualityAsInt(localMaxQ) >= qualityAsInt(remoteMaxQ)) {
                                         finalQ = remoteMaxQ;
@@ -198,13 +233,21 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                                         finalQ = localMaxQ;
                                     }
 
+                                    if (!finalQ.equals("low") && !finalQ.equals("high") && !finalQ.equals("full")) {
+                                        finalQ = "low";
+                                        Log.d(TAG,"ERROR IN GETTING the final max quality: Setting it to low! finalQ was: "+finalQ);
+                                    }
                                     //get url for the image
                                     String url = (String) groupSnapshot.child("images").child(remoteImageID).child((String) finalQ + "URL").getValue();
+                                    Log.d(TAG, "URL for databaseref / Dl'ing image: " + url);
+                                    Log.d(TAG, "finalQ: " + finalQ);
 
                                     //download from url as bitmap
                                     //Bitmap newBitmap = getBitmapFromURL(url); this doesnt work, mainthread röplem
 
                                     FirebaseStorage storage = FirebaseStorage.getInstance();
+
+                                    //TODO crash here if cloud not up I think
                                     final StorageReference httpsReference = storage.getReferenceFromUrl(url);
 
                                     final long MAX_SIZE = 50*1024*1024;

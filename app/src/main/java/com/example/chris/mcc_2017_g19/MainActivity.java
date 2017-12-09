@@ -106,7 +106,7 @@ public class MainActivity extends AppCompatActivity {
         api.updateDeviceToken(device_token);
 
         //Check for new images everytime when loading MainActivity. If user is in a group.
-        MyFirebaseMessagingService newClassObjectForSync = new MyFirebaseMessagingService();
+        MyFirebaseMessagingService newClassObjectForSync = new MyFirebaseMessagingService(getApplicationContext());
         newClassObjectForSync.syncImageFolder();
 
         //Ask the user for permission to write on disc
@@ -618,7 +618,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    public String getLTESettings(){
+    public final String getLTESettings(){
 
         String LTEpicturevalue = PreferenceManager
                 .getDefaultSharedPreferences(getApplicationContext())
@@ -627,7 +627,7 @@ public class MainActivity extends AppCompatActivity {
         return LTEpicturevalue;
     }
 
-    public String getWIFISettings(){
+    public final String getWIFISettings(){
 
         String WIFIpicturevalue =PreferenceManager
                 .getDefaultSharedPreferences(getApplicationContext())
