@@ -234,28 +234,25 @@ public class BackendAPI {
     }
 
 
-    public void updateDeviceToken(final String device_token){
+    public void updateDeviceToken(final String device_token, final HttpCallback cb){
         getIdToken(new BackendAPI.HttpCallback() {
+
             @Override
             public void onFailure(String response, Exception exception) {
                 Log.d(TAG, "Error: " + response + " " + exception);
+
             }
             @Override
             public void onSuccess(String response) {
                 String url = backendUrl + "/updateDeviceToken";
-                RequestBody requestBody = new MultipartBody.Builder()
+                final RequestBody requestBody = new MultipartBody.Builder()
                         .setType(MultipartBody.FORM)
-                        .addFormDataPart("idToken", idToken)
+                        .addFormDataPart("userToken", idToken)
                         .addFormDataPart("deviceToken", device_token)
                         .build();
-                try{
-                    postRequest(url, requestBody, new HttpCallback() {
-                        @Override
-                        public void onFailure(String response, Exception exception) {}
 
-                        @Override
-                        public void onSuccess(String response) {}
-                    });
+                try{
+                    postRequest(url, requestBody, cb);
                 }
                 catch (Exception e){
                 }

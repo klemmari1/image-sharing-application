@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -71,7 +72,6 @@ public class MainActivity extends AppCompatActivity {
 
     private FirebaseUser firebaseUser;
     private UserObject userObj;
-    private GroupObject userGroupObj;
     private DatabaseReference databaseReference;
 
     static final int REQUEST_IMAGE_CAPTURE = 1;
@@ -81,12 +81,11 @@ public class MainActivity extends AppCompatActivity {
     static final int REQUEST_CREATE_GROUP = 5;
     private static final String TAG = "MainActivity";
 
-
     private static final int REQUEST_WRITE_STORAGE = 112;
-
 
     private ProgressDialog progressDialog;
     private String maxQuality;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -96,18 +95,34 @@ public class MainActivity extends AppCompatActivity {
         databaseReference = Utils.getDatabase().getReference();
         firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
 
-        DatabaseReference userReference = databaseReference.child("users").child(firebaseUser.getUid());
-        userReference.keepSynced(true);
-
         //testing notification stuff (fcm)
         String device_token = FirebaseInstanceId.getInstance().getToken();
-
         BackendAPI api = new BackendAPI();
-        api.updateDeviceToken(device_token);
+        api.updateDeviceToken(device_token, new BackendAPI.HttpCallback() {
+            @Override
+            public void onFailure(String response, Exception exception) {
+            }
+            @Override
+            public void onSuccess(String response) {
+            }
+        });
+
+        DatabaseReference userReference = databaseReference.child("users").child(firebaseUser.getUid());
+        userReference.keepSynced(true);
+        userReference.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
+                userObj = snapshot.getValue(UserObject.class);
+                MyFirebaseMessagingService newClassObjectForSync = new MyFirebaseMessagingService();
+                newClassObjectForSync.syncImageFolder(userObj.getGroup());
+            }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                System.out.println("The read failed: " + databaseError.getMessage());
+            }
+        });
 
         //Check for new images everytime when loading MainActivity. If user is in a group.
-        MyFirebaseMessagingService newClassObjectForSync = new MyFirebaseMessagingService(getApplicationContext());
-        newClassObjectForSync.syncImageFolder();
 
         //Ask the user for permission to write on disc
         boolean hasPermission = (ContextCompat.checkSelfPermission(this,
@@ -118,18 +133,6 @@ public class MainActivity extends AppCompatActivity {
                     REQUEST_WRITE_STORAGE);
         }
 
-        userReference.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot snapshot) {
-                userObj = snapshot.getValue(UserObject.class);
-            }
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                System.out.println("The read failed: " + databaseError.getMessage());
-            }
-        });
-
-
         gallery = (ImageView) findViewById(R.id.gallery);
         gallery.setClickable(true);
         gallery.setOnClickListener(new View.OnClickListener() {
@@ -137,6 +140,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Intent intent = new Intent(MainActivity.this, AlbumsActivity.class);
                 startActivity(intent);
+
             }
         });
 
@@ -165,22 +169,32 @@ public class MainActivity extends AppCompatActivity {
         takepicture.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                setButtonStatus(false);
+                DatabaseReference userReference = databaseReference.child("users").child(firebaseUser.getUid());
+                userReference.keepSynced(true);
+                userReference.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot snapshot) {
+                        UserObject userObject = snapshot.getValue(UserObject.class);
+                        final String userGroup = userObject.getGroup();
 
-                /*if(!userObj.equals(null)){
-                    final String userGroup = userObj.getGroup();
-                }
-
-
-                if (userGroup == null) {
-                    errorToast("Join or create a group to take pictures");
-                } else {
-                    cameraButtonAction(userGroup);
-                }*/
-
-                TakePictureIntent();
+                        if (userGroup == null) {
+                            errorToast("Join or create a group to take pictures");
+                        } else {
+                            cameraButtonAction(userGroup);
+                        }
+                        setButtonStatus(true);
+                    }
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                        System.out.println("The read failed: " + databaseError.getMessage());
+                        setButtonStatus(true);
+                    }
+                });
             }
         });
     }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -205,52 +219,64 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void selectGroupManagementActivity() {
-        if (userObj != null){
-            if (userObj.getGroup() == null){
-                //Setup the alert builder
-                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                View customTitle = View.inflate(MainActivity.this, R.layout.dialog_title, null);
-                builder.setCustomTitle(customTitle);
-                builder.setTitle("Choose an action");
+        setButtonStatus(false);
+        DatabaseReference userReference = databaseReference.child("users").child(firebaseUser.getUid());
+        userReference.keepSynced(true);
+        userReference.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
+                setButtonStatus(true);
+                UserObject userObject = snapshot.getValue(UserObject.class);
+                if (userObject.getGroup() == null){
+                    //Setup the alert builder
+                    AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                    View customTitle = View.inflate(MainActivity.this, R.layout.dialog_title, null);
+                    builder.setCustomTitle(customTitle);
+                    builder.setTitle("Choose an action");
 
-                //Add options
-                List<String> actions = new ArrayList<String>();
-                actions.add("JOIN A GROUP");
-                actions.add("CREATE A GROUP");
-                DialogAdapter da = new DialogAdapter(this, actions);
-                builder.setAdapter(da, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        switch (which) {
-                            case 0:
-                                //Yes button pressed: Join a group
-                                if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CAMERA)
-                                        != PackageManager.PERMISSION_GRANTED) {
-                                    ActivityCompat.requestPermissions(MainActivity.this,
-                                            new String[]{Manifest.permission.CAMERA}, MY_PERMISSIONS_REQUEST_QR);
-                                } else {
-                                    Intent intent = new Intent(MainActivity.this, QrReaderActivity.class);
-                                    startActivity(intent);
-                                }
-                                break;
-                            case 1:
-                                //No button pressed: Create group
-                                setButtonStatus(false);
-                                Intent intent = new Intent(MainActivity.this, GroupCreationActivity.class);
-                                startActivityForResult(intent, REQUEST_CREATE_GROUP);
-                                break;
+                    //Add options
+                    List<String> actions = new ArrayList<String>();
+                    actions.add("JOIN A GROUP");
+                    actions.add("CREATE A GROUP");
+                    DialogAdapter da = new DialogAdapter(MainActivity.this, actions);
+                    builder.setAdapter(da, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            switch (which) {
+                                case 0:
+                                    //Yes button pressed: Join a group
+                                    if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CAMERA)
+                                            != PackageManager.PERMISSION_GRANTED) {
+                                        ActivityCompat.requestPermissions(MainActivity.this,
+                                                new String[]{Manifest.permission.CAMERA}, MY_PERMISSIONS_REQUEST_QR);
+                                    } else {
+                                        Intent intent = new Intent(MainActivity.this, QrReaderActivity.class);
+                                        startActivityForResult(intent, REQUEST_CREATE_GROUP);
+                                    }
+                                    break;
+                                case 1:
+                                    //No button pressed: Create group
+                                    Intent intent = new Intent(MainActivity.this, GroupCreationActivity.class);
+                                    startActivityForResult(intent, REQUEST_CREATE_GROUP);
+                                    break;
+                            }
                         }
-                    }
-                });
-                //Create and show the alert dialog
-                AlertDialog dialog = builder.create();
-                dialog.show();
+                    });
+                    //Create and show the alert dialog
+                    AlertDialog dialog = builder.create();
+                    dialog.show();
+                }
+                else{
+                    Intent intent = new Intent(MainActivity.this, GroupStatusActivity.class);
+                    startActivity(intent);
+                }
             }
-            else{
-                Intent intent = new Intent(MainActivity.this, GroupStatusActivity.class);
-                startActivity(intent);
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                setButtonStatus(true);
+                System.out.println("The read failed: " + databaseError.getMessage());
             }
-        }
+        });
     }
 
 
@@ -259,11 +285,11 @@ public class MainActivity extends AppCompatActivity {
         userGroupReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                userGroupObj = dataSnapshot.getValue(GroupObject.class);
-                if (!userGroupObj.isExpired())
+                GroupObject groupObj = dataSnapshot.getValue(GroupObject.class);
+                if (!groupObj.isExpired())
                     TakePictureIntent();
                 else
-                    Log.d(TAG, "Group expired!");
+                    Toast.makeText(getApplicationContext(), "Group expired", Toast.LENGTH_SHORT).show();
             }
             @Override
             public void onCancelled(DatabaseError databaseError) {
@@ -284,8 +310,8 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
     private void startCamera() {
-        setButtonStatus(false);
         Intent pictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         // Ensure that there's a camera activity to handle the intent
         if (pictureIntent.resolveActivity(getPackageManager()) != null) {
@@ -325,7 +351,6 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        setButtonStatus(true);
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
             if (checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
                     != PackageManager.PERMISSION_GRANTED) {
@@ -380,10 +405,10 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected Bitmap doInBackground(Void... params) {
             //Create the Barcode detector and detect barcode
-            Bitmap resized = getLowResolutionBitmap(0.05);
+            Bitmap bitmap = getImageBitmap();
 
             BarcodeDetector detector = new BarcodeDetector.Builder(getApplicationContext()).setBarcodeFormats(Barcode.DATA_MATRIX | Barcode.QR_CODE | Barcode.EAN_13).build();
-            Frame frame = new Frame.Builder().setBitmap(resized).build();
+            Frame frame = new Frame.Builder().setBitmap(bitmap).build();
             SparseArray<Barcode> barcodes = new SparseArray<>();
             if(detector.isOperational()){
                 barcodes = detector.detect(frame);
@@ -403,16 +428,14 @@ public class MainActivity extends AppCompatActivity {
                 Random generator = new Random();
                 int n = 1000;
                 n = generator.nextInt(n);
-                String fname = "Image-" + n + ".jpeg";
+                String fname = "Image-" + n + ".jpg";
 
 
                 // Call the method to store image in private folder
-                SaveImage("/Private",fname);
+                SaveImage("Private", fname);
             }
 
-            removeTempPicture();
-
-            return resized;
+            return bitmap;
             //return Bitmap.createScaledBitmap(bit, width, height, true);
         }
 
@@ -429,63 +452,50 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void SaveImage(String folder, String filename) {
-        Bitmap finalBitmap = getImageBitmap();
-        File myDir = new File(Utils.getAlbumsRoot(getApplicationContext()) + folder);
+        File myDir = new File(Utils.getAlbumsRoot(getApplicationContext()) +  File.separator + folder);
 
         if (!myDir.exists()) {
             myDir.mkdirs();
         }
 
-        File file = new File(myDir, filename);
+        try{
+            File file_a =new File(imagePath);
 
+            if(file_a.renameTo(new File(myDir + File.separator + filename))){
+                System.out.println("Temp image moved successfully!");
+            }else{
+                System.out.println("Error!");
+            }
 
-        try {
-            MediaScannerConnection.scanFile(getApplicationContext(), new String[]{file.getPath()}, new String[]{"Image/*"}, null);
-            System.out.println(file);
-
-            //FileOutputStream out = new FileOutputStream(file);
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            finalBitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
-
-
-            file.createNewFile();
-            FileOutputStream fo = new FileOutputStream(file);
-            fo.write(out.toByteArray());
-            fo.close();
-
-            out.flush();
-            out.close();
-        } catch (Exception e) {
+        }catch(Exception e){
             e.printStackTrace();
         }
     }
 
     private void CheckSettings() {
+        Bitmap FirebaseBitmap = getImageBitmap();
 
         if(Connectivity.isConnectedMobile(getApplicationContext())){
-            //Create the bitmap that is going to be scaled
-            Bitmap FirebaseBitmapLTE = getImageBitmap();
-
 
             //Check which one is the setting (low/high/full) and tranform the bitmap
-            if(getWIFISettings().toLowerCase().contains("high")){
+            if(getLTESettings().toLowerCase().contains("high")){
 
                 //Check if the image has been taken in landscape or not:
-                if(getImageBitmap().getWidth() < 1280){
-                    FirebaseBitmapLTE = Bitmap.createScaledBitmap(getImageBitmap(), 960, 1280, false);
+                if(FirebaseBitmap.getWidth() < FirebaseBitmap.getHeight()){
+                    FirebaseBitmap = Bitmap.createScaledBitmap(FirebaseBitmap, 960, 1280, false);
                 }else{
-                    FirebaseBitmapLTE = Bitmap.createScaledBitmap(getImageBitmap(), 1280, 960, false);
+                    FirebaseBitmap = Bitmap.createScaledBitmap(FirebaseBitmap, 1280, 960, false);
                 }
 
                 maxQuality = "high";
 
-            }else if(getWIFISettings().toLowerCase().contains("low")){
+            }else if(getLTESettings().toLowerCase().contains("low")){
 
                 //Check if the image has been taken in landscape or not:
-                if(getImageBitmap().getWidth() < 640){
-                    FirebaseBitmapLTE = Bitmap.createScaledBitmap(getImageBitmap(), 480, 640, false);
+                if(FirebaseBitmap.getWidth() < FirebaseBitmap.getHeight()){
+                    FirebaseBitmap = Bitmap.createScaledBitmap(FirebaseBitmap, 480, 640, false);
                 }else{
-                    FirebaseBitmapLTE = Bitmap.createScaledBitmap(getImageBitmap(), 640, 480, false);
+                    FirebaseBitmap = Bitmap.createScaledBitmap(FirebaseBitmap, 640, 480, false);
                 }
 
                 maxQuality = "low";
@@ -493,44 +503,39 @@ public class MainActivity extends AppCompatActivity {
             }else{
                 maxQuality = "full";
             }
-
-            uploadImageFirebase(FirebaseBitmapLTE);
-
         }
+
         if(Connectivity.isConnectedWifi(getApplicationContext())){
-            //Create the bitmap that is going to be scaled
-            Bitmap FirebaseBitmapWIFI = getImageBitmap();
-
             //Check which one is the setting (low/high/full) and tranform the bitmap
             if(getWIFISettings().toLowerCase().contains("high")){
 
                 //Check if the image has been taken in landscape or not:
-                if(getImageBitmap().getWidth() < 1280){
-                    FirebaseBitmapWIFI = Bitmap.createScaledBitmap(getImageBitmap(), 960, 1280, false);
+                if(FirebaseBitmap.getWidth() < FirebaseBitmap.getHeight()){
+                    FirebaseBitmap = Bitmap.createScaledBitmap(FirebaseBitmap, 960, 1280, false);
                 }else{
-                    FirebaseBitmapWIFI = Bitmap.createScaledBitmap(getImageBitmap(), 1280, 960, false);
+                    FirebaseBitmap = Bitmap.createScaledBitmap(FirebaseBitmap, 1280, 960, false);
                 }
 
                 maxQuality = "high";
             }else if(getWIFISettings().toLowerCase().contains("low")){
 
                 //Check if the image has been taken in landscape or not:
-                if(getImageBitmap().getWidth() < 640){
-                    FirebaseBitmapWIFI = Bitmap.createScaledBitmap(getImageBitmap(), 480, 640, false);
+                if(FirebaseBitmap.getWidth() < FirebaseBitmap.getHeight()){
+                    FirebaseBitmap = Bitmap.createScaledBitmap(FirebaseBitmap, 480, 640, false);
                 }else{
-                    FirebaseBitmapWIFI = Bitmap.createScaledBitmap(getImageBitmap(), 640, 480, false);
+                    FirebaseBitmap = Bitmap.createScaledBitmap(FirebaseBitmap, 640, 480, false);
                 }
 
                 maxQuality = "low";
             }else{
                 maxQuality = "full";
             }
-
-            uploadImageFirebase(FirebaseBitmapWIFI);
         }
+
+        uploadImageFirebase(FirebaseBitmap);
     }
 
-    public void uploadImageFirebase(Bitmap firebasebitmap){
+        public void uploadImageFirebase(Bitmap FirebaseBitmap){
         //Get a reference from our storage:
         FirebaseStorage storage = FirebaseStorage.getInstance();
 
@@ -541,7 +546,7 @@ public class MainActivity extends AppCompatActivity {
 
         //Upload to Firebase using puBytes
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        firebasebitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+        FirebaseBitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
         byte[] data = baos.toByteArray();
 
         UploadTask uploadTask = storageReference.putBytes(data);
@@ -563,36 +568,34 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                     @Override
-                    public void onSuccess(String response) {
+                    public void onSuccess(final String response) {
                         try {
                             if(!response.contains("error")){
-                                SaveImage(userObj.getName()+ "_" + userObj.getGroup(), response);
+                                DatabaseReference userGroupReference = databaseReference.child("groups").child(userObj.getGroup());
+                                userGroupReference.addListenerForSingleValueEvent(new ValueEventListener() {
+                                    @Override
+                                    public void onDataChange(DataSnapshot dataSnapshot) {
+                                        GroupObject groupObj = dataSnapshot.getValue(GroupObject.class);
+                                        SaveImage(groupObj.getName() + "_" + userObj.getGroup(), response + ".jpg");
+                                    }
+                                    @Override
+                                    public void onCancelled(DatabaseError databaseError) {
+                                    }
+                                });
                             }
                             else{
                                 Toast.makeText(MainActivity.this, response, Toast.LENGTH_SHORT).show();
-                                System.out.println("abccddd"+ response);
+
                             }
                         } catch (Exception e){
                             Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
                         }
                     }
                 });
-
             }
         });
     }
 
-
-    private void removeTempPicture(){
-        File file_to_delete = new File(imagePath);
-        if (file_to_delete.exists()) {
-            if (file_to_delete.delete()) {
-                System.out.println("file Deleted :" + file_to_delete.getPath());
-            } else {
-                System.out.println("file not Deleted :" + file_to_delete.getPath());
-            }
-        }
-    }
 
     private Bitmap getImageBitmap(){
         try{
@@ -604,11 +607,13 @@ public class MainActivity extends AppCompatActivity {
         return null;
     }
 
+
     private Bitmap getLowResolutionBitmap(double factor){
         Bitmap bitmap = getImageBitmap();
         Bitmap resized = Bitmap.createScaledBitmap(bitmap,(int)(bitmap.getWidth()*factor), (int)(bitmap.getHeight()*factor), true);
         return resized;
     }
+
 
     private void setButtonStatus(boolean status){
         findViewById(R.id.gallery).setEnabled(status);

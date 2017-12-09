@@ -50,7 +50,6 @@ import java.util.List;
 
 public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
-
     UserObject userObj;
     DatabaseReference databaseReference;
 
@@ -60,6 +59,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         mContext = ctx.getApplicationContext(); }
 
         private static final String TAG = "MyFirebaseMsgService";
+
 
     /**
      * Called when message is received.
@@ -89,22 +89,38 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             try {
                 //receive groupID and filename from received data-notification
                 JSONObject jsonObject = new JSONObject(remoteMessage.getData());
-                String filename = jsonObject.getString("filename");
-                String groupID = jsonObject.getString("groupID");
 
-                String photographer = jsonObject.getString("photographer");
+                final String photographer = jsonObject.getString("photographer");
 
+                DatabaseReference databaseReference = Utils.getDatabase().getReference();
+                FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+                String uid = firebaseUser.getUid();
+                DatabaseReference userReference = databaseReference.child("users").child(uid);
+                userReference.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot userSnapshot) {
+                        //1. get group id from database: users/<userid>/group
+                        String groupID = (String) userSnapshot.child("group").getValue();
+                        String userName =  (String) userSnapshot.child("name").getValue();
+                        Log.d(TAG,"found groupID in the begining of syncImageFolder(): " + groupID);
 
-                sendNotification("New image from " + photographer);
+                        //2. get all image ids from groups/groupID/images
 
-
-                syncImageFolder();
-                Log.d(TAG,"Data MSG in. (no new data nessesarily)");
+                        if (groupID != null && !userName.equals(photographer)) {
+                            sendNotification("New image from " + photographer);
+                            syncImageFolder(groupID);
+                            Log.d(TAG,"Data MSG in. (no new data nessesarily)");
+                        }
+                    }
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                        System.out.println("The read failed: " + databaseError.getMessage());
+                    }
+                });
             }
             catch (JSONException e) {
                 Log.d(TAG,"json roblem",e);
             }
-
         }
 
         // Check if message contains a notification payload.
@@ -154,159 +170,150 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     }
 
     //TODO in syncImageFolder(): access control between android and firebase
-    public void syncImageFolder() {
-        //get remote image ids: 1. get group id of current user, 2. get all image ids
+    public void syncImageFolder(final String groupID) {
 
-        databaseReference = Utils.getDatabase().getReference();
-        FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
-        String uid = firebaseUser.getUid();
-
-        DatabaseReference userReference = databaseReference.child("users").child(uid);
-
-        userReference.addListenerForSingleValueEvent(new ValueEventListener() {
+        final DatabaseReference databaseReference = Utils.getDatabase().getReference();
+        DatabaseReference imagesReference = databaseReference.child("groups").child(groupID);
+        imagesReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
-            public void onDataChange(DataSnapshot userSnapshot) {
-                //1. get group id from database: users/<userid>/group
-                final String groupID = (String) userSnapshot.child("group").getValue();
-                Log.d(TAG,"found groupID in the begining of syncImageFolder(): " + groupID);
+            public void onDataChange(final DataSnapshot groupSnapshot) {
 
-                //2. get all image ids from groups/groupID/images
+                //get local imageIDs first:
+                final String groupName = (String) groupSnapshot.child("name").getValue();
+                List<String> localImageIdList = getLocalImageIDs(groupID,groupName);
 
-                if (groupID != null) {
-                    DatabaseReference imagesReference = databaseReference.child("groups").child(groupID);
+                List<String> remoteImageIdList = new ArrayList<String>();
+                for (DataSnapshot imageSnapshot: groupSnapshot.child("images").getChildren()) {
+                    remoteImageIdList.add(imageSnapshot.getKey());
+                    Log.d(TAG,"added to remote image list: " + imageSnapshot.getKey() + ":"+groupID);
+                }
 
-                    imagesReference.addListenerForSingleValueEvent(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(final DataSnapshot groupSnapshot) {
+                //loop through remote imageIDs and download if new found
+                for (final String remoteImageID : remoteImageIdList) {
+                    if (localImageIdList.contains(remoteImageID) != true) {
+                        Log.d(TAG,"Found new remote image to be synced! remoteImageID: wasnt found locally " + remoteImageID);
 
-                            //get local imageIDs first:
-                            final String groupName = (String) groupSnapshot.child("name").getValue();
-                            List<String> localImageIdList = getLocalImageIDs(groupID,groupName);
+                        //get url based on quality min(localMaxQ,remoteMaxQ)
+                        ////get max quality as int
+                        String remoteMaxQ = (String) groupSnapshot.child("images").child(remoteImageID).child("maxQuality").getValue();
+                        Log.d(TAG, "remoteMaxQ: " + remoteMaxQ);
+                        //TODO: get local max Quality from Alessio / Kristian
+                        String localMaxQ = "high";
+                        String finalQ;
+                        if (qualityAsInt(localMaxQ) >= qualityAsInt(remoteMaxQ)) {
+                            finalQ = remoteMaxQ;
+                        }
+                        else {
+                            finalQ = localMaxQ;
+                        }
 
-                            List<String> remoteImageIdList = new ArrayList<String>();
-                            for (DataSnapshot imageSnapshot: groupSnapshot.child("images").getChildren()) {
-                                remoteImageIdList.add(imageSnapshot.getKey());
-                                Log.d(TAG,"added to remote image list: " + imageSnapshot.getKey() + ":"+groupID);
-                            }
-
-                            //loop through remote imageIDs and download if new found
-                            for (final String remoteImageID : remoteImageIdList) {
-                                if (localImageIdList.contains(remoteImageID) != true) {
-                                    Log.d(TAG,"Found new remote image to be synced! remoteImageID: wasnt found locally " + remoteImageID);
-
-                                    //get url based on quality min(localMaxQ,remoteMaxQ)
-                                    ////get max quality as int
-                                    String remoteMaxQ = (String) groupSnapshot.child("images").child(remoteImageID).child("maxQuality").getValue();
-                                    Log.d(TAG, "remoteMaxQ: " + remoteMaxQ);
-                                    //TODO: get local max Quality from Alessio / Kristian
-
-
-                                    MainActivity mActivity= new MainActivity();
-
-                                    String LTE;
-                                    String WIFI;
-                                    String localMaxQ = "errorQ";
+                        //get url for the image
+                        String url = (String) groupSnapshot.child("images").child(remoteImageID).child((String) finalQ + "URL").getValue();
 
 
-                                    if (Connectivity.isConnectedMobile(mContext)) {
-                                        LTE = PreferenceManager
-                                                .getDefaultSharedPreferences(mContext)
-                                                .getString("LTEpicturevalue","");
-                                        if (LTE.toLowerCase().contains("low"))
-                                            localMaxQ = "low";
-                                        if (LTE.toLowerCase().contains("high"))
-                                            localMaxQ = "high";
-                                        if (LTE.toLowerCase().contains("full"))
-                                            localMaxQ = "full";
-                                    }
-                                    else if (Connectivity.isConnectedWifi(mContext)) {
-                                        WIFI =PreferenceManager
-                                                .getDefaultSharedPreferences(mContext)
-                                                .getString("WIFIpicturevalue","");
-                                        if (WIFI.toLowerCase().contains("low"))
-                                            localMaxQ = "low";
-                                        if (WIFI.toLowerCase().contains("high"))
-                                            localMaxQ = "high";
-                                        if (WIFI.toLowerCase().contains("full"))
-                                            localMaxQ = "full";
-                                    }
-                                    else {
-                                        Log.d(TAG,"ERROR CONNECTION STATUS. WIFI/MOBILE?");
-                                    }
+                        //get url based on quality min(localMaxQ,remoteMaxQ)
+                        ////get max quality as int
+                        String remoteMaxQ = (String) groupSnapshot.child("images").child(remoteImageID).child("maxQuality").getValue();
+                        Log.d(TAG, "remoteMaxQ: " + remoteMaxQ);
+                        //TODO: get local max Quality from Alessio / Kristian
 
-                                    String finalQ;
-                                    if (qualityAsInt(localMaxQ) >= qualityAsInt(remoteMaxQ)) {
-                                        finalQ = remoteMaxQ;
-                                    }
-                                    else {
-                                        finalQ = localMaxQ;
-                                    }
 
-                                    if (!finalQ.equals("low") && !finalQ.equals("high") && !finalQ.equals("full")) {
-                                        finalQ = "low";
-                                        Log.d(TAG,"ERROR IN GETTING the final max quality: Setting it to low! finalQ was: "+finalQ);
-                                    }
-                                    //get url for the image
-                                    String url = (String) groupSnapshot.child("images").child(remoteImageID).child((String) finalQ + "URL").getValue();
-                                    Log.d(TAG, "URL for databaseref / Dl'ing image: " + url);
-                                    Log.d(TAG, "finalQ: " + finalQ);
+                        MainActivity mActivity= new MainActivity();
 
-                                    //download from url as bitmap
-                                    //Bitmap newBitmap = getBitmapFromURL(url); this doesnt work, mainthread röplem
+                        String LTE;
+                        String WIFI;
+                        String localMaxQ = "errorQ";
 
-                                    FirebaseStorage storage = FirebaseStorage.getInstance();
 
-                                    //TODO crash here if cloud not up I think
-                                    final StorageReference httpsReference = storage.getReferenceFromUrl(url);
+                        if (Connectivity.isConnectedMobile(mContext)) {
+                            LTE = PreferenceManager
+                                    .getDefaultSharedPreferences(mContext)
+                                    .getString("LTEpicturevalue","");
+                            if (LTE.toLowerCase().contains("low"))
+                                localMaxQ = "low";
+                            if (LTE.toLowerCase().contains("high"))
+                                localMaxQ = "high";
+                            if (LTE.toLowerCase().contains("full"))
+                                localMaxQ = "full";
+                        }
+                        else if (Connectivity.isConnectedWifi(mContext)) {
+                            WIFI =PreferenceManager
+                                    .getDefaultSharedPreferences(mContext)
+                                    .getString("WIFIpicturevalue","");
+                            if (WIFI.toLowerCase().contains("low"))
+                                localMaxQ = "low";
+                            if (WIFI.toLowerCase().contains("high"))
+                                localMaxQ = "high";
+                            if (WIFI.toLowerCase().contains("full"))
+                                localMaxQ = "full";
+                        }
+                        else {
+                            Log.d(TAG,"ERROR CONNECTION STATUS. WIFI/MOBILE?");
+                        }
 
-                                    final long MAX_SIZE = 50*1024*1024;
+                        String finalQ;
+                        if (qualityAsInt(localMaxQ) >= qualityAsInt(remoteMaxQ)) {
+                            finalQ = remoteMaxQ;
+                        }
+                        else {
+                            finalQ = localMaxQ;
+                        }
 
-                                    String photoOwnerID = (String) groupSnapshot.child("images").child(remoteImageID).child("userID").getValue();
+                        if (!finalQ.equals("low") && !finalQ.equals("high") && !finalQ.equals("full")) {
+                            finalQ = "low";
+                            Log.d(TAG,"ERROR IN GETTING the final max quality: Setting it to low! finalQ was: "+finalQ);
+                        }
+                        //get url for the image
+                        String url = (String) groupSnapshot.child("images").child(remoteImageID).child((String) finalQ + "URL").getValue();
+                        Log.d(TAG, "URL for databaseref / Dl'ing image: " + url);
+                        Log.d(TAG, "finalQ: " + finalQ);
 
-                                    DatabaseReference photographerUserRef = databaseReference.child("users").child(photoOwnerID);
-                                    photographerUserRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                        //download from url as bitmap
+                        //Bitmap newBitmap = getBitmapFromURL(url); this doesnt work, mainthread röplem
+
+                        FirebaseStorage storage = FirebaseStorage.getInstance();
+                        final StorageReference httpsReference = storage.getReferenceFromUrl(url);
+
+
+                        final long MAX_SIZE = 50*1024*1024;
+
+                        String photoOwnerID = (String) groupSnapshot.child("images").child(remoteImageID).child("userID").getValue();
+
+                        DatabaseReference photographerUserRef = databaseReference.child("users").child(photoOwnerID);
+                        photographerUserRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot userSnapshot) {
+
+                                String photoOwner = (String) userSnapshot.child("name").getValue();
+                                long hasFaces = (long) groupSnapshot.child("images").child(remoteImageID).child("hasFaces").getValue();
+                                String fname = remoteImageID + "_" + photoOwner + "_" + hasFaces + "_.jpg";
+                                String path =  "PhotoOrganizer/Albums/" + groupName + "_" + groupID;
+                                File sdCardRoot = Environment.getExternalStorageDirectory();
+                                File directory = new File(sdCardRoot, path);
+
+                                try {
+                                    File newFile = new File(directory, fname);
+                                    httpsReference.getFile(newFile).addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
                                         @Override
-                                        public void onDataChange(DataSnapshot userSnapshot) {
-
-                                            String photoOwner = (String) userSnapshot.child("name").getValue();
-                                            long hasFaces = (long) groupSnapshot.child("images").child(remoteImageID).child("hasFaces").getValue();
-                                            String fname = remoteImageID + "_" + photoOwner + "_" + hasFaces + "_.jpg";
-                                            String path =  "PhotoOrganizer/Albums/" + groupName + "_" + groupID;
-                                            File sdCardRoot = Environment.getExternalStorageDirectory();
-                                            File directory = new File(sdCardRoot, path);
-
-                                            try {
-                                                File newFile = new File(directory, fname);
-                                                httpsReference.getFile(newFile).addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
-                                                    @Override
-                                                    public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
-                                                        Log.d(TAG,"Downloaded an image! /w ID: " + remoteImageID);
-                                                    }
-                                                });
-                                            } catch (Exception e) {
-                                                Log.d(TAG, e.getMessage());
-                                            }
-                                        }
-                                        @Override
-                                        public void onCancelled(DatabaseError databaseError) {
-                                            Log.d(TAG,"error in getting photographer name" + databaseError.getDetails() + databaseError.getMessage());
+                                        public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
+                                            Log.d(TAG,"Downloaded an image! /w ID: " + remoteImageID);
                                         }
                                     });
+                                } catch (Exception e) {
+                                    Log.d(TAG, e.getMessage());
                                 }
                             }
-
-                        }
-
-                        @Override
-                        public void onCancelled(DatabaseError databaseError) {
-                            Log.d(TAG,"database error: " + databaseError.getDetails() + databaseError.getMessage());
-                        }
-                    });
+                            @Override
+                            public void onCancelled(DatabaseError databaseError) {
+                                Log.d(TAG,"error in getting photographer name" + databaseError.getDetails() + databaseError.getMessage());
+                            }
+                        });
+                    }
                 }
             }
             @Override
             public void onCancelled(DatabaseError databaseError) {
-                System.out.println("The read failed: " + databaseError.getMessage());
+                Log.d(TAG,"database error: " + databaseError.getDetails() + databaseError.getMessage());
             }
         });
     }

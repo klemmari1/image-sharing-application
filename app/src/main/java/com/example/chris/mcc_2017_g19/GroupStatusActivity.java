@@ -5,10 +5,13 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.text.SpannableStringBuilder;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -68,7 +71,11 @@ public class GroupStatusActivity extends AppCompatActivity {
                             GroupObject groupObj = dataSnapshot.getValue(GroupObject.class);
                             if(groupObj != null){
                                 displayGroupName(groupObj.getName());
-                                displayGroupExpiration(groupObj.getExpiration());
+                                displayGroupExpiration(groupObj.getExpiration(), groupObj.isExpired());
+                                if (groupObj.isExpired()) {
+                                    displayExpiredText();
+                                    disableAddMemberButton();
+                                }
                                 checkIfUserIsGroupCreator(groupObj.getCreator());
 
                                 DataSnapshot membersSnapshot = dataSnapshot.child("members");
@@ -197,7 +204,7 @@ public class GroupStatusActivity extends AppCompatActivity {
         groupNameField.setText(name);
     }
 
-    private void displayGroupExpiration(String expiration) {
+    private void displayGroupExpiration(String expiration, boolean groupIsExpired) {
         TextView groupExpirationField = (TextView) findViewById(R.id.group_status_expiration_value);
         Calendar cal = Calendar.getInstance();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
@@ -211,5 +218,15 @@ public class GroupStatusActivity extends AppCompatActivity {
         if (tz != 0)
             cal.add(Calendar.MILLISECOND, tz);
         groupExpirationField.setText(sdf.format(cal.getTime()));
+    }
+
+    private void displayExpiredText() {
+        TextView expiredText = (TextView) findViewById(R.id.group_status_expired_text);
+        expiredText.setText("(Expired)");
+    }
+
+    private void disableAddMemberButton() {
+        Button addMemberButton = (Button) findViewById(R.id.group_status_add);
+        addMemberButton.setClickable(false);
     }
 }
