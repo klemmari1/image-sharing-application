@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -166,18 +167,27 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
-                /*if(!userObj.equals(null)){
-                    final String userGroup = userObj.getGroup();
-                }
+                DatabaseReference userReference = databaseReference.child("users").child(firebaseUser.getUid());
+                userReference.keepSynced(true);
+                userReference.addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot snapshot) {
+                        userObj = snapshot.getValue(UserObject.class);
+                        final String userGroup = userObj.getGroup();
+
+                        if (userGroup == null) {
+                            errorToast("Join or create a group to take pictures");
+                        } else {
+                            cameraButtonAction(userGroup);
+                        }
+                    }
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                        System.out.println("The read failed: " + databaseError.getMessage());
+                    }
+                });
 
 
-                if (userGroup == null) {
-                    errorToast("Join or create a group to take pictures");
-                } else {
-                    cameraButtonAction(userGroup);
-                }*/
-
-                TakePictureIntent();
             }
         });
     }
@@ -263,7 +273,8 @@ public class MainActivity extends AppCompatActivity {
                 if (!userGroupObj.isExpired())
                     TakePictureIntent();
                 else
-                    Log.d(TAG, "Group expired!");
+                    Toast.makeText(getApplicationContext(), "Group expired", Toast.LENGTH_SHORT).show();
+
             }
             @Override
             public void onCancelled(DatabaseError databaseError) {
@@ -403,14 +414,14 @@ public class MainActivity extends AppCompatActivity {
                 Random generator = new Random();
                 int n = 1000;
                 n = generator.nextInt(n);
-                String fname = "Image-" + n + ".jpeg";
+                String fname = "Image-" + n + ".jpg";
 
 
                 // Call the method to store image in private folder
                 SaveImage("/Private",fname);
             }
 
-            removeTempPicture();
+
 
             return resized;
             //return Bitmap.createScaledBitmap(bit, width, height, true);
@@ -430,6 +441,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void SaveImage(String folder, String filename) {
         Bitmap finalBitmap = getImageBitmap();
+
+        System.out.println("W    "+finalBitmap.getWidth());
+        System.out.println("H    "+finalBitmap.getHeight());
         File myDir = new File(Utils.getAlbumsRoot(getApplicationContext()) + folder);
 
         if (!myDir.exists()) {
@@ -455,6 +469,11 @@ public class MainActivity extends AppCompatActivity {
 
             out.flush();
             out.close();
+
+            System.out.println("Wnew    "+finalBitmap.getWidth());
+            System.out.println("Hnew    "+finalBitmap.getHeight());
+            removeTempPicture();
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -462,19 +481,21 @@ public class MainActivity extends AppCompatActivity {
 
     private void CheckSettings() {
 
+        Bitmap FirebaseBitmap = getImageBitmaptest();
+
         if(Connectivity.isConnectedMobile(getApplicationContext())){
             //Create the bitmap that is going to be scaled
-            Bitmap FirebaseBitmapLTE = getImageBitmap();
+
 
 
             //Check which one is the setting (low/high/full) and tranform the bitmap
             if(getWIFISettings().toLowerCase().contains("high")){
 
                 //Check if the image has been taken in landscape or not:
-                if(getImageBitmap().getWidth() < 1280){
-                    FirebaseBitmapLTE = Bitmap.createScaledBitmap(getImageBitmap(), 960, 1280, false);
+                if(FirebaseBitmap.getWidth() < FirebaseBitmap.getHeight()){
+                    FirebaseBitmap = Bitmap.createScaledBitmap(FirebaseBitmap, 960, 1280, false);
                 }else{
-                    FirebaseBitmapLTE = Bitmap.createScaledBitmap(getImageBitmap(), 1280, 960, false);
+                    FirebaseBitmap = Bitmap.createScaledBitmap(FirebaseBitmap, 1280, 960, false);
                 }
 
                 maxQuality = "high";
@@ -482,10 +503,10 @@ public class MainActivity extends AppCompatActivity {
             }else if(getWIFISettings().toLowerCase().contains("low")){
 
                 //Check if the image has been taken in landscape or not:
-                if(getImageBitmap().getWidth() < 640){
-                    FirebaseBitmapLTE = Bitmap.createScaledBitmap(getImageBitmap(), 480, 640, false);
+                if(FirebaseBitmap.getWidth() < FirebaseBitmap.getHeight()){
+                    FirebaseBitmap = Bitmap.createScaledBitmap(FirebaseBitmap, 480, 640, false);
                 }else{
-                    FirebaseBitmapLTE = Bitmap.createScaledBitmap(getImageBitmap(), 640, 480, false);
+                    FirebaseBitmap = Bitmap.createScaledBitmap(FirebaseBitmap, 640, 480, false);
                 }
 
                 maxQuality = "low";
@@ -494,43 +515,48 @@ public class MainActivity extends AppCompatActivity {
                 maxQuality = "full";
             }
 
-            uploadImageFirebase(FirebaseBitmapLTE);
+            //uploadImageFirebase(FirebaseBitmapLTE);
 
         }
+
         if(Connectivity.isConnectedWifi(getApplicationContext())){
-            //Create the bitmap that is going to be scaled
-            Bitmap FirebaseBitmapWIFI = getImageBitmap();
+
+            System.out.println("W " + getImageBitmaptest().getWidth());
+            System.out.println("H " + getImageBitmaptest().getHeight());
 
             //Check which one is the setting (low/high/full) and tranform the bitmap
             if(getWIFISettings().toLowerCase().contains("high")){
 
                 //Check if the image has been taken in landscape or not:
-                if(getImageBitmap().getWidth() < 1280){
-                    FirebaseBitmapWIFI = Bitmap.createScaledBitmap(getImageBitmap(), 960, 1280, false);
+                if(FirebaseBitmap.getWidth() < FirebaseBitmap.getHeight()){
+                    FirebaseBitmap = Bitmap.createScaledBitmap(FirebaseBitmap, 960, 1280, false);
                 }else{
-                    FirebaseBitmapWIFI = Bitmap.createScaledBitmap(getImageBitmap(), 1280, 960, false);
+                    FirebaseBitmap = Bitmap.createScaledBitmap(FirebaseBitmap, 1280, 960, false);
                 }
 
                 maxQuality = "high";
             }else if(getWIFISettings().toLowerCase().contains("low")){
 
                 //Check if the image has been taken in landscape or not:
-                if(getImageBitmap().getWidth() < 640){
-                    FirebaseBitmapWIFI = Bitmap.createScaledBitmap(getImageBitmap(), 480, 640, false);
+                if(FirebaseBitmap.getWidth() < FirebaseBitmap.getHeight()){
+                    FirebaseBitmap = Bitmap.createScaledBitmap(FirebaseBitmap, 480, 640, false);
                 }else{
-                    FirebaseBitmapWIFI = Bitmap.createScaledBitmap(getImageBitmap(), 640, 480, false);
+                    FirebaseBitmap = Bitmap.createScaledBitmap(FirebaseBitmap, 640, 480, false);
                 }
 
                 maxQuality = "low";
             }else{
                 maxQuality = "full";
+
             }
 
-            uploadImageFirebase(FirebaseBitmapWIFI);
+
+
+            uploadImageFirebase(FirebaseBitmap);
         }
     }
 
-    public void uploadImageFirebase(Bitmap firebasebitmap){
+        public void uploadImageFirebase(Bitmap FirebaseBitmap){
         //Get a reference from our storage:
         FirebaseStorage storage = FirebaseStorage.getInstance();
 
@@ -541,7 +567,7 @@ public class MainActivity extends AppCompatActivity {
 
         //Upload to Firebase using puBytes
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        firebasebitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+        FirebaseBitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
         byte[] data = baos.toByteArray();
 
         UploadTask uploadTask = storageReference.putBytes(data);
@@ -566,11 +592,12 @@ public class MainActivity extends AppCompatActivity {
                     public void onSuccess(String response) {
                         try {
                             if(!response.contains("error")){
-                                SaveImage(userObj.getName()+ "_" + userObj.getGroup(), response);
+                                System.out.println("abccdaabccdddabccdddabccdddbccddddd"+ response);
+                                SaveImage(userObj.getName()+ "_" + userObj.getGroup(), response + ".jpg");
                             }
                             else{
                                 Toast.makeText(MainActivity.this, response, Toast.LENGTH_SHORT).show();
-                                System.out.println("abccddd"+ response);
+
                             }
                         } catch (Exception e){
                             Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
@@ -603,6 +630,19 @@ public class MainActivity extends AppCompatActivity {
         }
         return null;
     }
+    private Bitmap getImageBitmaptest(){
+        try{
+
+            BitmapFactory.Options bmOptions = new BitmapFactory.Options();
+
+            Bitmap test = BitmapFactory.decodeFile(imagePath,bmOptions);
+            return test.copy(test.getConfig(),true);
+        }
+        catch(Exception e){
+        }
+        return null;
+    }
+
 
     private Bitmap getLowResolutionBitmap(double factor){
         Bitmap bitmap = getImageBitmap();
