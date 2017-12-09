@@ -200,29 +200,38 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                                     Log.d(TAG, "remoteMaxQ: " + remoteMaxQ);
                                     //TODO: get local max Quality from Alessio / Kristian
 
-                                    String localMaxQ = "full";
+
                                     MainActivity mActivity= new MainActivity();
 
+                                    String LTE;
+                                    String WIFI;
+                                    String localMaxQ = "errorQ";
 
-                                    String LTE = PreferenceManager
-                                            .getDefaultSharedPreferences(mContext)
-                                            .getString("LTEpicturevalue","");
-
-                                    String WIFI =PreferenceManager
-                                            .getDefaultSharedPreferences(mContext)
-                                            .getString("WIFIpicturevalue","");
-
-                                    Log.d(TAG, "Current WIFI setting: " + WIFI);
-                                    Log.d(TAG, "Current LTE setting: " + LTE);
 
                                     if (Connectivity.isConnectedMobile(mContext)) {
-                                        localMaxQ = LTE;
+                                        LTE = PreferenceManager
+                                                .getDefaultSharedPreferences(mContext)
+                                                .getString("LTEpicturevalue","");
+                                        if (LTE.toLowerCase().contains("low"))
+                                            localMaxQ = "low";
+                                        if (LTE.toLowerCase().contains("high"))
+                                            localMaxQ = "high";
+                                        if (LTE.toLowerCase().contains("full"))
+                                            localMaxQ = "full";
                                     }
-                                    else if (Connectivity.isConnectedMobile(mContext)) {
-                                        localMaxQ = WIFI;
+                                    else if (Connectivity.isConnectedWifi(mContext)) {
+                                        WIFI =PreferenceManager
+                                                .getDefaultSharedPreferences(mContext)
+                                                .getString("WIFIpicturevalue","");
+                                        if (WIFI.toLowerCase().contains("low"))
+                                            localMaxQ = "low";
+                                        if (WIFI.toLowerCase().contains("high"))
+                                            localMaxQ = "high";
+                                        if (WIFI.toLowerCase().contains("full"))
+                                            localMaxQ = "full";
                                     }
                                     else {
-                                        Log.d(TAG,"ERROR IN GETTING LOCAL MAX Q");
+                                        Log.d(TAG,"ERROR CONNECTION STATUS. WIFI/MOBILE?");
                                     }
 
                                     String finalQ;
