@@ -72,7 +72,6 @@ public class MainActivity extends AppCompatActivity {
 
     private FirebaseUser firebaseUser;
     private UserObject userObj;
-    private GroupObject userGroupObj;
     private DatabaseReference databaseReference;
 
     static final int REQUEST_IMAGE_CAPTURE = 1;
@@ -82,12 +81,11 @@ public class MainActivity extends AppCompatActivity {
     static final int REQUEST_CREATE_GROUP = 5;
     private static final String TAG = "MainActivity";
 
-
     private static final int REQUEST_WRITE_STORAGE = 112;
-
 
     private ProgressDialog progressDialog;
     private String maxQuality;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -287,8 +285,8 @@ public class MainActivity extends AppCompatActivity {
         userGroupReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                userGroupObj = dataSnapshot.getValue(GroupObject.class);
-                if (!userGroupObj.isExpired())
+                GroupObject groupObj = dataSnapshot.getValue(GroupObject.class);
+                if (!groupObj.isExpired())
                     TakePictureIntent();
                 else
                     Toast.makeText(getApplicationContext(), "Group expired", Toast.LENGTH_SHORT).show();
@@ -488,15 +486,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void CheckSettings() {
-
         Bitmap FirebaseBitmap = getImageBitmap();
+
         if(Connectivity.isConnectedMobile(getApplicationContext())){
-            //Create the bitmap that is going to be scaled
-
-
 
             //Check which one is the setting (low/high/full) and tranform the bitmap
-            if(getWIFISettings().toLowerCase().contains("high")){
+            if(getLTESettings().toLowerCase().contains("high")){
 
                 //Check if the image has been taken in landscape or not:
                 if(FirebaseBitmap.getWidth() < FirebaseBitmap.getHeight()){
@@ -507,7 +502,7 @@ public class MainActivity extends AppCompatActivity {
 
                 maxQuality = "high";
 
-            }else if(getWIFISettings().toLowerCase().contains("low")){
+            }else if(getLTESettings().toLowerCase().contains("low")){
 
                 //Check if the image has been taken in landscape or not:
                 if(FirebaseBitmap.getWidth() < FirebaseBitmap.getHeight()){
@@ -521,14 +516,9 @@ public class MainActivity extends AppCompatActivity {
             }else{
                 maxQuality = "full";
             }
-
-            //uploadImageFirebase(FirebaseBitmapLTE);
-
         }
 
         if(Connectivity.isConnectedWifi(getApplicationContext())){
-
-
             //Check which one is the setting (low/high/full) and tranform the bitmap
             if(getWIFISettings().toLowerCase().contains("high")){
 
@@ -552,9 +542,9 @@ public class MainActivity extends AppCompatActivity {
                 maxQuality = "low";
             }else{
                 maxQuality = "full";
-
             }
         }
+
         uploadImageFirebase(FirebaseBitmap);
     }
 
@@ -591,10 +581,20 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                     @Override
-                    public void onSuccess(String response) {
+                    public void onSuccess(final String response) {
                         try {
                             if(!response.contains("error")){
-                                SaveImage(userObj.getName()+ "_" + userObj.getGroup(), response + ".jpg");
+                                DatabaseReference userGroupReference = databaseReference.child("groups").child(userObj.getGroup());
+                                userGroupReference.addListenerForSingleValueEvent(new ValueEventListener() {
+                                    @Override
+                                    public void onDataChange(DataSnapshot dataSnapshot) {
+                                        GroupObject groupObj = dataSnapshot.getValue(GroupObject.class);
+                                        SaveImage(groupObj.getName() + "_" + userObj.getGroup(), response + ".jpg");
+                                    }
+                                    @Override
+                                    public void onCancelled(DatabaseError databaseError) {
+                                    }
+                                });
                             }
                             else{
                                 Toast.makeText(MainActivity.this, response, Toast.LENGTH_SHORT).show();
@@ -605,7 +605,6 @@ public class MainActivity extends AppCompatActivity {
                         }
                     }
                 });
-
             }
         });
     }
@@ -621,6 +620,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
 
     private Bitmap getImageBitmap(){
         try{
@@ -638,6 +638,7 @@ public class MainActivity extends AppCompatActivity {
         Bitmap resized = Bitmap.createScaledBitmap(bitmap,(int)(bitmap.getWidth()*factor), (int)(bitmap.getHeight()*factor), true);
         return resized;
     }
+
 
     private void setButtonStatus(boolean status){
         findViewById(R.id.gallery).setEnabled(status);
