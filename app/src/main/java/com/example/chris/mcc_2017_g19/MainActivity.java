@@ -27,6 +27,7 @@ import android.widget.Toast;
 
 
 import com.example.chris.mcc_2017_g19.AlbumsView.AlbumsActivity;
+import com.example.chris.mcc_2017_g19.BackendAPI.BackendAPI;
 import com.google.android.gms.vision.Frame;
 import com.google.android.gms.vision.barcode.Barcode;
 import com.google.android.gms.vision.barcode.BarcodeDetector;
@@ -89,11 +90,10 @@ public class MainActivity extends AppCompatActivity {
         userReference.keepSynced(true);
 
         //testing notification stuff (fcm)
-        String token = FirebaseInstanceId.getInstance().getToken();
+        String device_token = FirebaseInstanceId.getInstance().getToken();
 
-        userReference.child("deviceTokens").child(token).setValue(1);
-        Log.d(TAG,"token token token:" + token);
-
+        BackendAPI api = new BackendAPI();
+        api.updateDeviceToken(device_token);
 
         //Check for new images everytime when loading MainActivity. If user is in a group.
         MyFirebaseMessagingService newClassObjectForSync = new MyFirebaseMessagingService();
