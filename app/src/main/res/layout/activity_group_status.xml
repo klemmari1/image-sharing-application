@@ -92,4 +92,14 @@
         app:layout_constraintLeft_toRightOf="@+id/group_status_expiration"
         app:layout_constraintTop_toBottomOf="@+id/group_status" />
 
+    <TextView
+        android:id="@+id/group_status_expired_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="24dp"
+        android:textColor="@color/primary"
+        app:layout_constraintLeft_toRightOf="@+id/group_status_expiration_value"
+        app:layout_constraintTop_toBottomOf="@+id/group_status_name" />
+
 </android.support.constraint.ConstraintLayout>
