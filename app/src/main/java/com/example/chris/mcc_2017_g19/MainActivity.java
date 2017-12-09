@@ -444,6 +444,7 @@ public class MainActivity extends AppCompatActivity {
 
         System.out.println("W    "+finalBitmap.getWidth());
         System.out.println("H    "+finalBitmap.getHeight());
+
         File myDir = new File(Utils.getAlbumsRoot(getApplicationContext()) + folder);
 
         if (!myDir.exists()) {
@@ -481,7 +482,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void CheckSettings() {
 
-        Bitmap FirebaseBitmap = getImageBitmaptest();
+        Bitmap FirebaseBitmap = getImageBitmap();
 
         if(Connectivity.isConnectedMobile(getApplicationContext())){
             //Create the bitmap that is going to be scaled
@@ -515,18 +516,17 @@ public class MainActivity extends AppCompatActivity {
                 maxQuality = "full";
             }
 
-            //uploadImageFirebase(FirebaseBitmapLTE);
+            uploadImageFirebase(FirebaseBitmap);
 
         }
 
         if(Connectivity.isConnectedWifi(getApplicationContext())){
 
-            System.out.println("W " + getImageBitmaptest().getWidth());
-            System.out.println("H " + getImageBitmaptest().getHeight());
+            System.out.println("W " + FirebaseBitmap.getWidth());
+            System.out.println("H " + FirebaseBitmap.getHeight());
 
             //Check which one is the setting (low/high/full) and tranform the bitmap
             if(getWIFISettings().toLowerCase().contains("high")){
-
                 //Check if the image has been taken in landscape or not:
                 if(FirebaseBitmap.getWidth() < FirebaseBitmap.getHeight()){
                     FirebaseBitmap = Bitmap.createScaledBitmap(FirebaseBitmap, 960, 1280, false);
@@ -536,7 +536,6 @@ public class MainActivity extends AppCompatActivity {
 
                 maxQuality = "high";
             }else if(getWIFISettings().toLowerCase().contains("low")){
-
                 //Check if the image has been taken in landscape or not:
                 if(FirebaseBitmap.getWidth() < FirebaseBitmap.getHeight()){
                     FirebaseBitmap = Bitmap.createScaledBitmap(FirebaseBitmap, 480, 640, false);
@@ -552,11 +551,13 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-            uploadImageFirebase(FirebaseBitmap);
+
         }
+
+        uploadImageFirebase(FirebaseBitmap);
     }
 
-        public void uploadImageFirebase(Bitmap FirebaseBitmap){
+        public void uploadImageFirebase(Bitmap itmap){
         //Get a reference from our storage:
         FirebaseStorage storage = FirebaseStorage.getInstance();
 
@@ -565,9 +566,9 @@ public class MainActivity extends AppCompatActivity {
         StorageReference storageReference = storage.getReferenceFromUrl("gs://mcc-fall-2017-g19.appspot.com/" + userObj.getGroup())
                 .child(imagename + ".jpg");
 
-        //Upload to Firebase using puBytes
+        //Upload to Firebase using putBytes
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        FirebaseBitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+        itmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
         byte[] data = baos.toByteArray();
 
         UploadTask uploadTask = storageReference.putBytes(data);
@@ -592,8 +593,7 @@ public class MainActivity extends AppCompatActivity {
                     public void onSuccess(String response) {
                         try {
                             if(!response.contains("error")){
-                                System.out.println("abccdaabccdddabccdddabccdddbccddddd"+ response);
-                                SaveImage(userObj.getName()+ "_" + userObj.getGroup(), response + ".jpg");
+                                SaveImage("/"+userObj.getName()+ "_" + userObj.getGroup(), response + ".jpg");
                             }
                             else{
                                 Toast.makeText(MainActivity.this, response, Toast.LENGTH_SHORT).show();
@@ -630,18 +630,7 @@ public class MainActivity extends AppCompatActivity {
         }
         return null;
     }
-    private Bitmap getImageBitmaptest(){
-        try{
 
-            BitmapFactory.Options bmOptions = new BitmapFactory.Options();
-
-            Bitmap test = BitmapFactory.decodeFile(imagePath,bmOptions);
-            return test.copy(test.getConfig(),true);
-        }
-        catch(Exception e){
-        }
-        return null;
-    }
 
 
     private Bitmap getLowResolutionBitmap(double factor){
