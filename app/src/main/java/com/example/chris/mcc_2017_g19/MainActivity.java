@@ -97,9 +97,6 @@ public class MainActivity extends AppCompatActivity {
         databaseReference = Utils.getDatabase().getReference();
         firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
 
-        DatabaseReference userReference = databaseReference.child("users").child(firebaseUser.getUid());
-        userReference.keepSynced(true);
-
         //testing notification stuff (fcm)
         String device_token = FirebaseInstanceId.getInstance().getToken();
         BackendAPI api = new BackendAPI();
@@ -109,6 +106,19 @@ public class MainActivity extends AppCompatActivity {
             }
             @Override
             public void onSuccess(String response) {
+            }
+        });
+
+        DatabaseReference userReference = databaseReference.child("users").child(firebaseUser.getUid());
+        userReference.keepSynced(true);
+        userReference.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
+                userObj = snapshot.getValue(UserObject.class);
+            }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                System.out.println("The read failed: " + databaseError.getMessage());
             }
         });
 
@@ -125,18 +135,6 @@ public class MainActivity extends AppCompatActivity {
                     REQUEST_WRITE_STORAGE);
         }
 
-        userReference.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot snapshot) {
-                userObj = snapshot.getValue(UserObject.class);
-            }
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                System.out.println("The read failed: " + databaseError.getMessage());
-            }
-        });
-
-
         gallery = (ImageView) findViewById(R.id.gallery);
         gallery.setClickable(true);
         gallery.setOnClickListener(new View.OnClickListener() {
@@ -144,6 +142,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Intent intent = new Intent(MainActivity.this, AlbumsActivity.class);
                 startActivity(intent);
+
             }
         });
 
@@ -172,31 +171,32 @@ public class MainActivity extends AppCompatActivity {
         takepicture.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                setButtonStatus(false);
                 DatabaseReference userReference = databaseReference.child("users").child(firebaseUser.getUid());
                 userReference.keepSynced(true);
-                userReference.addValueEventListener(new ValueEventListener() {
+                userReference.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot snapshot) {
-                        userObj = snapshot.getValue(UserObject.class);
-                        final String userGroup = userObj.getGroup();
+                        UserObject userObject = snapshot.getValue(UserObject.class);
+                        final String userGroup = userObject.getGroup();
 
                         if (userGroup == null) {
                             errorToast("Join or create a group to take pictures");
                         } else {
                             cameraButtonAction(userGroup);
                         }
+                        setButtonStatus(true);
                     }
                     @Override
                     public void onCancelled(DatabaseError databaseError) {
                         System.out.println("The read failed: " + databaseError.getMessage());
+                        setButtonStatus(true);
                     }
                 });
-
-
             }
         });
     }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -221,52 +221,64 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void selectGroupManagementActivity() {
-        if (userObj != null){
-            if (userObj.getGroup() == null){
-                //Setup the alert builder
-                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                View customTitle = View.inflate(MainActivity.this, R.layout.dialog_title, null);
-                builder.setCustomTitle(customTitle);
-                builder.setTitle("Choose an action");
+        setButtonStatus(false);
+        DatabaseReference userReference = databaseReference.child("users").child(firebaseUser.getUid());
+        userReference.keepSynced(true);
+        userReference.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
+                setButtonStatus(true);
+                UserObject userObject = snapshot.getValue(UserObject.class);
+                if (userObject.getGroup() == null){
+                    //Setup the alert builder
+                    AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                    View customTitle = View.inflate(MainActivity.this, R.layout.dialog_title, null);
+                    builder.setCustomTitle(customTitle);
+                    builder.setTitle("Choose an action");
 
-                //Add options
-                List<String> actions = new ArrayList<String>();
-                actions.add("JOIN A GROUP");
-                actions.add("CREATE A GROUP");
-                DialogAdapter da = new DialogAdapter(this, actions);
-                builder.setAdapter(da, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        switch (which) {
-                            case 0:
-                                //Yes button pressed: Join a group
-                                if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CAMERA)
-                                        != PackageManager.PERMISSION_GRANTED) {
-                                    ActivityCompat.requestPermissions(MainActivity.this,
-                                            new String[]{Manifest.permission.CAMERA}, MY_PERMISSIONS_REQUEST_QR);
-                                } else {
-                                    Intent intent = new Intent(MainActivity.this, QrReaderActivity.class);
-                                    startActivity(intent);
-                                }
-                                break;
-                            case 1:
-                                //No button pressed: Create group
-                                setButtonStatus(false);
-                                Intent intent = new Intent(MainActivity.this, GroupCreationActivity.class);
-                                startActivityForResult(intent, REQUEST_CREATE_GROUP);
-                                break;
+                    //Add options
+                    List<String> actions = new ArrayList<String>();
+                    actions.add("JOIN A GROUP");
+                    actions.add("CREATE A GROUP");
+                    DialogAdapter da = new DialogAdapter(MainActivity.this, actions);
+                    builder.setAdapter(da, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            switch (which) {
+                                case 0:
+                                    //Yes button pressed: Join a group
+                                    if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CAMERA)
+                                            != PackageManager.PERMISSION_GRANTED) {
+                                        ActivityCompat.requestPermissions(MainActivity.this,
+                                                new String[]{Manifest.permission.CAMERA}, MY_PERMISSIONS_REQUEST_QR);
+                                    } else {
+                                        Intent intent = new Intent(MainActivity.this, QrReaderActivity.class);
+                                        startActivityForResult(intent, REQUEST_CREATE_GROUP);
+                                    }
+                                    break;
+                                case 1:
+                                    //No button pressed: Create group
+                                    Intent intent = new Intent(MainActivity.this, GroupCreationActivity.class);
+                                    startActivityForResult(intent, REQUEST_CREATE_GROUP);
+                                    break;
+                            }
                         }
-                    }
-                });
-                //Create and show the alert dialog
-                AlertDialog dialog = builder.create();
-                dialog.show();
+                    });
+                    //Create and show the alert dialog
+                    AlertDialog dialog = builder.create();
+                    dialog.show();
+                }
+                else{
+                    Intent intent = new Intent(MainActivity.this, GroupStatusActivity.class);
+                    startActivity(intent);
+                }
             }
-            else{
-                Intent intent = new Intent(MainActivity.this, GroupStatusActivity.class);
-                startActivity(intent);
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                setButtonStatus(true);
+                System.out.println("The read failed: " + databaseError.getMessage());
             }
-        }
+        });
     }
 
 
@@ -280,7 +292,6 @@ public class MainActivity extends AppCompatActivity {
                     TakePictureIntent();
                 else
                     Toast.makeText(getApplicationContext(), "Group expired", Toast.LENGTH_SHORT).show();
-
             }
             @Override
             public void onCancelled(DatabaseError databaseError) {
@@ -301,8 +312,8 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
     private void startCamera() {
-        setButtonStatus(false);
         Intent pictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         // Ensure that there's a camera activity to handle the intent
         if (pictureIntent.resolveActivity(getPackageManager()) != null) {
@@ -342,7 +353,6 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        setButtonStatus(true);
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
             if (checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
                     != PackageManager.PERMISSION_GRANTED) {
@@ -397,10 +407,10 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected Bitmap doInBackground(Void... params) {
             //Create the Barcode detector and detect barcode
-            Bitmap resized = getLowResolutionBitmap(0.4);
+            Bitmap bitmap = getImageBitmap();
 
             BarcodeDetector detector = new BarcodeDetector.Builder(getApplicationContext()).setBarcodeFormats(Barcode.DATA_MATRIX | Barcode.QR_CODE | Barcode.EAN_13).build();
-            Frame frame = new Frame.Builder().setBitmap(resized).build();
+            Frame frame = new Frame.Builder().setBitmap(bitmap).build();
             SparseArray<Barcode> barcodes = new SparseArray<>();
             if(detector.isOperational()){
                 barcodes = detector.detect(frame);
@@ -424,12 +434,11 @@ public class MainActivity extends AppCompatActivity {
 
 
                 // Call the method to store image in private folder
-                SaveImage("/Private",fname);
+                SaveImage("Private", fname);
             }
 
-
-
-            return resized;
+            removeTempPicture();
+            return bitmap;
             //return Bitmap.createScaledBitmap(bit, width, height, true);
         }
 
@@ -448,9 +457,7 @@ public class MainActivity extends AppCompatActivity {
     private void SaveImage(String folder, String filename) {
         Bitmap finalBitmap = getImageBitmap();
 
-        System.out.println("W    "+finalBitmap.getWidth());
-        System.out.println("H    "+finalBitmap.getHeight());
-        File myDir = new File(Utils.getAlbumsRoot(getApplicationContext()) + folder);
+        File myDir = new File(Utils.getAlbumsRoot(getApplicationContext()) +  File.separator + folder);
 
         if (!myDir.exists()) {
             myDir.mkdirs();
@@ -475,11 +482,6 @@ public class MainActivity extends AppCompatActivity {
 
             out.flush();
             out.close();
-
-            System.out.println("Wnew    "+finalBitmap.getWidth());
-            System.out.println("Hnew    "+finalBitmap.getHeight());
-            removeTempPicture();
-
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -592,7 +594,6 @@ public class MainActivity extends AppCompatActivity {
                     public void onSuccess(String response) {
                         try {
                             if(!response.contains("error")){
-                                System.out.println("abccdaabccdddabccdddabccdddbccddddd"+ response);
                                 SaveImage(userObj.getName()+ "_" + userObj.getGroup(), response + ".jpg");
                             }
                             else{
