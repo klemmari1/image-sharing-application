@@ -85,19 +85,19 @@ def create_group():
 def join_group():
     try:
         id_token = request.form['id_token']
-        user_token = request.form['token']
-        group_id = user_token.split(":")[0]
+        joining_token = request.form['token']
+        group_id = joining_token.split(":")[0]
         user_id = get_uid(id_token)
         group_token = database.child("groups").child(group_id).child("token").get().val()
 
-        if user_token == group_token:
+        if joining_token == group_token:
             user_name = database.child("users").child(user_id).child("name").get().val()
             database.child("groups").child(group_id).child("members").update({user_id: user_name})
             database.child("users").child(user_id).update({"group": group_id})
             set_new_token(group_id)
             return "JOINED GROUP"
         else:
-            return "INVALID USER TOKEN!"
+            return "INVALID GROUP TOKEN!"
     except Exception as e:
         return "Unexpected error: " + str(e)
 
@@ -113,7 +113,7 @@ def creator_deletes_group():
             delete_group(group_id)
             return "GROUP DELETED"
         else:
-            return "INVALID USER TOKEN!"
+            return "INVALID USER TOKEN OR USER NOT GROUP CREATOR!"
     except Exception as e:
         return "Unexpected error: " + str(e)
 
@@ -124,12 +124,12 @@ def leave_group(group_id):
         id_token = request.form['id_token']
         user_id = get_uid(id_token)
 
-        if get_uid(id_token) == user_id:
+        if validate_user_in_group(user_id, group_id):
             database.child("groups").child(group_id).child("members").child(user_id).remove()
             database.child("users").child(user_id).child("group").remove()
             return "LEFT GROUP"
         else:
-            return "INVALID USER TOKEN!"
+            return "INVALID USER TOKEN OR USER NOT IN GROUP!"
     except Exception as e:
         return "Unexpected error: " + str(e)
 
@@ -212,49 +212,56 @@ userID=<userID>&groupID=<groupID>&filename=<filename>&maxQuality=<low/full/high>
 '''
 @app.route('/upload_image', methods=['POST'])
 def upload_image():
-    # Get arguments
-    args = request.form
-    print(args)  # For debugging
-    userID = request.form['userID']
-    groupID = request.form['groupID']
-    filename = request.form['filename']
-    maxQuality = request.form['maxQuality']
+    try:
+        # Get arguments
+        args = request.form
+        print(args)  # For debugging
+        token = request.form['idToken']
+        userID = get_uid(token)
+        groupID = request.form['groupID']
+        if validate_user_in_group(userID, groupID):
+            filename = request.form['filename']
+            maxQuality = request.form['maxQuality']
 
-    urlpath = groupID + "/" + filename
-    initialURL = storage.child(urlpath).get_url(0)
+            urlpath = groupID + "/" + filename
+            initialURL = storage.child(urlpath).get_url(0)
 
-    """image_processing() function should generate lower quality pictures and upload them into STORAGE.
-    returns URLs and if any people found in google-vision face detection
-    """
-    URLs, hasFaces = image_processing(initialURL, maxQuality,groupID, filename)
+            """image_processing() function should generate lower quality pictures and upload them into STORAGE.
+            returns URLs and if any people found in google-vision face detection
+            """
+            URLs, hasFaces = image_processing(initialURL, maxQuality,groupID, filename)
 
-    '''Push to firebase
-    '''
-    data = {}
-    data['userID'] = userID
-    data['groupID'] = groupID
-    data['maxQuality'] = maxQuality
-    if (maxQuality == 'low'):
-        data['lowURL'] = URLs[0]
-    if (maxQuality == 'high'):
-        data['lowURL'] = URLs[1]
-        data['highURL'] = URLs[0]
-    if (maxQuality == 'full'):
-        data['lowURL'] = URLs[2]
-        data['highURL'] = URLs[1]
-        data['fullURL'] = URLs[0]
+            '''Push to firebase
+            '''
+            data = {}
+            data['userID'] = userID
+            data['groupID'] = groupID
+            data['maxQuality'] = maxQuality
+            if (maxQuality == 'low'):
+                data['lowURL'] = URLs[0]
+            if (maxQuality == 'high'):
+                data['lowURL'] = URLs[1]
+                data['highURL'] = URLs[0]
+            if (maxQuality == 'full'):
+                data['lowURL'] = URLs[2]
+                data['highURL'] = URLs[1]
+                data['fullURL'] = URLs[0]
 
-    data['hasFaces'] = hasFaces
+            data['hasFaces'] = hasFaces
 
-    token = str(uuid.uuid4())
-    database.child("groups").child(groupID).child("images").update({token: data})
+            token = str(uuid.uuid4())
+            database.child("groups").child(groupID).child("images").update({token: data})
 
-    # send notification to all group users that new image has been uploaded
-    notification_upload_image(data)
+            # send notification to all group users that new image has been uploaded
+            notification_upload_image(data)
 
-    user_name = database.child("users").child(userID).child("name").get().val()
-    user_name = user_name.strip("_")
-    return token + "_" + user_name + "_" + str(hasFaces) + "_"
+            user_name = database.child("users").child(userID).child("name").get().val()
+            user_name = user_name.strip("_")
+            return token + "_" + user_name + "_" + str(hasFaces) + "_"
+        else:
+            return "INVALID USER TOKEN OR USER NOT IN GROUP!"
+    except Exception as e:
+        return "Unexpected error: " + str(e)
 
 
 def image_processing(initialURL, maxQuality,groupID, filename):
