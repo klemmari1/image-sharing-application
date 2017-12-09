@@ -380,7 +380,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected Bitmap doInBackground(Void... params) {
             //Create the Barcode detector and detect barcode
-            Bitmap resized = getLowResolutionBitmap(0.05);
+            Bitmap resized = getLowResolutionBitmap(0.4);
 
             BarcodeDetector detector = new BarcodeDetector.Builder(getApplicationContext()).setBarcodeFormats(Barcode.DATA_MATRIX | Barcode.QR_CODE | Barcode.EAN_13).build();
             Frame frame = new Frame.Builder().setBitmap(resized).build();
@@ -403,7 +403,7 @@ public class MainActivity extends AppCompatActivity {
                 Random generator = new Random();
                 int n = 1000;
                 n = generator.nextInt(n);
-                String fname = "Image-" + n + ".jpeg";
+                String fname = "Image-" + n + ".jpg";
 
 
                 // Call the method to store image in private folder
