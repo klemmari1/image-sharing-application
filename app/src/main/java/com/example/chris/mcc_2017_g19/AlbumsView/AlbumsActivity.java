@@ -33,7 +33,12 @@ public class AlbumsActivity extends AppCompatActivity {
 
         GridView gridview = (GridView) findViewById(R.id.gridview);
 
+
+        //List<ItemObject> allItems = getAllItemObject();
+
+
         final List<ItemObject> allItems = getAllItemObject();
+
         CustomAdapter customAdapter = new CustomAdapter(AlbumsActivity.this, allItems);
         gridview.setAdapter(customAdapter);
 

@@ -1,6 +1,9 @@
 package com.example.chris.mcc_2017_g19;
 
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class UserObject {
     private String name;
     private String group;

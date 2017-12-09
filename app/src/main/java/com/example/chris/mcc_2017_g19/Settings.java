@@ -1,6 +1,9 @@
 package com.example.chris.mcc_2017_g19;
 
 import android.app.Activity;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -14,15 +17,24 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.List;
 
+
 public class Settings extends Activity implements AdapterView.OnItemSelectedListener {
+
+    Spinner spinner, spinnerwifi;
+    SharedPreferences prefs;
+
+
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
 
+
+        TextView imagequality = (TextView) findViewById(R.id.iq);
         // Spinner element
-        Spinner spinner = (Spinner) findViewById(R.id.spinner);
-        Spinner spinnerwifi = (Spinner) findViewById(R.id.spinnerwifi);
+        spinner = (Spinner) findViewById(R.id.spinnerlte);
+        spinnerwifi = (Spinner) findViewById(R.id.spinnerwifi);
 
         // Spinner click listener
         spinner.setOnItemSelectedListener(this);
@@ -30,15 +42,15 @@ public class Settings extends Activity implements AdapterView.OnItemSelectedList
 
         // Spinner Drop down elements
         List<String> size = new ArrayList<String>();
-        size.add("size 1");
-        size.add("size 2");
-        size.add("size 3");
+        size.add("full (original size)");
+        size.add("high (1280x960)");
+        size.add("low(640x480)");
 
         // Spinner-wifi Drop down elements
         List<String> sizewifi = new ArrayList<String>();
-        sizewifi.add("size 1 wifi");
-        sizewifi.add("size 2 wifi");
-        sizewifi.add("size 3 wifi");
+        sizewifi.add("full (original size)");
+        sizewifi.add("high (1280x960)");
+        sizewifi.add("low(640x480)");
 
 
         // Creating adapter for spinner
@@ -50,17 +62,71 @@ public class Settings extends Activity implements AdapterView.OnItemSelectedList
         // attaching data adapter to spinner
         spinner.setAdapter(dataAdapter);
         spinnerwifi.setAdapter(dataAdapterwifi);
+
+
+        //Check if the values of the spinner are already saved. If yes, load the values. If not, fill with full size
+        prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        if (prefs.getString("LTEpicturevalue","") != null && prefs.getString("WIFIpicturevalue","") != null )
+        {
+            loadspinnervalue();
+        } else{
+            uploaddefaultspinnervalue();
+        }
+
+    }
+
+
+    public void loadspinnervalue(){
+        String LTEpicturevalue =PreferenceManager
+                .getDefaultSharedPreferences(getApplicationContext())
+                .getString("LTEpicturevalue","");
+        String WIFIpicturevalue =PreferenceManager
+                .getDefaultSharedPreferences(getApplicationContext())
+                .getString("WIFIpicturevalue","");
+
+        for(int i=0;i<3;i++)
+            if(LTEpicturevalue.equals(spinner.getItemAtPosition(i).toString())){
+                spinner.setSelection(i);
+                break;
+            }
+
+        for(int i=0;i<3;i++)
+            if(WIFIpicturevalue.equals(spinnerwifi.getItemAtPosition(i).toString())){
+                spinnerwifi.setSelection(i);
+                break;
+            }
+    }
+
+
+
+
+    public void uploaddefaultspinnervalue(){
+        SharedPreferences.Editor prefEditor = prefs.edit();
+        prefEditor.putString("LTEpicturevalue", spinner.getSelectedItem().toString());
+        prefEditor.putString("WIFIpicturevalue", spinnerwifi.getSelectedItem().toString());
+
+        prefEditor.commit();
     }
 
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-        // TODO: On selecting a spinner item we change the one setted on the db
         String item = parent.getItemAtPosition(position).toString();
-
         // Showing selected spinner item
-        Toast.makeText(parent.getContext(), "Selected: " + item, Toast.LENGTH_LONG).show();
+        Toast.makeText(parent.getContext(), "Selected: " + item, Toast.LENGTH_SHORT).show();
+
+
+        SharedPreferences.Editor prefEditor = prefs.edit();
+        prefEditor.putString("LTEpicturevalue", spinner.getSelectedItem().toString());
+        prefEditor.putString("WIFIpicturevalue", spinnerwifi.getSelectedItem().toString());
+
+
+        prefEditor.commit();
+
     }
+
     public void onNothingSelected(AdapterView<?> arg0) {
         // TODO Auto-generated method stub
     }
+
+
 }
