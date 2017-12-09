@@ -104,7 +104,15 @@ public class MainActivity extends AppCompatActivity {
         String device_token = FirebaseInstanceId.getInstance().getToken();
 
         BackendAPI api = new BackendAPI();
-        api.updateDeviceToken(device_token);
+        api.updateDeviceToken(device_token, new BackendAPI.HttpCallback() {
+            @Override
+            public void onFailure(String response, Exception exception) {
+                System.out.println(exception.toString());
+            }
+            @Override
+            public void onSuccess(String response) {
+            }
+        });
 
         //Check for new images everytime when loading MainActivity. If user is in a group.
         MyFirebaseMessagingService newClassObjectForSync = new MyFirebaseMessagingService();
@@ -481,8 +489,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void CheckSettings() {
 
-        Bitmap FirebaseBitmap = getImageBitmaptest();
-
+        Bitmap FirebaseBitmap = getImageBitmap();
         if(Connectivity.isConnectedMobile(getApplicationContext())){
             //Create the bitmap that is going to be scaled
 
@@ -521,8 +528,6 @@ public class MainActivity extends AppCompatActivity {
 
         if(Connectivity.isConnectedWifi(getApplicationContext())){
 
-            System.out.println("W " + getImageBitmaptest().getWidth());
-            System.out.println("H " + getImageBitmaptest().getHeight());
 
             //Check which one is the setting (low/high/full) and tranform the bitmap
             if(getWIFISettings().toLowerCase().contains("high")){
@@ -549,11 +554,8 @@ public class MainActivity extends AppCompatActivity {
                 maxQuality = "full";
 
             }
-
-
-
-            uploadImageFirebase(FirebaseBitmap);
         }
+        uploadImageFirebase(FirebaseBitmap);
     }
 
         public void uploadImageFirebase(Bitmap FirebaseBitmap){
@@ -625,18 +627,6 @@ public class MainActivity extends AppCompatActivity {
         try{
             Uri imageUri = Uri.fromFile(new File(imagePath));
             return(MediaStore.Images.Media.getBitmap(this.getContentResolver(), imageUri));
-        }
-        catch(Exception e){
-        }
-        return null;
-    }
-    private Bitmap getImageBitmaptest(){
-        try{
-
-            BitmapFactory.Options bmOptions = new BitmapFactory.Options();
-
-            Bitmap test = BitmapFactory.decodeFile(imagePath,bmOptions);
-            return test.copy(test.getConfig(),true);
         }
         catch(Exception e){
         }
