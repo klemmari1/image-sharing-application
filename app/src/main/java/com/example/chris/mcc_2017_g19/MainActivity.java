@@ -102,12 +102,10 @@ public class MainActivity extends AppCompatActivity {
 
         //testing notification stuff (fcm)
         String device_token = FirebaseInstanceId.getInstance().getToken();
-
         BackendAPI api = new BackendAPI();
         api.updateDeviceToken(device_token, new BackendAPI.HttpCallback() {
             @Override
             public void onFailure(String response, Exception exception) {
-                System.out.println(exception.toString());
             }
             @Override
             public void onSuccess(String response) {

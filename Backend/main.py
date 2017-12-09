@@ -198,14 +198,12 @@ def server_error(e):
 @app.route('/updateDeviceToken', methods=['POST'])
 def updateDeviceToken():
     try:
-        args = request.form
-    print(args)  # For debugging
-    userToken = request.form['userToken']
-    deviceToken = request.form['deviceToken']
-    userID = get_uid(userToken)
+        userToken = request.form['userToken']
+        deviceToken = request.form['deviceToken']
+        userID = get_uid(userToken)
 
-    database.child("users").child(userID).child("deviceTokens").child(deviceToken).set("1");
-    return "updateDeviceToken() worked in backend!"
+        database.child("users").child(userID).child("deviceTokens").update({deviceToken: "1"});
+        return "updateDeviceToken() worked in backend!"
 
     except Exception as e:
         return "Error in updateDeviceToken(): " + str(e)
