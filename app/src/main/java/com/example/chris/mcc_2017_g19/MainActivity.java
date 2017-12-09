@@ -113,6 +113,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
                 userObj = snapshot.getValue(UserObject.class);
+                MyFirebaseMessagingService newClassObjectForSync = new MyFirebaseMessagingService();
+                newClassObjectForSync.syncImageFolder(userObj.getGroup());
             }
             @Override
             public void onCancelled(DatabaseError databaseError) {
@@ -121,8 +123,6 @@ public class MainActivity extends AppCompatActivity {
         });
 
         //Check for new images everytime when loading MainActivity. If user is in a group.
-        MyFirebaseMessagingService newClassObjectForSync = new MyFirebaseMessagingService();
-        newClassObjectForSync.syncImageFolder();
 
         //Ask the user for permission to write on disc
         boolean hasPermission = (ContextCompat.checkSelfPermission(this,
@@ -435,7 +435,6 @@ public class MainActivity extends AppCompatActivity {
                 SaveImage("Private", fname);
             }
 
-            removeTempPicture();
             return bitmap;
             //return Bitmap.createScaledBitmap(bit, width, height, true);
         }
@@ -453,34 +452,22 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void SaveImage(String folder, String filename) {
-        Bitmap finalBitmap = getImageBitmap();
-
         File myDir = new File(Utils.getAlbumsRoot(getApplicationContext()) +  File.separator + folder);
 
         if (!myDir.exists()) {
             myDir.mkdirs();
         }
 
-        File file = new File(myDir, filename);
+        try{
+            File file_a =new File(imagePath);
 
+            if(file_a.renameTo(new File(myDir + File.separator + filename))){
+                System.out.println("Temp image moved successfully!");
+            }else{
+                System.out.println("Error!");
+            }
 
-        try {
-            MediaScannerConnection.scanFile(getApplicationContext(), new String[]{file.getPath()}, new String[]{"Image/*"}, null);
-            System.out.println(file);
-
-            //FileOutputStream out = new FileOutputStream(file);
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            finalBitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
-
-
-            file.createNewFile();
-            FileOutputStream fo = new FileOutputStream(file);
-            fo.write(out.toByteArray());
-            fo.close();
-
-            out.flush();
-            out.close();
-        } catch (Exception e) {
+        }catch(Exception e){
             e.printStackTrace();
         }
     }
@@ -607,18 +594,6 @@ public class MainActivity extends AppCompatActivity {
                 });
             }
         });
-    }
-
-
-    private void removeTempPicture(){
-        File file_to_delete = new File(imagePath);
-        if (file_to_delete.exists()) {
-            if (file_to_delete.delete()) {
-                System.out.println("file Deleted :" + file_to_delete.getPath());
-            } else {
-                System.out.println("file not Deleted :" + file_to_delete.getPath());
-            }
-        }
     }
 
 
