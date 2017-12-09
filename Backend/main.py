@@ -216,7 +216,7 @@ def upload_image():
         # Get arguments
         args = request.form
         print(args)  # For debugging
-        token = request.form['idToken']
+        token = request.form['id_token']
         userID = get_uid(token)
         groupID = request.form['groupID']
         if validate_user_in_group(userID, groupID):
