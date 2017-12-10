@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -39,7 +38,6 @@ public class GroupStatusActivity extends AppCompatActivity {
     private DatabaseReference databaseReference;
     private boolean isFinalized;
 
-    private static final String TAG = "GroupStatusActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,50 +52,53 @@ public class GroupStatusActivity extends AppCompatActivity {
         memberAdapter = new MemberAdapter(this, members);
         memberList.setAdapter(memberAdapter);
 
+        if(Utils.isNetworkAvailable(getApplicationContext())){
+            //Getting group info from firebase
+            DatabaseReference userRef = databaseReference.child("users").child(firebaseUser.getUid());
+            userRef.keepSynced(true);
+            userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    group_id = (String) dataSnapshot.child("group").getValue();
+                    if(group_id != null){
+                        DatabaseReference groupRef = databaseReference.child("groups").child(group_id);
+                        groupRef.keepSynced(true);
+                        groupRef.addValueEventListener(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot dataSnapshot) {
+                                GroupObject groupObj = dataSnapshot.getValue(GroupObject.class);
+                                if(groupObj != null){
+                                    //Update view values
+                                    displayGroupName(groupObj.getName());
+                                    displayGroupExpiration(groupObj.getExpiration());
+                                    if (groupObj.isExpired()) {
+                                        displayExpiredText();
+                                        disableAddMemberButton();
+                                    }
+                                    checkIfUserIsGroupCreator(groupObj.getCreator());
 
-        DatabaseReference userRef = databaseReference.child("users").child(firebaseUser.getUid());
-        userRef.keepSynced(true);
-        userRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                group_id = (String) dataSnapshot.child("group").getValue();
-                if(group_id != null){
-                    DatabaseReference groupRef = databaseReference.child("groups").child(group_id);
-                    groupRef.keepSynced(true);
-                    groupRef.addValueEventListener(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(DataSnapshot dataSnapshot) {
-                            GroupObject groupObj = dataSnapshot.getValue(GroupObject.class);
-                            if(groupObj != null){
-                                displayGroupName(groupObj.getName());
-                                displayGroupExpiration(groupObj.getExpiration(), groupObj.isExpired());
-                                if (groupObj.isExpired()) {
-                                    displayExpiredText();
-                                    disableAddMemberButton();
+                                    DataSnapshot membersSnapshot = dataSnapshot.child("members");
+                                    members.clear();
+                                    for (DataSnapshot member : membersSnapshot.getChildren()) {
+                                        members.add((String) member.getValue());
+                                    }
+                                    memberAdapter.notifyDataSetChanged();
                                 }
-                                checkIfUserIsGroupCreator(groupObj.getCreator());
-
-                                DataSnapshot membersSnapshot = dataSnapshot.child("members");
-                                members.clear();
-                                for (DataSnapshot member : membersSnapshot.getChildren()) {
-                                    members.add((String) member.getValue());
-                                }
-                                memberAdapter.notifyDataSetChanged();
                             }
-                        }
-                        @Override
-                        public void onCancelled(DatabaseError databaseError) {
-                            Toast.makeText(getApplicationContext(), "Network error", Toast.LENGTH_SHORT).show();
-                        }
-                    });
+                            @Override
+                            public void onCancelled(DatabaseError databaseError) {
+                            }
+                        });
+                    }
                 }
-            }
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                Toast.makeText(getApplicationContext(), "Network error", Toast.LENGTH_SHORT).show();
-            }
-        });
-
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+                }
+            });
+        }
+        else{
+            Toast.makeText(getApplicationContext(), "Network error", Toast.LENGTH_SHORT).show();
+        }
     }
 
     public void addButton(View v) {
@@ -116,7 +117,10 @@ public class GroupStatusActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         if(item.getItemId() == R.id.action_leave)
         {
-            leaveGroup();
+            if(Utils.isNetworkAvailable(getApplicationContext()))
+                leaveGroup();
+            else
+                Toast.makeText(getApplicationContext(), "Network error", Toast.LENGTH_SHORT).show();
         }
         return true;
     }
@@ -171,7 +175,7 @@ public class GroupStatusActivity extends AppCompatActivity {
             api.deleteGroup(group_id, new BackendAPI.HttpCallback() {
                 @Override
                 public void onFailure(String response, Exception exception) {
-                    Toast.makeText(getApplicationContext(), "Network error", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), exception.toString(), Toast.LENGTH_SHORT).show();
                 }
 
                 @Override
@@ -207,7 +211,7 @@ public class GroupStatusActivity extends AppCompatActivity {
         groupNameField.setText(name);
     }
 
-    private void displayGroupExpiration(String expiration, boolean groupIsExpired) {
+    private void displayGroupExpiration(String expiration) {
         TextView groupExpirationField = (TextView) findViewById(R.id.group_status_expiration_value);
         Calendar cal = Calendar.getInstance();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
@@ -225,7 +229,7 @@ public class GroupStatusActivity extends AppCompatActivity {
 
     private void displayExpiredText() {
         TextView expiredText = (TextView) findViewById(R.id.group_status_expired_text);
-        expiredText.setText("(Expired)");
+        expiredText.setText(R.string.group_status_expired_text);
     }
 
     private void disableAddMemberButton() {

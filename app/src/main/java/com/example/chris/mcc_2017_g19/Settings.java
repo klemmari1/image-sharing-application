@@ -1,7 +1,5 @@
 package com.example.chris.mcc_2017_g19;
 
-import android.app.Activity;
-import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
@@ -9,10 +7,8 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,7 +18,6 @@ public class Settings extends AppCompatActivity implements AdapterView.OnItemSel
 
     Spinner spinner, spinnerwifi;
     SharedPreferences prefs;
-
 
 
     @Override
@@ -98,8 +93,6 @@ public class Settings extends AppCompatActivity implements AdapterView.OnItemSel
     }
 
 
-
-
     public void uploaddefaultspinnervalue(){
         SharedPreferences.Editor prefEditor = prefs.edit();
         prefEditor.putString("LTEpicturevalue", spinner.getSelectedItem().toString());
@@ -108,6 +101,7 @@ public class Settings extends AppCompatActivity implements AdapterView.OnItemSel
         prefEditor.apply();
     }
 
+
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
         SharedPreferences.Editor prefEditor = prefs.edit();
@@ -115,7 +109,6 @@ public class Settings extends AppCompatActivity implements AdapterView.OnItemSel
         prefEditor.putString("WIFIpicturevalue", spinnerwifi.getSelectedItem().toString());
 
         prefEditor.apply();
-
     }
 
     public void onNothingSelected(AdapterView<?> arg0) {

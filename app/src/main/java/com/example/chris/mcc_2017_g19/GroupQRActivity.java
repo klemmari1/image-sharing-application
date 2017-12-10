@@ -4,8 +4,8 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
@@ -23,7 +23,7 @@ import com.google.firebase.auth.FirebaseUser;
 public class GroupQRActivity extends AppCompatActivity {
 
     private FirebaseUser firebaseUser;
-    private static final String TAG = "GroupQRActivity";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,41 +32,47 @@ public class GroupQRActivity extends AppCompatActivity {
         firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
         final DatabaseReference databaseReference = Utils.getDatabase().getReference();
 
-        DatabaseReference userRef = databaseReference.child("users").child(firebaseUser.getUid());
-        userRef.keepSynced(true);
-        userRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                String group_id = (String) dataSnapshot.child("group").getValue();
-                if(group_id != null){
-                    DatabaseReference groupRef = databaseReference.child("groups").child(group_id);
-                    groupRef.keepSynced(true);
-                    groupRef.addValueEventListener(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(DataSnapshot dataSnapshot) {
-                            GroupObject groupObj = dataSnapshot.getValue(GroupObject.class);
-                            if(groupObj != null){
-                                String token = groupObj.getToken();
-                                System.out.println(groupObj);
-                                try{
-                                    ImageView imageView = (ImageView) findViewById(R.id.qr_image);
-                                    Bitmap bitmap = getBitmap(token, 750);
-                                    imageView.setImageBitmap(bitmap);
-                                }
-                                catch (Exception e){
+        if(Utils.isNetworkAvailable(getApplicationContext())){
+            //Query for the QR code from the group object in firebase database
+            DatabaseReference userRef = databaseReference.child("users").child(firebaseUser.getUid());
+            userRef.keepSynced(true);
+            userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    String group_id = (String) dataSnapshot.child("group").getValue();
+                    if(group_id != null){
+                        DatabaseReference groupRef = databaseReference.child("groups").child(group_id);
+                        groupRef.keepSynced(true);
+                        groupRef.addValueEventListener(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot dataSnapshot) {
+                                GroupObject groupObj = dataSnapshot.getValue(GroupObject.class);
+                                if(groupObj != null){
+                                    String token = groupObj.getToken();
+                                    System.out.println(groupObj);
+                                    try{
+                                        //Display the token in the view actively
+                                        ImageView imageView = (ImageView) findViewById(R.id.qr_image);
+                                        Bitmap bitmap = getBitmap(token, 750);
+                                        imageView.setImageBitmap(bitmap);
+                                    }
+                                    catch (Exception e){
+                                    }
                                 }
                             }
-                        }
-                        @Override
-                        public void onCancelled(DatabaseError databaseError) {
-                            System.out.println("The read failed: " + databaseError.getCode());
-                        }
-                    });
+                            @Override
+                            public void onCancelled(DatabaseError databaseError) {
+                            }
+                        });
+                    }
                 }
-            }
-            @Override
-            public void onCancelled(DatabaseError databaseError) {}
-        });
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+                }
+            });
+        }
+        else
+            Toast.makeText(getApplicationContext(), "Network error", Toast.LENGTH_SHORT).show();
     }
 
     private Bitmap getBitmap(String str, int dim) throws WriterException {

@@ -36,16 +36,18 @@ import java.io.File;
 import java.util.Random;
 
 
+/*
+This service handles saving the image from the camera to local storage and firebase storage.
+It also updates the database.
+ */
 public class ImageSaveService extends IntentService {
 
     private FirebaseUser firebaseUser;
     private UserObject userObj;
     private DatabaseReference databaseReference;
 
-    private static final String TAG = "SyncImagesService";
     private String imagePath;
     private String maxQuality;
-
 
     public ImageSaveService(){
         super("ImageSaveService");
@@ -54,19 +56,20 @@ public class ImageSaveService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
-        // Gets data from the incoming Intent
+        // Gets image path of the image captured with the camera
         imagePath = intent.getStringExtra("imagePath");
 
         databaseReference = Utils.getDatabase().getReference();
         firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
 
-        DatabaseReference userReference = databaseReference.child("users").child(firebaseUser.getUid());
+        final DatabaseReference userReference = databaseReference.child("users").child(firebaseUser.getUid());
         userReference.keepSynced(true);
         userReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
                 userObj = snapshot.getValue(UserObject.class);
-                checkSensiblePictures();
+                if(userObj != null && userObj.getGroup() != null)
+                    checkSensiblePictures();
             }
             @Override
             public void onCancelled(DatabaseError databaseError) {
@@ -89,11 +92,8 @@ public class ImageSaveService extends IntentService {
         int result = barcodes.size();
         System.out.println("Barcodes found: " + result);
         if(result == 0) {
-
             CheckSettings();
-
         } else {
-
             //Creating a unique name for the picture
             Random generator = new Random();
             int n = 1000;
@@ -104,15 +104,16 @@ public class ImageSaveService extends IntentService {
             SaveImage("Private", fname);
         }
 
-        //return Bitmap.createScaledBitmap(bit, width, height, true);
         if (result == 0) {
-            //It is not showing the toast, I don't know why (But it is entering this :
             Toast.makeText(ImageSaveService.this, "Image is being added to your shared folder!", Toast.LENGTH_LONG).show();
         } else {
             Toast.makeText(ImageSaveService.this, "SENSIBLE DATA! Image is being added to private folder", Toast.LENGTH_LONG).show();
         }
     }
 
+    /*
+    Save image locally
+     */
     private void SaveImage(String folder, String filename) {
         File myDir = new File(Utils.getAlbumsRoot(getApplicationContext()) +  File.separator + folder);
 
@@ -134,6 +135,9 @@ public class ImageSaveService extends IntentService {
         }
     }
 
+    /*
+    Checks for quality settings and then calls the upload function
+     */
     private void CheckSettings() {
         Bitmap FirebaseBitmap = getImageBitmap();
 
@@ -148,7 +152,6 @@ public class ImageSaveService extends IntentService {
                 }else{
                     FirebaseBitmap = Bitmap.createScaledBitmap(FirebaseBitmap, 1280, 960, false);
                 }
-
                 maxQuality = "high";
 
             }else if(getLTESettings().toLowerCase().contains("low")){
@@ -159,7 +162,6 @@ public class ImageSaveService extends IntentService {
                 }else{
                     FirebaseBitmap = Bitmap.createScaledBitmap(FirebaseBitmap, 640, 480, false);
                 }
-
                 maxQuality = "low";
 
             }else{
@@ -177,8 +179,8 @@ public class ImageSaveService extends IntentService {
                 }else{
                     FirebaseBitmap = Bitmap.createScaledBitmap(FirebaseBitmap, 1280, 960, false);
                 }
-
                 maxQuality = "high";
+
             }else if(getWIFISettings().toLowerCase().contains("low")){
 
                 //Check if the image has been taken in landscape or not:
@@ -187,16 +189,19 @@ public class ImageSaveService extends IntentService {
                 }else{
                     FirebaseBitmap = Bitmap.createScaledBitmap(FirebaseBitmap, 640, 480, false);
                 }
-
                 maxQuality = "low";
+
             }else{
                 maxQuality = "full";
             }
         }
-
         uploadImageFirebase(FirebaseBitmap);
     }
 
+    /*
+    Uploads the image to firebase storage and updates the database.
+    Finally saves the image locally to the group folder.
+     */
     public void uploadImageFirebase(Bitmap FirebaseBitmap){
         //Get a reference from our storage:
         FirebaseStorage storage = FirebaseStorage.getInstance();
@@ -215,7 +220,7 @@ public class ImageSaveService extends IntentService {
         uploadTask.addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception exception) {
-                Toast.makeText(getApplicationContext(), "Network error", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), exception.toString(), Toast.LENGTH_SHORT).show();
             }
         }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
@@ -223,15 +228,15 @@ public class ImageSaveService extends IntentService {
 
                 //Call the backend API and send data
                 BackendAPI api = new BackendAPI();
-                api.uploadImage(userObj.getGroup(), imagename+ ".jpg", maxQuality, new BackendAPI.HttpCallback() {
+                api.uploadImage(userObj.getGroup(), imagename + ".jpg", maxQuality, new BackendAPI.HttpCallback() {
                     @Override
                     public void onFailure(String response, Exception exception) {
-                        Toast.makeText(getApplicationContext(), "Network error", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), exception.toString(), Toast.LENGTH_SHORT).show();
                     }
                     @Override
                     public void onSuccess(final String response) {
                         try {
-                            if(!response.contains("error")){
+                            if(!response.toLowerCase().contains("error")){
                                 DatabaseReference userGroupReference = databaseReference.child("groups").child(userObj.getGroup());
                                 userGroupReference.addListenerForSingleValueEvent(new ValueEventListener() {
                                     @Override
@@ -242,12 +247,12 @@ public class ImageSaveService extends IntentService {
                                     }
                                     @Override
                                     public void onCancelled(DatabaseError databaseError) {
+                                        Toast.makeText(ImageSaveService.this, databaseError.toString(), Toast.LENGTH_SHORT).show();
                                     }
                                 });
                             }
                             else{
                                 Toast.makeText(ImageSaveService.this, response, Toast.LENGTH_SHORT).show();
-
                             }
                         } catch (Exception e){
                             Toast.makeText(ImageSaveService.this, e.getMessage(), Toast.LENGTH_SHORT).show();

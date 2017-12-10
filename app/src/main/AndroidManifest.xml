@@ -33,7 +33,8 @@
 
         <activity
             android:name=".LoginActivity"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/AppTheme.NoActionBar"
+            android:windowSoftInputMode="stateHidden">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -54,13 +55,16 @@
                 android:value="barcode" />
         </activity>
         <activity android:name=".SignupActivity"
-            android:theme="@style/AppTheme.NoActionBar"/>
+            android:theme="@style/AppTheme.NoActionBar"
+            android:windowSoftInputMode="stateHidden"/>
         <activity android:name=".AlbumsView.AlbumsActivity" />
         <activity android:name=".GroupCreationActivity" />
         <activity android:name=".MainActivity" />
         <activity android:name=".ImagePreviewActivity" />
-        <activity android:name=".ResetPasswordActivity" />
-        <activity android:name=".AlbumsView.AlbumEach.pvtgallery.PrivateGallery" />
+        <activity android:name=".ResetPasswordActivity"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:windowSoftInputMode="stateHidden"/>
+        <activity android:name=".AlbumsView.AlbumEach.pvtgallery.PrivateGalleryActivity" />
         <activity android:name=".GroupStatusActivity" />
         <activity
             android:name=".QrReaderActivity"
@@ -81,15 +85,14 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT"/>
             </intent-filter>
         </service>
-        <service android:name=".BackgroundSync.FirebaseBackgroundService" />
         <service
             android:name=".BackgroundServices.SyncImagesService"
             android:exported="false"/>
         <service
             android:name=".BackgroundServices.ImageSaveService"
             android:exported="false"/>
-        <activity android:name=".AlbumsView.AlbumEach.model.FullImage" />
-        <activity android:name=".AlbumsView.AlbumEach.AlbumInfo"></activity>
+        <activity android:name=".AlbumsView.AlbumEach.model.FullImageAcitivty" />
+        <activity android:name=".AlbumsView.AlbumEach.AlbumInfoActivity"></activity>
     </application>
 
 </manifest>

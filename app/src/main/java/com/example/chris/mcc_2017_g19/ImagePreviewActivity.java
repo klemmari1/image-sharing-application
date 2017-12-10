@@ -17,6 +17,10 @@ import com.example.chris.mcc_2017_g19.BackgroundServices.ImageSaveService;
 import java.io.File;
 import java.io.InputStream;
 
+
+/*
+This class is for showing a preview of the image before actually sending it to the group
+ */
 public class ImagePreviewActivity extends AppCompatActivity {
 
     private String imagePath;
@@ -30,7 +34,7 @@ public class ImagePreviewActivity extends AppCompatActivity {
         Intent i = getIntent();
 
         imagePath = i.getExtras().getString("imagePath");
-        System.out.println("JAA" + imagePath);
+
         //Load image asynchronously
         ImageLoadTask ilt = new ImageLoadTask();
         ilt.execute(imagePath);

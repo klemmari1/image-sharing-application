@@ -4,7 +4,6 @@ package com.example.chris.mcc_2017_g19;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -58,31 +57,37 @@ public class GroupCreationActivity extends AppCompatActivity {
 
         findViewById(R.id.buttonCreateGroup).setEnabled(false);
 
-        //okhttp request: create_group
-        BackendAPI api = new BackendAPI();
-        api.createGroup(groupName, expirationTimestamp, new BackendAPI.HttpCallback() {
-            @Override
-            public void onFailure(String response, Exception exception) {
-                Toast.makeText(getApplicationContext(), "Network error", Toast.LENGTH_SHORT).show();
-            }
-
-            @Override
-            public void onSuccess(String response) {
-                try {
-                    if(!response.contains("error")){
-                        Intent groupStatus = new Intent(GroupCreationActivity.this, GroupStatusActivity.class);
-                        startActivity(groupStatus);
-                        GroupCreationActivity.this.finish();
-                    }
-                    else{
-                        findViewById(R.id.buttonCreateGroup).setEnabled(true);
-                        Toast.makeText(GroupCreationActivity.this, response, Toast.LENGTH_SHORT).show();
-                    }
-                } catch (Exception e){
-                    Toast.makeText(GroupCreationActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
+        //Request to the backend to create the group
+        if(Utils.isNetworkAvailable(getApplicationContext())){
+            BackendAPI api = new BackendAPI();
+            api.createGroup(groupName, expirationTimestamp, new BackendAPI.HttpCallback() {
+                @Override
+                public void onFailure(String response, Exception exception) {
+                    Toast.makeText(getApplicationContext(), exception.toString(), Toast.LENGTH_SHORT).show();
                 }
-            }
-        });
+
+                @Override
+                public void onSuccess(String response) {
+                    try {
+                        if(!response.toLowerCase().contains("error")){
+                            //Start GroupStatusActivity with the new group
+                            Intent groupStatus = new Intent(GroupCreationActivity.this, GroupStatusActivity.class);
+                            startActivity(groupStatus);
+                            GroupCreationActivity.this.finish();
+                        }
+                        else{
+                            findViewById(R.id.buttonCreateGroup).setEnabled(true);
+                            Toast.makeText(GroupCreationActivity.this, response, Toast.LENGTH_SHORT).show();
+                        }
+                    } catch (Exception e){
+                        Toast.makeText(GroupCreationActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                }
+            });
+        }
+        else{
+            Toast.makeText(getApplicationContext(), "Network error", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private int validateDuration(String inputDuration) throws IllegalArgumentException {

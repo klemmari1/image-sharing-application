@@ -15,7 +15,10 @@ import com.example.chris.mcc_2017_g19.R;
 import java.io.File;
 import java.io.InputStream;
 
-public class FullImage extends AppCompatActivity {
+/*
+This activity shows the full image when it is clicked from the gallery
+ */
+public class FullImageAcitivty extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

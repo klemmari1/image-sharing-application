@@ -40,13 +40,12 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 
-
 public class MainActivity extends AppCompatActivity {
 
-    ImageView gallery;
-    ImageView groupManagement;
-    ImageView settings;
-    ImageView takepicture;
+    private ImageView gallery;
+    private ImageView groupManagement;
+    private ImageView settings;
+    private ImageView takepicture;
 
     private String imagePath;
 
@@ -54,13 +53,11 @@ public class MainActivity extends AppCompatActivity {
     private UserObject userObj;
     private DatabaseReference databaseReference;
 
-    static final int REQUEST_IMAGE_CAPTURE = 1;
-    static final int MY_PERMISSIONS_REQUEST_WRITE_EXT_STORAGE = 2;
-    static final int MY_PERMISSIONS_REQUEST_CAMERA = 3;
-    static final int MY_PERMISSIONS_REQUEST_QR = 4;
-    static final int REQUEST_CREATE_GROUP = 5;
-    private static final String TAG = "MainActivity";
-
+    private static final int REQUEST_IMAGE_CAPTURE = 1;
+    private static final int MY_PERMISSIONS_REQUEST_WRITE_EXT_STORAGE = 2;
+    private static final int MY_PERMISSIONS_REQUEST_CAMERA = 3;
+    private static final int MY_PERMISSIONS_REQUEST_QR = 4;
+    private static final int REQUEST_CREATE_GROUP = 5;
     private static final int REQUEST_WRITE_STORAGE = 112;
 
     private ProgressDialog progressDialog;
@@ -73,22 +70,16 @@ public class MainActivity extends AppCompatActivity {
 
         databaseReference = Utils.getDatabase().getReference();
         firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
-
-        //testing notification stuff (fcm)
-        String device_token = FirebaseInstanceId.getInstance().getToken();
-        BackendAPI api = new BackendAPI();
-        api.updateDeviceToken(device_token, new BackendAPI.HttpCallback() {
-            @Override
-            public void onFailure(String response, Exception exception) {
-            }
-            @Override
-            public void onSuccess(String response) {
-            }
-        });
-
         DatabaseReference userReference = databaseReference.child("users").child(firebaseUser.getUid());
+
+        String device_token = FirebaseInstanceId.getInstance().getToken();
+        if(userReference != null && device_token != null){
+            userReference.child("deviceTokens").child(device_token).setValue(1);
+        }
+
+        //Check for new images everytime when loading MainActivity, if user is in a group.
         userReference.keepSynced(true);
-        userReference.addValueEventListener(new ValueEventListener() {
+        userReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
                 userObj = snapshot.getValue(UserObject.class);
@@ -102,11 +93,9 @@ public class MainActivity extends AppCompatActivity {
             }
             @Override
             public void onCancelled(DatabaseError databaseError) {
-                Toast.makeText(getApplicationContext(), "Network error", Toast.LENGTH_SHORT).show();
             }
         });
 
-        //Check for new images everytime when loading MainActivity. If user is in a group.
 
         //Ask the user for permission to write on disc
         boolean hasPermission = (ContextCompat.checkSelfPermission(this,
@@ -133,7 +122,11 @@ public class MainActivity extends AppCompatActivity {
         groupManagement.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                selectGroupManagementActivity();
+                //Dont start camera if network not available
+                if(Utils.isNetworkAvailable(getApplicationContext()))
+                    selectGroupManagementActivity();
+                else
+                    Toast.makeText(getApplicationContext(), "Network error", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -153,30 +146,34 @@ public class MainActivity extends AppCompatActivity {
         takepicture.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                setButtonStatus(false);
-                DatabaseReference userReference = databaseReference.child("users").child(firebaseUser.getUid());
-                userReference.keepSynced(true);
-                userReference.addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot snapshot) {
-                        UserObject userObject = snapshot.getValue(UserObject.class);
-                        if(userObject != null){
-                            final String userGroup = userObject.getGroup();
-
-                            if (userGroup == null) {
-                                errorToast("Join or create a group to take pictures");
-                                setButtonStatus(true);
-                            } else {
-                                cameraButtonAction(userGroup);
+                //Dont start camera if network not available
+                if(Utils.isNetworkAvailable(getApplicationContext())){
+                    setButtonStatus(false);
+                    DatabaseReference userReference = databaseReference.child("users").child(firebaseUser.getUid());
+                    userReference.keepSynced(true);
+                    userReference.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot snapshot) {
+                            UserObject userObject = snapshot.getValue(UserObject.class);
+                            if(userObject != null){
+                                final String userGroup = userObject.getGroup();
+                                if (userGroup == null) {
+                                    errorToast("Join or create a group to take pictures");
+                                    setButtonStatus(true);
+                                } else {
+                                    cameraButtonAction(userGroup);
+                                }
                             }
                         }
-                    }
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
-                        Toast.makeText(getApplicationContext(), "Network error", Toast.LENGTH_SHORT).show();
-                        setButtonStatus(true);
-                    }
-                });
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+                            setButtonStatus(true);
+                        }
+                    });
+                }
+                else{
+                    Toast.makeText(getApplicationContext(), "Network error", Toast.LENGTH_SHORT).show();
+                }
             }
         });
     }
@@ -189,11 +186,11 @@ public class MainActivity extends AppCompatActivity {
         return super.onCreateOptionsMenu(menu);
     }
 
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_logout:
-                //TODO Do we need (onCompletion) listeners for these kinds of situations?
                 FirebaseAuth.getInstance().signOut();
                 startActivity(new Intent(MainActivity.this, LoginActivity.class));
                 MainActivity.this.finish();
@@ -204,6 +201,10 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /*
+    Group management activity shows join or create group when not in a group.
+    It shows group status when in a group
+     */
     private void selectGroupManagementActivity() {
         setButtonStatus(false);
         DatabaseReference userReference = databaseReference.child("users").child(firebaseUser.getUid());
@@ -214,14 +215,13 @@ public class MainActivity extends AppCompatActivity {
                 setButtonStatus(true);
                 UserObject userObject = snapshot.getValue(UserObject.class);
                 if(userObject != null){
+                    //User does not have a group. Query if they want to make a new group or join an existing one
                     if(userObject.getGroup() == null){
-                        //Setup the alert builder
                         AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
                         View customTitle = View.inflate(MainActivity.this, R.layout.dialog_title, null);
                         builder.setCustomTitle(customTitle);
                         builder.setTitle("Choose an action");
 
-                        //Add options
                         List<String> actions = new ArrayList<String>();
                         actions.add("JOIN A GROUP");
                         actions.add("CREATE A GROUP");
@@ -231,7 +231,7 @@ public class MainActivity extends AppCompatActivity {
                             public void onClick(DialogInterface dialog, int which) {
                                 switch (which) {
                                     case 0:
-                                        //Yes button pressed: Join a group
+                                        //"Yes" button pressed: Join a group
                                         if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CAMERA)
                                                 != PackageManager.PERMISSION_GRANTED) {
                                             ActivityCompat.requestPermissions(MainActivity.this,
@@ -242,18 +242,18 @@ public class MainActivity extends AppCompatActivity {
                                         }
                                         break;
                                     case 1:
-                                        //No button pressed: Create group
+                                        //"No" button pressed: Create group
                                         Intent intent = new Intent(MainActivity.this, GroupCreationActivity.class);
                                         startActivityForResult(intent, REQUEST_CREATE_GROUP);
                                         break;
                                 }
                             }
                         });
-                        //Create and show the alert dialog
                         AlertDialog dialog = builder.create();
                         dialog.show();
                     }
                     else{
+                        //If user already in a group, show group status activity
                         Intent intent = new Intent(MainActivity.this, GroupStatusActivity.class);
                         startActivity(intent);
                     }
@@ -261,13 +261,14 @@ public class MainActivity extends AppCompatActivity {
             }
             @Override
             public void onCancelled(DatabaseError databaseError) {
-                Toast.makeText(getApplicationContext(), "Network error", Toast.LENGTH_SHORT).show();
                 setButtonStatus(true);
             }
         });
     }
 
+    /*
 
+     */
     private void cameraButtonAction(String group) throws IllegalArgumentException {
         DatabaseReference userGroupReference = databaseReference.child("groups").child(group);
         userGroupReference.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -277,24 +278,35 @@ public class MainActivity extends AppCompatActivity {
                 if(groupObj != null) {
                     if (!groupObj.isExpired()){
                         TakePictureIntent();
+                        setButtonStatus(true);
+                    }
+                    else{
+                        Toast.makeText(getApplicationContext(), "Group expired", Toast.LENGTH_SHORT).show();
+                        setButtonStatus(true);
                     }
                 }
-                else
-                    Toast.makeText(getApplicationContext(), "Group expired", Toast.LENGTH_SHORT).show();
+                else{
+                    Toast.makeText(getApplicationContext(), "Network Error", Toast.LENGTH_SHORT).show();
+                    setButtonStatus(true);
+                }
+
             }
             @Override
             public void onCancelled(DatabaseError databaseError) {
-                Toast.makeText(getApplicationContext(), "Network error", Toast.LENGTH_SHORT).show();
                 setButtonStatus(true);
             }
         });
     }
+
 
     private void errorToast(String errorMessage) {
         Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show();
     }
 
 
+    /*
+    Checking for camera permissions
+     */
     private void TakePictureIntent() {
         if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED || checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA}, MY_PERMISSIONS_REQUEST_CAMERA);
@@ -304,7 +316,9 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
+    /*
+    Starts the camera and gives the image file where to write to
+     */
     private void startCamera() {
         Intent pictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         // Ensure that there's a camera activity to handle the intent
@@ -327,6 +341,10 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
+    /*
+    Create image file where camera saves the image
+     */
     private File createImageFile() throws IOException {
         // Create an image file name
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
@@ -343,6 +361,10 @@ public class MainActivity extends AppCompatActivity {
         return image;
     }
 
+
+    /*
+    This is used only for the camera's result at the moment.
+     */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
@@ -351,7 +373,6 @@ public class MainActivity extends AppCompatActivity {
                 requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
                         MY_PERMISSIONS_REQUEST_WRITE_EXT_STORAGE);
                 // We check the permission at Runtime
-                //
             } else {
                 Intent it = new Intent(getApplicationContext(), ImagePreviewActivity.class);
                 it.putExtra("imagePath", imagePath);
@@ -360,6 +381,10 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
+    /*
+    Method for requesting camera and storage permissions
+     */
     @Override
     public void onRequestPermissionsResult(int requestCode,
                                            String permissions[],
@@ -391,13 +416,10 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(this, "Please grant camera permission to use the QR Scanner", Toast.LENGTH_SHORT).show();
                 }
                 break;
-            // other 'switch' lines to check for other
-            // permissions this app might request
         }
     }
 
-
-
+    //Buttons are set disabled so that the activities cannot be accessed many times at a time. Finally enabled when user gets back to the view.
     private void setButtonStatus(boolean status){
         findViewById(R.id.gallery).setEnabled(status);
         findViewById(R.id.photo).setEnabled(status);

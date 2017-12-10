@@ -54,40 +54,57 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         // Check if message contains a data payload.
         if (remoteMessage.getData().size() > 0) {
             Log.d(TAG, "Message data payload: " + remoteMessage.getData());
-
             try {
                 //receive groupID and filename from received data-notification
                 JSONObject jsonObject = new JSONObject(remoteMessage.getData());
 
-                final String photographer = jsonObject.getString("photographer");
+                //If group is deleted
+                if(jsonObject.has("deleted_group")){
+                    String deleted_group = jsonObject.getString("deleted_group");
+                    sendNotification("Group deleted!", "Your group was deleted!");
+                }
 
-                DatabaseReference databaseReference = Utils.getDatabase().getReference();
-                FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
-                String uid = firebaseUser.getUid();
-                DatabaseReference userReference = databaseReference.child("users").child(uid);
-                userReference.addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot userSnapshot) {
-                        //1. get group id from database: users/<userid>/group
-                        String groupID = (String) userSnapshot.child("group").getValue();
-                        String userName =  (String) userSnapshot.child("name").getValue();
-                        Log.d(TAG,"found groupID in the begining of syncImageFolder(): " + groupID);
+                //If an user leaves the group
+                else if(jsonObject.has("left_user")){
+                    String left_user = jsonObject.getString("left_user");
+                    sendNotification("User left!", "User " + left_user + " left from the group!");
+                }
 
-                        //2. get all image ids from groups/groupID/images
+                //If a new photo was added to the group
+                else if(jsonObject.has("photographer")){
+                    final String photographer = jsonObject.getString("photographer");
 
-                        if (groupID != null && !userName.equals(photographer)) {
-                            sendNotification("New image from " + photographer);
-                            Intent it = new Intent(getApplicationContext(), SyncImagesService.class);
-                            it.putExtra("groupID", groupID);
-                            startService(it);
-                            Log.d(TAG,"Data MSG in. (no new data nessesarily)");
+                    DatabaseReference databaseReference = Utils.getDatabase().getReference();
+                    FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+                    String uid = firebaseUser.getUid();
+                    DatabaseReference userReference = databaseReference.child("users").child(uid);
+                    userReference.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot userSnapshot) {
+                            //1. get group id from database: users/<userid>/group
+                            String groupID = (String) userSnapshot.child("group").getValue();
+                            String userName =  (String) userSnapshot.child("name").getValue();
+                            Log.d(TAG,"found groupID in the begining of syncImageFolder(): " + groupID);
+
+                            //2. get all image ids from groups/groupID/images
+
+                            if (groupID != null && !userName.equals(photographer)) {
+                                //Send push notification
+                                sendNotification("New image!", "New image from " + photographer);
+
+                                //Start sync service
+                                Intent it = new Intent(getApplicationContext(), SyncImagesService.class);
+                                it.putExtra("groupID", groupID);
+                                startService(it);
+                                Log.d(TAG,"Data MSG in. (no new data nessesarily)");
+                            }
                         }
-                    }
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
-                        System.out.println("The read failed: " + databaseError.getMessage());
-                    }
-                });
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+                            System.out.println("The read failed: " + databaseError.getMessage());
+                        }
+                    });
+                }
             }
             catch (JSONException e) {
                 Log.d(TAG,"json roblem",e);
@@ -98,7 +115,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         if (remoteMessage.getNotification() != null) {
             Log.d(TAG, "Message Notification Body: " + remoteMessage.getNotification().getBody());
 
-            sendNotification("Notification payload (this should never happen):  " + remoteMessage.getNotification().getBody());
+            sendNotification("Error", "Notification payload (this should never happen):  " + remoteMessage.getNotification().getBody());
         }
 
         // Also if you intend on generating your own notifications as a result of a received FCM
@@ -117,7 +134,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
      *
      * @param messageBody FCM message body received.
      */
-    private void sendNotification(String messageBody) {
+    private void sendNotification(String title, String messageBody) {
         Intent intent = new Intent(this, MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0 /* Request code */, intent,
@@ -128,7 +145,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         NotificationCompat.Builder notificationBuilder =
                 new NotificationCompat.Builder(this)
                         .setSmallIcon(R.mipmap.ic_launcher_logo)
-                        .setContentTitle("New Image!")
+                        .setContentTitle(title)
                         .setContentText(messageBody)
                         .setAutoCancel(true)
                         .setSound(defaultSoundUri)
