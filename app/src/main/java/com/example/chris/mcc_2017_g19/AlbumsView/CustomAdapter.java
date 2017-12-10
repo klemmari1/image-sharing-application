@@ -1,9 +1,6 @@
 package com.example.chris.mcc_2017_g19.AlbumsView;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.net.Uri;
-import android.provider.MediaStore;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
