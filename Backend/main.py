@@ -240,7 +240,6 @@ userID=<userID>&groupID=<groupID>&filename=<filename>&maxQuality=<low/full/high>
 '''
 @app.route('/upload_image', methods=['POST'])
 def upload_image():
-
     try:
         # Get arguments
         args = request.form
@@ -290,44 +289,44 @@ def upload_image():
             user_name = user_name.strip("_")
             return token + "_" + user_name + "_" + str(hasFaces) + "_"
         else:
-            return "INVALID USER TOKEN OR USER NOT IN GROUP!"
+                return "INVALID USER TOKEN OR USER NOT IN GROUP!"
+
     except Exception as e:
-        print(str(e))
-        return "error in upload_image backend: probably googele vision api" 
+        return "upload_function error: " + str(e)
 
 
 
 def image_processing(initialURL, maxQuality,groupID, filename):
     URLs = []
+    
     people = 0
+    
+    storagePath = groupID + "/" + filename
+    storage.child(storagePath).download(filename)
+    #pilImage = Image.open(BytesIO(r.content))
+    pilImage = Image.open(filename)
+    #pilImage.mode = 'RGBA'
+    
     if (maxQuality == 'low'):
         URLs.append(initialURL)
-    else:
-        #r = requests.get(initialURL,verify=False)
-        #TODO: download with storage object, open ti pilImage object, REMEMBER TO DELETE downloaded file
-
-        storagePath = groupID + "/" + filename
-        storage.child(storagePath).download(filename)
-
-        #pilImage = Image.open(BytesIO(r.content))
-        pilImage = Image.open(filename)
-        #pilImage.mode = 'RGBA'
-
+        people = check_for_faces(filename)
     if (maxQuality == 'high'):
         URLs.append(initialURL)
         URLs.append(img_to_low(pilImage, groupID, filename))
+        check_for_faces(filename)
     if (maxQuality == 'full'):
         URLs.append(initialURL)
         URLs.append(img_to_high(pilImage, groupID, filename))
         URLs.append(img_to_low(pilImage, groupID, filename))
+        check_for_faces(addHighToFileName(filename))
 
 
-    if (check_for_faces(filename)):
-        people = 1
-
-
-    os.remove(filename)
-
+    try:
+        os.remove(filename)
+        os.remove(addLowToFileName(filename))
+        os.remove(addHighToFileName(filename))
+    except Exception as e:
+        print("ERROR IN DELETING TEMP PICTURES !!!!")
 
     return URLs, people
 
@@ -348,7 +347,7 @@ def img_to_low(pilImage, groupID, filename):
     pilImage.save(fname, 'JPEG')
     fbpath = groupID + "/" + fname
     storage.child(fbpath).put(fname)
-    os.remove(fname)
+    
 
     return storage.child(fbpath).get_url(0)
 
@@ -365,7 +364,7 @@ def img_to_high(pilImage, groupID, filename):
     pilImage.save(fname, 'JPEG')
     fbpath = groupID + "/" + fname
     storage.child(fbpath).put(fname)
-    os.remove(fname)
+    
 
     return storage.child(fbpath).get_url(0)
 
@@ -385,8 +384,10 @@ def check_for_faces(path):
         nFaces +=1
 
     if (nFaces > 1):
+        print("checking for faces from" + path + "return: 1")
         return 1
     else:
+        print("checking for faces from" + path + "return: 0")
         return 0
 
 '''helper functions'''
@@ -406,7 +407,7 @@ def notification_upload_image(data):
     photographer = database.child("users").child(data['userID']).child("name").get()
     data["photographer"] = photographer.val()
 
-    send_notification(data["groupID"])
+    send_notification(data["groupID"], data)
     #todo: with this function we can get valid tokens,
     #i.e. we can clean up firebase from all of the non-valid ids.
     #valid_registration_ids = push_service.clean_registration_ids(registration_ids)
@@ -496,36 +497,36 @@ def testDeleteFromStorage():
 
 
     #if found -- delete
-@app.route('/testFaces', methods=['GET'])
-def testFaces():
-    # Instantiates a client
-    client = vision.ImageAnnotatorClient()
+# @app.route('/testFaces', methods=['GET'])
+# def testFaces():
+#     # Instantiates a client
+#     client = vision.ImageAnnotatorClient()
 
-    fname = "faces.jpg"
-    # The name of the image file to annotate
-    file_name = os.path.join(
-        os.path.dirname(__file__),
-        fname)
+#     fname = "1512912404.jpg"
+#     # The name of the image file to annotate
+#     file_name = os.path.join(
+#         os.path.dirname(__file__),
+#         fname)
 
-    # Loads the image into memory
-    with io.open(file_name, 'rb') as image_file:
-        content = image_file.read()
+#     # Loads the image into memory
+#     with io.open(file_name, 'rb') as image_file:
+#         content = image_file.read()
 
-    image = types.Image(content=content)
+#     image = types.Image(content=content)
 
-    # Performs label detection on the image file
-    #response = client.label_detection(image=image)
-    response = client.face_detection(image=image)
-    if (len(response.face_annotations) > 0):
-        return 1
-    else:
-        return 0
+#     # Performs label detection on the image file
+#     #response = client.label_detection(image=image)
+#     response = client.face_detection(image=image)
+#     if (len(response.face_annotations) > 0):
+#         return "1"
+#     else:
+#         return "0"
 @app.route('/detect_faces',methods=['GET'])
 def detect_faces():
     """Detects faces in an image."""
     client = vision.ImageAnnotatorClient()
 
-    path = "faces.jpg"
+    path = "1512912404High.jpg"
     with io.open(path, 'rb') as image_file:
         content = image_file.read()
 
