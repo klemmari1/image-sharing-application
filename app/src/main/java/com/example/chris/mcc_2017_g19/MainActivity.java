@@ -23,6 +23,8 @@ import android.widget.Toast;
 
 import com.example.chris.mcc_2017_g19.AlbumsView.AlbumsActivity;
 import com.example.chris.mcc_2017_g19.BackendAPI.BackendAPI;
+import com.example.chris.mcc_2017_g19.BackgroundServices.ImageSaveService;
+import com.example.chris.mcc_2017_g19.BackgroundServices.SyncImagesService;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;

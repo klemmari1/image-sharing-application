@@ -1,24 +1,19 @@
-package com.example.chris.mcc_2017_g19.pvtgallery;
+package com.example.chris.mcc_2017_g19.AlbumsView.AlbumEach.pvtgallery;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
-import android.support.v7.widget.RecyclerView;
-import android.text.Html;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
-import android.widget.TextView;
 
+import com.example.chris.mcc_2017_g19.AlbumsView.AlbumEach.model.FullImage;
 import com.example.chris.mcc_2017_g19.R;
 import com.squareup.picasso.Picasso;
 
@@ -67,9 +62,10 @@ public class GridViewAdapter extends ArrayAdapter<GridItem> {
         GridItem item = mGridData.get(position);
         File file = new File(String.valueOf(Uri.parse(item.getImage())));
 
-        //ADD PICTURES IN GRIDVIEW
+        //ADD PICTURES IN GRIDVIEW with reasonable resolution
         Picasso.with(mContext).load(file).resize(500, 500).error(R.drawable.cloudoff).into(holder.imageView);
 
+        //If clicked send to FullImage view
         holder.imageView.setOnClickListener(new View.OnClickListener() {
 
             @Override

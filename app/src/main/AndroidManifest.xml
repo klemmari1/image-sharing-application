@@ -56,7 +56,7 @@
         <activity android:name=".GroupCreationActivity" />
         <activity android:name=".MainActivity" />
         <activity android:name=".ResetPasswordActivity" />
-        <activity android:name=".pvtgallery.PrivateGallery" />
+        <activity android:name=".AlbumsView.AlbumEach.pvtgallery.PrivateGallery" />
         <activity android:name=".GroupStatusActivity" />
         <activity
             android:name=".QrReaderActivity"
@@ -65,26 +65,26 @@
         <activity android:name=".Settings" />
 
         <service
-            android:name=".MyFirebaseInstanceIDService">
+            android:name=".BackgroundServices.MyFirebaseInstanceIDService">
             <intent-filter>
                 <action android:name="com.google.firebase.INSTANCE_ID_EVENT"/>
             </intent-filter>
         </service>
 
         <service
-            android:name=".MyFirebaseMessagingService">
+            android:name=".BackgroundServices.MyFirebaseMessagingService">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT"/>
             </intent-filter>
         </service>
         <service android:name=".BackgroundSync.FirebaseBackgroundService" />
         <service
-            android:name=".SyncImagesService"
+            android:name=".BackgroundServices.SyncImagesService"
             android:exported="false"/>
         <service
-            android:name=".ImageSaveService"
+            android:name=".BackgroundServices.ImageSaveService"
             android:exported="false"/>
-        <activity android:name=".pvtgallery.FullImage" />
+        <activity android:name=".AlbumsView.AlbumEach.model.FullImage" />
         <activity android:name=".AlbumsView.AlbumEach.AlbumInfo"></activity>
     </application>
 

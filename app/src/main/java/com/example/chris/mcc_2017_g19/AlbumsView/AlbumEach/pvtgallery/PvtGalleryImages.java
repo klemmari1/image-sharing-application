@@ -1,10 +1,7 @@
-package com.example.chris.mcc_2017_g19.pvtgallery;
+package com.example.chris.mcc_2017_g19.AlbumsView.AlbumEach.pvtgallery;
 
 import android.content.Context;
-import android.database.Cursor;
-import android.provider.MediaStore;
 
-import com.example.chris.mcc_2017_g19.AlbumsView.AlbumEach.model.GridImageItem;
 import com.example.chris.mcc_2017_g19.Utils;
 
 import java.io.File;
@@ -20,25 +17,18 @@ import java.util.ArrayList;
 
 public class PvtGalleryImages {
 
-    //Define bucket name from which you want to take images Example '/DCIM/Camera' for camera images
-
-    //method to get id of image bucket from path
-    public static String getBucketId(String path) {
-        return String.valueOf(path.toLowerCase().hashCode());
-    }
 
     //method to get images
     public static ArrayList<GridItem> getImages(Context context) {
-
-        final String[] EXTENSIONS = new String[]{
+        final String[] EXT = new String[]{
                 "jpg"
         };
-        // filter to identify images based on their extensions
+        // filter to identify only .jpg images
         final FilenameFilter IMAGE_FILTER = new FilenameFilter() {
 
             @Override
             public boolean accept(final File dir, final String name) {
-                for (final String ext : EXTENSIONS) {
+                for (final String ext : EXT) {
                     if (name.endsWith("." + ext)) {
                         return (true);
                     }

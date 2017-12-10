@@ -28,22 +28,17 @@ public class GalleryImages {
         CAMERA_IMAGE_BUCKET_NAME = Utils.getAlbumsRoot(context) + File.separator + path;
     }
 
-    //method to get id of image bucket from path
-    private static String getBucketId(String path) {
-        return String.valueOf(path.toLowerCase().hashCode());
-    }
-
     //method to get images
     public ArrayList<GridImageItem> getImages(Context context) {
-        final String[] EXTENSIONS = new String[]{
+        final String[] EXT = new String[]{
                 "jpg"
         };
-        // filter to identify images based on their extensions
+        // filter to identify only .jpg images
         final FilenameFilter IMAGE_FILTER = new FilenameFilter() {
 
             @Override
             public boolean accept(final File dir, final String name) {
-                for (final String ext : EXTENSIONS) {
+                for (final String ext : EXT) {
                     if (name.endsWith("." + ext)) {
                         return (true);
                     }

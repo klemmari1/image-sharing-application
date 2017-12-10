@@ -1,4 +1,4 @@
-package com.example.chris.mcc_2017_g19;
+package com.example.chris.mcc_2017_g19.BackgroundServices;
 
 import android.app.IntentService;
 import android.content.Intent;
@@ -6,6 +6,7 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.example.chris.mcc_2017_g19.Connectivity.Connectivity;
+import com.example.chris.mcc_2017_g19.Utils;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
