@@ -65,8 +65,7 @@ def homepage():
 def create_group():
     try:
         id_token = request.form['id_token']
-        #user_id = get_uid(id_token)
-        user_id = request.form['user_id']
+        user_id = get_uid(id_token)
         group_name = request.form['group_name']
         group_expiration = request.form['group_expiration']
 
@@ -141,21 +140,27 @@ def leave_group(group_id):
 
 def delete_group(group_id):
     notification_group_deleted(group_id)
-    group_members = database.child("groups").child(group_id).child("members").get()
-    for member in group_members.each():
-        member_id = member.key()
-        database.child("users").child(member_id).child("group").remove()
-    database.child("groups").child(group_id).remove()
+    try:
+        group_members = database.child("groups").child(group_id).child("members").get()
+        for member in group_members.each():
+            member_id = member.key()
+            database.child("users").child(member_id).child("group").remove()
+    except Exception as e:
+        creator_id = database.child("groups").child(group_id).child("creator").get.val()
+        database.child("users").child(creator_id).child("group").remove()
+        print("Error occurred " + str(e))
+    finally:
+        database.child("groups").child(group_id).remove()
 
-    ###todo: delete storage folder
+        ###todo: delete storage folder
 
-    #get image ids from groupID/images/imageID/storageFilename
-    allImageIds = database.child(group_id).child("images")
-    for imageID in allImageIds:
-        print("imageID found: " + imageID)
-    #loop image ids + "Low" "High"
+        #get image ids from groupID/images/imageID/storageFilename
+        allImageIds = database.child(group_id).child("images")
+        for imageID in allImageIds:
+            print("imageID found: " + imageID)
+        #loop image ids + "Low" "High"
 
-    #if found -- delete
+        #if found -- delete
 
 
 

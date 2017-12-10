@@ -139,7 +139,7 @@ public class BackendAPI {
         });
     }
 
-    public void createGroup(final String userId, final String groupName, final String expirationTimestamp, final HttpCallback cb){
+    public void createGroup(final String groupName, final String expirationTimestamp, final HttpCallback cb){
         getIdToken(new BackendAPI.HttpCallback() {
             @Override
             public void onFailure(String response, Exception exception) {
@@ -152,7 +152,6 @@ public class BackendAPI {
                 RequestBody requestBody = new MultipartBody.Builder()
                         .setType(MultipartBody.FORM)
                         .addFormDataPart("id_token", idToken)
-                        .addFormDataPart("user_id", userId)
                         .addFormDataPart("group_name", groupName)
                         .addFormDataPart("group_expiration", expirationTimestamp)
                         .build();
