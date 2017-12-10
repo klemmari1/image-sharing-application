@@ -14,15 +14,12 @@ import me.dm7.barcodescanner.zxing.ZXingScannerView;
 
 public class QrReaderActivity extends AppCompatActivity implements ZXingScannerView.ResultHandler {
     private ZXingScannerView barcodeScanner;
-    private FirebaseUser user;
     private static final String TAG = "QrReaderActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_qr_reader);
-
-        user = FirebaseAuth.getInstance().getCurrentUser();
 
         barcodeScanner = new ZXingScannerView(this);
         setContentView(barcodeScanner);
@@ -41,34 +38,37 @@ public class QrReaderActivity extends AppCompatActivity implements ZXingScannerV
     @Override
     public void handleResult(Result rawResult) {
         try{
-            String token = rawResult.getText();
-            BackendAPI api = new BackendAPI();
-            api.joinGroup(token, new BackendAPI.HttpCallback() {
-                @Override
-                public void onFailure(String response, Exception exception) {
-                    Toast.makeText(getApplicationContext(), "Network error", Toast.LENGTH_SHORT).show();
-                }
+            if(Utils.isNetworkAvailable(getApplicationContext())){
+                String token = rawResult.getText();
+                BackendAPI api = new BackendAPI();
+                api.joinGroup(token, new BackendAPI.HttpCallback() {
+                    @Override
+                    public void onFailure(String response, Exception exception) {
+                        Toast.makeText(getApplicationContext(), exception.toString(), Toast.LENGTH_SHORT).show();
+                    }
 
-                @Override
-                public void onSuccess(String response) {
-                    if(!response.contains("INVALID")){
-                        try {
-                            Intent groupStatus = new Intent(QrReaderActivity.this, GroupStatusActivity.class);
-                            startActivity(groupStatus);
-                            QrReaderActivity.this.finish();
-                        } catch (Exception e){
-                            Toast.makeText(QrReaderActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
+                    @Override
+                    public void onSuccess(String response) {
+                        if(!response.contains("INVALID")){
+                            try {
+                                Intent groupStatus = new Intent(QrReaderActivity.this, GroupStatusActivity.class);
+                                startActivity(groupStatus);
+                                QrReaderActivity.this.finish();
+                            } catch (Exception e){
+                                Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                        else{
+                            Toast.makeText(QrReaderActivity.this, response, Toast.LENGTH_SHORT).show();
+                            barcodeScanner.resumeCameraPreview(QrReaderActivity.this);
                         }
                     }
-                    else{
-                        Toast.makeText(QrReaderActivity.this, "INVALID BARCODE", Toast.LENGTH_SHORT).show();
-                        barcodeScanner.resumeCameraPreview(QrReaderActivity.this);
-                    }
-                }
-            });
+                });
+            }
+            else
+                Toast.makeText(getApplicationContext(), "Network error", Toast.LENGTH_SHORT).show();
         }
         catch (Exception e){
-            Toast.makeText(QrReaderActivity.this, "NETWORK ERROR", Toast.LENGTH_SHORT).show();
             barcodeScanner.resumeCameraPreview(this);
         }
     }

@@ -54,50 +54,51 @@ public class GroupStatusActivity extends AppCompatActivity {
         memberAdapter = new MemberAdapter(this, members);
         memberList.setAdapter(memberAdapter);
 
+        if(Utils.isNetworkAvailable(getApplicationContext())){
+            DatabaseReference userRef = databaseReference.child("users").child(firebaseUser.getUid());
+            userRef.keepSynced(true);
+            userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    group_id = (String) dataSnapshot.child("group").getValue();
+                    if(group_id != null){
+                        DatabaseReference groupRef = databaseReference.child("groups").child(group_id);
+                        groupRef.keepSynced(true);
+                        groupRef.addValueEventListener(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot dataSnapshot) {
+                                GroupObject groupObj = dataSnapshot.getValue(GroupObject.class);
+                                if(groupObj != null){
+                                    displayGroupName(groupObj.getName());
+                                    displayGroupExpiration(groupObj.getExpiration(), groupObj.isExpired());
+                                    if (groupObj.isExpired()) {
+                                        displayExpiredText();
+                                        disableAddMemberButton();
+                                    }
+                                    checkIfUserIsGroupCreator(groupObj.getCreator());
 
-        DatabaseReference userRef = databaseReference.child("users").child(firebaseUser.getUid());
-        userRef.keepSynced(true);
-        userRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                group_id = (String) dataSnapshot.child("group").getValue();
-                if(group_id != null){
-                    DatabaseReference groupRef = databaseReference.child("groups").child(group_id);
-                    groupRef.keepSynced(true);
-                    groupRef.addValueEventListener(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(DataSnapshot dataSnapshot) {
-                            GroupObject groupObj = dataSnapshot.getValue(GroupObject.class);
-                            if(groupObj != null){
-                                displayGroupName(groupObj.getName());
-                                displayGroupExpiration(groupObj.getExpiration(), groupObj.isExpired());
-                                if (groupObj.isExpired()) {
-                                    displayExpiredText();
-                                    disableAddMemberButton();
+                                    DataSnapshot membersSnapshot = dataSnapshot.child("members");
+                                    members.clear();
+                                    for (DataSnapshot member : membersSnapshot.getChildren()) {
+                                        members.add((String) member.getValue());
+                                    }
+                                    memberAdapter.notifyDataSetChanged();
                                 }
-                                checkIfUserIsGroupCreator(groupObj.getCreator());
-
-                                DataSnapshot membersSnapshot = dataSnapshot.child("members");
-                                members.clear();
-                                for (DataSnapshot member : membersSnapshot.getChildren()) {
-                                    members.add((String) member.getValue());
-                                }
-                                memberAdapter.notifyDataSetChanged();
                             }
-                        }
-                        @Override
-                        public void onCancelled(DatabaseError databaseError) {
-                            Toast.makeText(getApplicationContext(), "Network error", Toast.LENGTH_SHORT).show();
-                        }
-                    });
+                            @Override
+                            public void onCancelled(DatabaseError databaseError) {
+                            }
+                        });
+                    }
                 }
-            }
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                Toast.makeText(getApplicationContext(), "Network error", Toast.LENGTH_SHORT).show();
-            }
-        });
-
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+                }
+            });
+        }
+        else{
+            Toast.makeText(getApplicationContext(), "Network error", Toast.LENGTH_SHORT).show();
+        }
     }
 
     public void addButton(View v) {
@@ -116,7 +117,10 @@ public class GroupStatusActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         if(item.getItemId() == R.id.action_leave)
         {
-            leaveGroup();
+            if(Utils.isNetworkAvailable(getApplicationContext()))
+                leaveGroup();
+            else
+                Toast.makeText(getApplicationContext(), "Network error", Toast.LENGTH_SHORT).show();
         }
         return true;
     }
@@ -171,7 +175,7 @@ public class GroupStatusActivity extends AppCompatActivity {
             api.deleteGroup(group_id, new BackendAPI.HttpCallback() {
                 @Override
                 public void onFailure(String response, Exception exception) {
-                    Toast.makeText(getApplicationContext(), "Network error", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), exception.toString(), Toast.LENGTH_SHORT).show();
                 }
 
                 @Override

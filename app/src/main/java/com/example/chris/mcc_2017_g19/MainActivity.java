@@ -5,6 +5,8 @@ import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -102,7 +104,6 @@ public class MainActivity extends AppCompatActivity {
             }
             @Override
             public void onCancelled(DatabaseError databaseError) {
-                Toast.makeText(getApplicationContext(), "Network error", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -133,7 +134,11 @@ public class MainActivity extends AppCompatActivity {
         groupManagement.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                selectGroupManagementActivity();
+                //Dont start camera if network not available
+                if(Utils.isNetworkAvailable(getApplicationContext()))
+                    selectGroupManagementActivity();
+                else
+                    Toast.makeText(getApplicationContext(), "Network error", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -153,30 +158,35 @@ public class MainActivity extends AppCompatActivity {
         takepicture.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                setButtonStatus(false);
-                DatabaseReference userReference = databaseReference.child("users").child(firebaseUser.getUid());
-                userReference.keepSynced(true);
-                userReference.addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot snapshot) {
-                        UserObject userObject = snapshot.getValue(UserObject.class);
-                        if(userObject != null){
-                            final String userGroup = userObject.getGroup();
+                //Dont start camera if network not available
+                if(Utils.isNetworkAvailable(getApplicationContext())){
+                    setButtonStatus(false);
+                    DatabaseReference userReference = databaseReference.child("users").child(firebaseUser.getUid());
+                    userReference.keepSynced(true);
+                    userReference.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot snapshot) {
+                            UserObject userObject = snapshot.getValue(UserObject.class);
+                            if(userObject != null){
+                                final String userGroup = userObject.getGroup();
 
-                            if (userGroup == null) {
-                                errorToast("Join or create a group to take pictures");
-                                setButtonStatus(true);
-                            } else {
-                                cameraButtonAction(userGroup);
+                                if (userGroup == null) {
+                                    errorToast("Join or create a group to take pictures");
+                                    setButtonStatus(true);
+                                } else {
+                                    cameraButtonAction(userGroup);
+                                }
                             }
                         }
-                    }
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
-                        Toast.makeText(getApplicationContext(), "Network error", Toast.LENGTH_SHORT).show();
-                        setButtonStatus(true);
-                    }
-                });
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+                            setButtonStatus(true);
+                        }
+                    });
+                }
+                else{
+                    Toast.makeText(getApplicationContext(), "Network error", Toast.LENGTH_SHORT).show();
+                }
             }
         });
     }
@@ -188,6 +198,7 @@ public class MainActivity extends AppCompatActivity {
         inflater.inflate(R.menu.toolbar_mainactivity, menu);
         return super.onCreateOptionsMenu(menu);
     }
+
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -203,6 +214,7 @@ public class MainActivity extends AppCompatActivity {
 
         }
     }
+
 
     private void selectGroupManagementActivity() {
         setButtonStatus(false);
@@ -261,7 +273,6 @@ public class MainActivity extends AppCompatActivity {
             }
             @Override
             public void onCancelled(DatabaseError databaseError) {
-                Toast.makeText(getApplicationContext(), "Network error", Toast.LENGTH_SHORT).show();
                 setButtonStatus(true);
             }
         });
@@ -277,14 +288,21 @@ public class MainActivity extends AppCompatActivity {
                 if(groupObj != null) {
                     if (!groupObj.isExpired()){
                         TakePictureIntent();
+                        setButtonStatus(true);
+                    }
+                    else{
+                        Toast.makeText(getApplicationContext(), "Group expired", Toast.LENGTH_SHORT).show();
+                        setButtonStatus(true);
                     }
                 }
-                else
-                    Toast.makeText(getApplicationContext(), "Group expired", Toast.LENGTH_SHORT).show();
+                else{
+                    Toast.makeText(getApplicationContext(), "Network Error", Toast.LENGTH_SHORT).show();
+                    setButtonStatus(true);
+                }
+
             }
             @Override
             public void onCancelled(DatabaseError databaseError) {
-                Toast.makeText(getApplicationContext(), "Network error", Toast.LENGTH_SHORT).show();
                 setButtonStatus(true);
             }
         });
@@ -395,7 +413,6 @@ public class MainActivity extends AppCompatActivity {
             // permissions this app might request
         }
     }
-
 
 
     private void setButtonStatus(boolean status){
