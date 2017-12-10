@@ -63,6 +63,7 @@ def homepage():
 
 @app.route('/groups', methods=['POST'])
 def create_group():
+    group_key = ""
     try:
         id_token = request.form['id_token']
         user_id = get_uid(id_token)
@@ -84,6 +85,7 @@ def create_group():
         token = set_new_token(group_key)
         return token
     except Exception as e:
+        database.child("groups").child(group_key).remove()
         return "Unexpected error: " + str(e)
 
 

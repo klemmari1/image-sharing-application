@@ -69,7 +69,7 @@ public class GroupCreationActivity extends AppCompatActivity {
                 @Override
                 public void onSuccess(String response) {
                     try {
-                        if(!response.contains("error")){
+                        if(!response.toLowerCase().contains("error")){
                             //Start GroupStatusActivity with the new group
                             Intent groupStatus = new Intent(GroupCreationActivity.this, GroupStatusActivity.class);
                             startActivity(groupStatus);
