@@ -255,7 +255,7 @@ def upload_image():
             """image_processing() function should generate lower quality pictures and upload them into STORAGE.
             returns URLs and if any people found in google-vision face detection
             """
-            URLs, hasFaces = image_processing(initialURL, maxQuality,groupID, filename)
+            URLs, hasFaces = image_processing(initialURL, maxQuality, groupID, filename)
 
             '''Push to firebase
             '''

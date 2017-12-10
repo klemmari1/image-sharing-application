@@ -30,7 +30,6 @@ public class ImagePreviewActivity extends AppCompatActivity {
         Intent i = getIntent();
 
         imagePath = i.getExtras().getString("imagePath");
-        System.out.println("JAA" + imagePath);
         //Load image asynchronously
         ImageLoadTask ilt = new ImageLoadTask();
         ilt.execute(imagePath);

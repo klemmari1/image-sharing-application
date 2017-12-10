@@ -60,13 +60,14 @@ public class ImageSaveService extends IntentService {
         databaseReference = Utils.getDatabase().getReference();
         firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
 
-        DatabaseReference userReference = databaseReference.child("users").child(firebaseUser.getUid());
+        final DatabaseReference userReference = databaseReference.child("users").child(firebaseUser.getUid());
         userReference.keepSynced(true);
         userReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
                 userObj = snapshot.getValue(UserObject.class);
-                checkSensiblePictures();
+                if(userObj != null && userObj.getGroup() != null)
+                    checkSensiblePictures();
             }
             @Override
             public void onCancelled(DatabaseError databaseError) {
@@ -215,7 +216,7 @@ public class ImageSaveService extends IntentService {
         uploadTask.addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception exception) {
-                Toast.makeText(getApplicationContext(), "Network error", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), exception.toString(), Toast.LENGTH_SHORT).show();
             }
         }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
@@ -223,10 +224,10 @@ public class ImageSaveService extends IntentService {
 
                 //Call the backend API and send data
                 BackendAPI api = new BackendAPI();
-                api.uploadImage(userObj.getGroup(), imagename+ ".jpg", maxQuality, new BackendAPI.HttpCallback() {
+                api.uploadImage(userObj.getGroup(), imagename + ".jpg", maxQuality, new BackendAPI.HttpCallback() {
                     @Override
                     public void onFailure(String response, Exception exception) {
-                        Toast.makeText(getApplicationContext(), "Network error", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), exception.toString(), Toast.LENGTH_SHORT).show();
                     }
                     @Override
                     public void onSuccess(final String response) {
@@ -242,12 +243,12 @@ public class ImageSaveService extends IntentService {
                                     }
                                     @Override
                                     public void onCancelled(DatabaseError databaseError) {
+                                        Toast.makeText(ImageSaveService.this, databaseError.toString(), Toast.LENGTH_SHORT).show();
                                     }
                                 });
                             }
                             else{
                                 Toast.makeText(ImageSaveService.this, response, Toast.LENGTH_SHORT).show();
-
                             }
                         } catch (Exception e){
                             Toast.makeText(ImageSaveService.this, e.getMessage(), Toast.LENGTH_SHORT).show();
