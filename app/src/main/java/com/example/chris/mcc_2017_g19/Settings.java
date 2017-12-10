@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-public class Settings extends Activity implements AdapterView.OnItemSelectedListener {
+public class Settings extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
 
     Spinner spinner, spinnerwifi;
     SharedPreferences prefs;
