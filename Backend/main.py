@@ -292,7 +292,7 @@ def upload_image():
             return "INVALID USER TOKEN OR USER NOT IN GROUP!"
     except Exception as e:
         print(str(e))
-        return "error in upload image 18 11 sunday" 
+        return "error in upload_image backend: probably googele vision api" 
 
 
 
@@ -372,7 +372,6 @@ def img_to_high(pilImage, groupID, filename):
 def check_for_faces(path):
     client = vision.ImageAnnotatorClient()
 
-    path = "faces.jpg"
     with io.open(path, 'rb') as image_file:
         content = image_file.read()
 
