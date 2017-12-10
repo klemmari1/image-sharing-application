@@ -21,8 +21,8 @@
             android:layout_width="@dimen/logo_w_h"
             android:layout_height="@dimen/logo_w_h"
             android:layout_gravity="center_horizontal"
-            android:layout_marginBottom="30dp"
-            android:src="@mipmap/ic_launcher" />
+            android:layout_marginBottom="20dp"
+            android:src="@drawable/logo" />
 
         <android.support.design.widget.TextInputLayout
             android:layout_width="match_parent"
@@ -60,7 +60,7 @@
             android:id="@+id/btn_login"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dip"
+            android:layout_marginTop="20dp"
             android:background="@color/common_action_bar_splitter"
             android:text="Login"
             android:textColor="@android:color/black" />
@@ -69,7 +69,7 @@
             android:id="@+id/btn_reset_password"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dip"
+            android:layout_marginTop="20dp"
             android:background="@null"
             android:text="@string/btn_forgot_password"
             android:textAllCaps="false"
@@ -81,7 +81,7 @@
             android:id="@+id/btn_signup"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dip"
+            android:layout_marginTop="20dp"
             android:background="@null"
             android:text="@string/btn_link_to_register"
             android:textAllCaps="false"

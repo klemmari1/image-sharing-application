@@ -23,7 +23,6 @@ import android.widget.Toast;
 
 import com.example.chris.mcc_2017_g19.AlbumsView.AlbumsActivity;
 import com.example.chris.mcc_2017_g19.BackendAPI.BackendAPI;
-import com.example.chris.mcc_2017_g19.BackgroundServices.ImageSaveService;
 import com.example.chris.mcc_2017_g19.BackgroundServices.SyncImagesService;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -103,7 +102,7 @@ public class MainActivity extends AppCompatActivity {
             }
             @Override
             public void onCancelled(DatabaseError databaseError) {
-                System.out.println("The read failed: " + databaseError.getMessage());
+                Toast.makeText(getApplicationContext(), "Network error", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -161,18 +160,20 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onDataChange(DataSnapshot snapshot) {
                         UserObject userObject = snapshot.getValue(UserObject.class);
-                        final String userGroup = userObject.getGroup();
+                        if(userObject != null){
+                            final String userGroup = userObject.getGroup();
 
-                        if (userGroup == null) {
-                            errorToast("Join or create a group to take pictures");
-                            setButtonStatus(true);
-                        } else {
-                            cameraButtonAction(userGroup);
+                            if (userGroup == null) {
+                                errorToast("Join or create a group to take pictures");
+                                setButtonStatus(true);
+                            } else {
+                                cameraButtonAction(userGroup);
+                            }
                         }
                     }
                     @Override
                     public void onCancelled(DatabaseError databaseError) {
-                        System.out.println("The read failed: " + databaseError.getMessage());
+                        Toast.makeText(getApplicationContext(), "Network error", Toast.LENGTH_SHORT).show();
                         setButtonStatus(true);
                     }
                 });
@@ -260,8 +261,8 @@ public class MainActivity extends AppCompatActivity {
             }
             @Override
             public void onCancelled(DatabaseError databaseError) {
+                Toast.makeText(getApplicationContext(), "Network error", Toast.LENGTH_SHORT).show();
                 setButtonStatus(true);
-                System.out.println("The read failed: " + databaseError.getMessage());
             }
         });
     }
@@ -283,6 +284,7 @@ public class MainActivity extends AppCompatActivity {
             }
             @Override
             public void onCancelled(DatabaseError databaseError) {
+                Toast.makeText(getApplicationContext(), "Network error", Toast.LENGTH_SHORT).show();
                 setButtonStatus(true);
             }
         });
@@ -351,9 +353,9 @@ public class MainActivity extends AppCompatActivity {
                 // We check the permission at Runtime
                 //
             } else {
-                Intent it = new Intent(getApplicationContext(), ImageSaveService.class);
+                Intent it = new Intent(getApplicationContext(), ImagePreviewActivity.class);
                 it.putExtra("imagePath", imagePath);
-                startService(it);
+                startActivity(it);
             }
         }
     }
@@ -365,9 +367,9 @@ public class MainActivity extends AppCompatActivity {
         switch (requestCode) {
             case MY_PERMISSIONS_REQUEST_WRITE_EXT_STORAGE:
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    Intent it = new Intent(getApplicationContext(), ImageSaveService.class);
+                    Intent it = new Intent(getApplicationContext(), ImagePreviewActivity.class);
                     it.putExtra("imagePath", imagePath);
-                    startService(it);
+                    startActivity(it);
                 } else {
                     Toast.makeText(this, "Please grant permissions to use the app", Toast.LENGTH_SHORT).show();
                 }
@@ -393,6 +395,7 @@ public class MainActivity extends AppCompatActivity {
             // permissions this app might request
         }
     }
+
 
 
     private void setButtonStatus(boolean status){

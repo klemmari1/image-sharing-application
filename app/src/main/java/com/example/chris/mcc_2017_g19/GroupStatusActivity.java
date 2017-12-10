@@ -5,15 +5,14 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.text.SpannableStringBuilder;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.chris.mcc_2017_g19.BackendAPI.BackendAPI;
 import com.google.firebase.auth.FirebaseAuth;
@@ -88,13 +87,15 @@ public class GroupStatusActivity extends AppCompatActivity {
                         }
                         @Override
                         public void onCancelled(DatabaseError databaseError) {
-                            System.out.println("The read failed: " + databaseError.getCode());
+                            Toast.makeText(getApplicationContext(), "Network error", Toast.LENGTH_SHORT).show();
                         }
                     });
                 }
             }
             @Override
-            public void onCancelled(DatabaseError databaseError) {}
+            public void onCancelled(DatabaseError databaseError) {
+                Toast.makeText(getApplicationContext(), "Network error", Toast.LENGTH_SHORT).show();
+            }
         });
 
     }
@@ -170,6 +171,7 @@ public class GroupStatusActivity extends AppCompatActivity {
             api.deleteGroup(group_id, new BackendAPI.HttpCallback() {
                 @Override
                 public void onFailure(String response, Exception exception) {
+                    Toast.makeText(getApplicationContext(), "Network error", Toast.LENGTH_SHORT).show();
                 }
 
                 @Override
@@ -183,6 +185,7 @@ public class GroupStatusActivity extends AppCompatActivity {
             api.leaveGroup(group_id, new BackendAPI.HttpCallback() {
                 @Override
                 public void onFailure(String response, Exception exception) {
+                    Toast.makeText(getApplicationContext(), "Network error", Toast.LENGTH_SHORT).show();
                 }
 
                 @Override
