@@ -178,29 +178,6 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.toolbar_mainactivity, menu);
-        return super.onCreateOptionsMenu(menu);
-    }
-
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_logout:
-                FirebaseAuth.getInstance().signOut();
-                startActivity(new Intent(MainActivity.this, LoginActivity.class));
-                MainActivity.this.finish();
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
-
-        }
-    }
-
     /*
     Group management activity shows join or create group when not in a group.
     It shows group status when in a group
