@@ -44,13 +44,13 @@ public class Settings extends Activity implements AdapterView.OnItemSelectedList
         List<String> size = new ArrayList<String>();
         size.add("full (original size)");
         size.add("high (1280x960)");
-        size.add("low(640x480)");
+        size.add("low (640x480)");
 
         // Spinner-wifi Drop down elements
         List<String> sizewifi = new ArrayList<String>();
         sizewifi.add("full (original size)");
         sizewifi.add("high (1280x960)");
-        sizewifi.add("low(640x480)");
+        sizewifi.add("low (640x480)");
 
 
         // Creating adapter for spinner
