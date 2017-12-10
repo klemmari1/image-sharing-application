@@ -3,18 +3,14 @@ package com.example.chris.mcc_2017_g19;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.Toast;
 
 import com.example.chris.mcc_2017_g19.BackendAPI.BackendAPI;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.zxing.Result;
 import me.dm7.barcodescanner.zxing.ZXingScannerView;
 
 public class QrReaderActivity extends AppCompatActivity implements ZXingScannerView.ResultHandler {
     private ZXingScannerView barcodeScanner;
-    private static final String TAG = "QrReaderActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,10 +19,8 @@ public class QrReaderActivity extends AppCompatActivity implements ZXingScannerV
 
         barcodeScanner = new ZXingScannerView(this);
         setContentView(barcodeScanner);
-
         barcodeScanner.setResultHandler(this);
         barcodeScanner.startCamera();
-
     }
 
     @Override

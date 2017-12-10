@@ -18,8 +18,6 @@ public class Utils {
     public static FirebaseDatabase getDatabase() {
         if (firebaseDatabase == null) {
             firebaseDatabase = FirebaseDatabase.getInstance();
-            //TODO: testing without caching
-            //firebaseDatabase.setPersistenceEnabled(true);
         }
         return firebaseDatabase;
     }

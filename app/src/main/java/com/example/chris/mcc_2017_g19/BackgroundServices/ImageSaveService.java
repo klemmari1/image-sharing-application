@@ -42,10 +42,8 @@ public class ImageSaveService extends IntentService {
     private UserObject userObj;
     private DatabaseReference databaseReference;
 
-    private static final String TAG = "SyncImagesService";
     private String imagePath;
     private String maxQuality;
-
 
     public ImageSaveService(){
         super("ImageSaveService");
@@ -90,11 +88,8 @@ public class ImageSaveService extends IntentService {
         int result = barcodes.size();
         System.out.println("Barcodes found: " + result);
         if(result == 0) {
-
             CheckSettings();
-
         } else {
-
             //Creating a unique name for the picture
             Random generator = new Random();
             int n = 1000;
@@ -105,9 +100,7 @@ public class ImageSaveService extends IntentService {
             SaveImage("Private", fname);
         }
 
-        //return Bitmap.createScaledBitmap(bit, width, height, true);
         if (result == 0) {
-            //It is not showing the toast, I don't know why (But it is entering this :
             Toast.makeText(ImageSaveService.this, "Image is being added to your shared folder!", Toast.LENGTH_LONG).show();
         } else {
             Toast.makeText(ImageSaveService.this, "SENSIBLE DATA! Image is being added to private folder", Toast.LENGTH_LONG).show();
@@ -149,7 +142,6 @@ public class ImageSaveService extends IntentService {
                 }else{
                     FirebaseBitmap = Bitmap.createScaledBitmap(FirebaseBitmap, 1280, 960, false);
                 }
-
                 maxQuality = "high";
 
             }else if(getLTESettings().toLowerCase().contains("low")){
@@ -160,7 +152,6 @@ public class ImageSaveService extends IntentService {
                 }else{
                     FirebaseBitmap = Bitmap.createScaledBitmap(FirebaseBitmap, 640, 480, false);
                 }
-
                 maxQuality = "low";
 
             }else{
@@ -178,8 +169,8 @@ public class ImageSaveService extends IntentService {
                 }else{
                     FirebaseBitmap = Bitmap.createScaledBitmap(FirebaseBitmap, 1280, 960, false);
                 }
-
                 maxQuality = "high";
+
             }else if(getWIFISettings().toLowerCase().contains("low")){
 
                 //Check if the image has been taken in landscape or not:
@@ -188,13 +179,12 @@ public class ImageSaveService extends IntentService {
                 }else{
                     FirebaseBitmap = Bitmap.createScaledBitmap(FirebaseBitmap, 640, 480, false);
                 }
-
                 maxQuality = "low";
+
             }else{
                 maxQuality = "full";
             }
         }
-
         uploadImageFirebase(FirebaseBitmap);
     }
 

@@ -4,7 +4,6 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -24,7 +23,7 @@ import com.google.firebase.auth.FirebaseUser;
 public class GroupQRActivity extends AppCompatActivity {
 
     private FirebaseUser firebaseUser;
-    private static final String TAG = "GroupQRActivity";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

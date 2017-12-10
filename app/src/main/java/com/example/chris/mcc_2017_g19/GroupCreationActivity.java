@@ -4,7 +4,6 @@ package com.example.chris.mcc_2017_g19;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -58,7 +57,6 @@ public class GroupCreationActivity extends AppCompatActivity {
 
         findViewById(R.id.buttonCreateGroup).setEnabled(false);
 
-        //okhttp request: create_group
         if(Utils.isNetworkAvailable(getApplicationContext())){
             BackendAPI api = new BackendAPI();
             api.createGroup(groupName, expirationTimestamp, new BackendAPI.HttpCallback() {

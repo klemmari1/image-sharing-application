@@ -5,8 +5,6 @@ import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -42,13 +40,12 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 
-
 public class MainActivity extends AppCompatActivity {
 
-    ImageView gallery;
-    ImageView groupManagement;
-    ImageView settings;
-    ImageView takepicture;
+    private ImageView gallery;
+    private ImageView groupManagement;
+    private ImageView settings;
+    private ImageView takepicture;
 
     private String imagePath;
 
@@ -56,13 +53,11 @@ public class MainActivity extends AppCompatActivity {
     private UserObject userObj;
     private DatabaseReference databaseReference;
 
-    static final int REQUEST_IMAGE_CAPTURE = 1;
-    static final int MY_PERMISSIONS_REQUEST_WRITE_EXT_STORAGE = 2;
-    static final int MY_PERMISSIONS_REQUEST_CAMERA = 3;
-    static final int MY_PERMISSIONS_REQUEST_QR = 4;
-    static final int REQUEST_CREATE_GROUP = 5;
-    private static final String TAG = "MainActivity";
-
+    private static final int REQUEST_IMAGE_CAPTURE = 1;
+    private static final int MY_PERMISSIONS_REQUEST_WRITE_EXT_STORAGE = 2;
+    private static final int MY_PERMISSIONS_REQUEST_CAMERA = 3;
+    private static final int MY_PERMISSIONS_REQUEST_QR = 4;
+    private static final int REQUEST_CREATE_GROUP = 5;
     private static final int REQUEST_WRITE_STORAGE = 112;
 
     private ProgressDialog progressDialog;
@@ -76,7 +71,6 @@ public class MainActivity extends AppCompatActivity {
         databaseReference = Utils.getDatabase().getReference();
         firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
 
-        //testing notification stuff (fcm)
         String device_token = FirebaseInstanceId.getInstance().getToken();
         BackendAPI api = new BackendAPI();
         api.updateDeviceToken(device_token, new BackendAPI.HttpCallback() {
@@ -88,6 +82,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        //Check for new images everytime when loading MainActivity, if user is in a group.
         DatabaseReference userReference = databaseReference.child("users").child(firebaseUser.getUid());
         userReference.keepSynced(true);
         userReference.addValueEventListener(new ValueEventListener() {
@@ -107,7 +102,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        //Check for new images everytime when loading MainActivity. If user is in a group.
 
         //Ask the user for permission to write on disc
         boolean hasPermission = (ContextCompat.checkSelfPermission(this,
@@ -169,7 +163,6 @@ public class MainActivity extends AppCompatActivity {
                             UserObject userObject = snapshot.getValue(UserObject.class);
                             if(userObject != null){
                                 final String userGroup = userObject.getGroup();
-
                                 if (userGroup == null) {
                                     errorToast("Join or create a group to take pictures");
                                     setButtonStatus(true);
@@ -204,7 +197,6 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_logout:
-                //TODO Do we need (onCompletion) listeners for these kinds of situations?
                 FirebaseAuth.getInstance().signOut();
                 startActivity(new Intent(MainActivity.this, LoginActivity.class));
                 MainActivity.this.finish();
@@ -308,6 +300,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+
     private void errorToast(String errorMessage) {
         Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show();
     }
@@ -345,6 +338,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
     private File createImageFile() throws IOException {
         // Create an image file name
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
@@ -361,6 +355,7 @@ public class MainActivity extends AppCompatActivity {
         return image;
     }
 
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
@@ -369,7 +364,6 @@ public class MainActivity extends AppCompatActivity {
                 requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
                         MY_PERMISSIONS_REQUEST_WRITE_EXT_STORAGE);
                 // We check the permission at Runtime
-                //
             } else {
                 Intent it = new Intent(getApplicationContext(), ImagePreviewActivity.class);
                 it.putExtra("imagePath", imagePath);
@@ -377,6 +371,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
 
     @Override
     public void onRequestPermissionsResult(int requestCode,
@@ -409,8 +404,6 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(this, "Please grant camera permission to use the QR Scanner", Toast.LENGTH_SHORT).show();
                 }
                 break;
-            // other 'switch' lines to check for other
-            // permissions this app might request
         }
     }
 
