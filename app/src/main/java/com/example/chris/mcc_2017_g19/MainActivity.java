@@ -5,21 +5,15 @@ import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Environment;
-import android.preference.PreferenceManager;
 import android.provider.MediaStore;
-import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
-import android.util.SparseArray;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -27,15 +21,8 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-
 import com.example.chris.mcc_2017_g19.AlbumsView.AlbumsActivity;
 import com.example.chris.mcc_2017_g19.BackendAPI.BackendAPI;
-import com.example.chris.mcc_2017_g19.Connectivity.Connectivity;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.vision.Frame;
-import com.google.android.gms.vision.barcode.Barcode;
-import com.google.android.gms.vision.barcode.BarcodeDetector;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -43,18 +30,13 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.iid.FirebaseInstanceId;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.UploadTask;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Random;
 
 
 
@@ -81,7 +63,6 @@ public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_WRITE_STORAGE = 112;
 
     private ProgressDialog progressDialog;
-    private String maxQuality;
 
 
     @Override
@@ -359,7 +340,9 @@ public class MainActivity extends AppCompatActivity {
                 // We check the permission at Runtime
                 //
             } else {
-                checkSensiblePictures();
+                Intent it = new Intent(getApplicationContext(), ImageSaveService.class);
+                it.putExtra("imagePath", imagePath);
+                startService(it);
             }
         }
     }
@@ -371,7 +354,9 @@ public class MainActivity extends AppCompatActivity {
         switch (requestCode) {
             case MY_PERMISSIONS_REQUEST_WRITE_EXT_STORAGE:
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    checkSensiblePictures();
+                    Intent it = new Intent(getApplicationContext(), ImageSaveService.class);
+                    it.putExtra("imagePath", imagePath);
+                    startService(it);
                 } else {
                     Toast.makeText(this, "Please grant permissions to use the app", Toast.LENGTH_SHORT).show();
                 }
@@ -397,200 +382,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    private void checkSensiblePictures() {
-        //Create the Barcode detector and detect barcode
-        Bitmap bitmap = getImageBitmap();
-        BarcodeDetector detector = new BarcodeDetector.Builder(getApplicationContext()).setBarcodeFormats(Barcode.DATA_MATRIX | Barcode.QR_CODE | Barcode.EAN_13).build();
-        Frame frame = new Frame.Builder().setBitmap(bitmap).build();
-        SparseArray<Barcode> barcodes = new SparseArray<>();
-        if(detector.isOperational()){
-            barcodes = detector.detect(frame);
-            detector.release();
-        }
-        int result = barcodes.size();
-        System.out.println("Barcodes found: " + result);
-        if(result == 0) {
-
-            CheckSettings();
-
-        } else {
-
-            //Creating a unique name for the picture
-            Random generator = new Random();
-            int n = 1000;
-            n = generator.nextInt(n);
-            String fname = "Image-" + n + ".jpg";
-
-            // Call the method to store image in private folder
-            SaveImage("Private", fname);
-        }
-
-        //return Bitmap.createScaledBitmap(bit, width, height, true);
-        if (result == 0) {
-            //It is not showing the toast, I don't know why (But it is entering this :
-            Toast.makeText(MainActivity.this, "Image has been added to your shared folder!", Toast.LENGTH_LONG).show();
-        } else {
-            Toast.makeText(MainActivity.this, "SENSIBLE DATA! Image has been added to private folder", Toast.LENGTH_LONG).show();
-        }
-    }
-
-    private void SaveImage(String folder, String filename) {
-        File myDir = new File(Utils.getAlbumsRoot(getApplicationContext()) +  File.separator + folder);
-
-        if (!myDir.exists()) {
-            myDir.mkdirs();
-        }
-
-        try{
-            File file_a = new File(imagePath);
-
-            if(file_a.renameTo(new File(myDir + File.separator + filename))){
-                System.out.println("Temp image moved successfully!");
-            }else{
-                System.out.println("Error!");
-            }
-
-        }catch(Exception e){
-            e.printStackTrace();
-        }
-    }
-
-    private void CheckSettings() {
-        Bitmap FirebaseBitmap = getImageBitmap();
-
-        if(Connectivity.isConnectedMobile(getApplicationContext())){
-
-            //Check which one is the setting (low/high/full) and tranform the bitmap
-            if(getLTESettings().toLowerCase().contains("high")){
-
-                //Check if the image has been taken in landscape or not:
-                if(FirebaseBitmap.getWidth() < FirebaseBitmap.getHeight()){
-                    FirebaseBitmap = Bitmap.createScaledBitmap(FirebaseBitmap, 960, 1280, false);
-                }else{
-                    FirebaseBitmap = Bitmap.createScaledBitmap(FirebaseBitmap, 1280, 960, false);
-                }
-
-                maxQuality = "high";
-
-            }else if(getLTESettings().toLowerCase().contains("low")){
-
-                //Check if the image has been taken in landscape or not:
-                if(FirebaseBitmap.getWidth() < FirebaseBitmap.getHeight()){
-                    FirebaseBitmap = Bitmap.createScaledBitmap(FirebaseBitmap, 480, 640, false);
-                }else{
-                    FirebaseBitmap = Bitmap.createScaledBitmap(FirebaseBitmap, 640, 480, false);
-                }
-
-                maxQuality = "low";
-
-            }else{
-                maxQuality = "full";
-            }
-        }
-
-        if(Connectivity.isConnectedWifi(getApplicationContext())){
-            //Check which one is the setting (low/high/full) and tranform the bitmap
-            if(getWIFISettings().toLowerCase().contains("high")){
-
-                //Check if the image has been taken in landscape or not:
-                if(FirebaseBitmap.getWidth() < FirebaseBitmap.getHeight()){
-                    FirebaseBitmap = Bitmap.createScaledBitmap(FirebaseBitmap, 960, 1280, false);
-                }else{
-                    FirebaseBitmap = Bitmap.createScaledBitmap(FirebaseBitmap, 1280, 960, false);
-                }
-
-                maxQuality = "high";
-            }else if(getWIFISettings().toLowerCase().contains("low")){
-
-                //Check if the image has been taken in landscape or not:
-                if(FirebaseBitmap.getWidth() < FirebaseBitmap.getHeight()){
-                    FirebaseBitmap = Bitmap.createScaledBitmap(FirebaseBitmap, 480, 640, false);
-                }else{
-                    FirebaseBitmap = Bitmap.createScaledBitmap(FirebaseBitmap, 640, 480, false);
-                }
-
-                maxQuality = "low";
-            }else{
-                maxQuality = "full";
-            }
-        }
-
-        uploadImageFirebase(FirebaseBitmap);
-    }
-
-    public void uploadImageFirebase(Bitmap FirebaseBitmap){
-        //Get a reference from our storage:
-        FirebaseStorage storage = FirebaseStorage.getInstance();
-
-        Long tsLong = System.currentTimeMillis()/1000;
-        final String imagename = tsLong.toString();
-        StorageReference storageReference = storage.getReferenceFromUrl("gs://mcc-fall-2017-g19.appspot.com/" + userObj.getGroup())
-                .child(imagename + ".jpg");
-
-        //Upload to Firebase using puBytes
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        FirebaseBitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
-        byte[] data = baos.toByteArray();
-
-        UploadTask uploadTask = storageReference.putBytes(data);
-        uploadTask.addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception exception) {
-                // Handle unsuccessful uploads
-            }
-        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-            @Override
-            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-
-                //Call the backend API and send data
-                BackendAPI api = new BackendAPI();
-                api.uploadImage(userObj.getGroup(), imagename+ ".jpg", maxQuality, new BackendAPI.HttpCallback() {
-                    @Override
-                    public void onFailure(String response, Exception exception) {
-                        Log.d(TAG, "Error: " + response + " " + exception);
-                    }
-                    @Override
-                    public void onSuccess(final String response) {
-                        try {
-                            if(!response.contains("error")){
-                                DatabaseReference userGroupReference = databaseReference.child("groups").child(userObj.getGroup());
-                                userGroupReference.addListenerForSingleValueEvent(new ValueEventListener() {
-                                    @Override
-                                    public void onDataChange(DataSnapshot dataSnapshot) {
-                                        GroupObject groupObj = dataSnapshot.getValue(GroupObject.class);
-                                        if(groupObj != null)
-                                            SaveImage(groupObj.getName() + "_" + userObj.getGroup(), response + ".jpg");
-                                    }
-                                    @Override
-                                    public void onCancelled(DatabaseError databaseError) {
-                                    }
-                                });
-                            }
-                            else{
-                                Toast.makeText(MainActivity.this, response, Toast.LENGTH_SHORT).show();
-
-                            }
-                        } catch (Exception e){
-                            Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                });
-            }
-        });
-    }
-
-
-    private Bitmap getImageBitmap(){
-        try{
-            Uri imageUri = Uri.fromFile(new File(imagePath));
-            return(MediaStore.Images.Media.getBitmap(this.getContentResolver(), imageUri));
-        }
-        catch(Exception e){
-        }
-        return null;
-    }
-
-
     private void setButtonStatus(boolean status){
         findViewById(R.id.gallery).setEnabled(status);
         findViewById(R.id.photo).setEnabled(status);
@@ -599,27 +390,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    public final String getLTESettings(){
-
-        String LTEpicturevalue = PreferenceManager
-                .getDefaultSharedPreferences(getApplicationContext())
-                .getString("LTEpicturevalue","");
-
-        return LTEpicturevalue;
-    }
-
-    public final String getWIFISettings(){
-
-        String WIFIpicturevalue =PreferenceManager
-                .getDefaultSharedPreferences(getApplicationContext())
-                .getString("WIFIpicturevalue","");
-
-        return WIFIpicturevalue;
-    }
-
     protected void showProgressDialog(String title, String msg) {
         progressDialog = ProgressDialog.show(this, title, msg, true);
     }
+
 
     protected void dismissProgressDialog() {
         progressDialog.dismiss();

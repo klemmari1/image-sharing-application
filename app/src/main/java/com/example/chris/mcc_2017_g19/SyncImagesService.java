@@ -47,7 +47,7 @@ public class SyncImagesService extends IntentService {
 
                 //get local imageIDs first:
                 final String groupName = (String) groupSnapshot.child("name").getValue();
-                List<String> localImageIdList = getLocalImageIDs(groupID,groupName);
+                List<String> localImageIdList = getLocalImageIDs(groupID, groupName);
 
                 List<String> remoteImageIdList = new ArrayList<String>();
                 for (DataSnapshot imageSnapshot: groupSnapshot.child("images").getChildren()) {
