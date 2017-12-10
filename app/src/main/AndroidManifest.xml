@@ -78,6 +78,12 @@
             </intent-filter>
         </service>
         <service android:name=".BackgroundSync.FirebaseBackgroundService" />
+        <service
+            android:name=".SyncImagesService"
+            android:exported="false"/>
+        <service
+            android:name=".ImageSaveService"
+            android:exported="false"/>
         <activity android:name=".pvtgallery.FullImage" />
         <activity android:name=".AlbumsView.AlbumEach.AlbumInfo"></activity>
     </application>

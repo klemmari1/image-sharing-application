@@ -68,7 +68,7 @@ public class GridViewAdapter extends ArrayAdapter<GridItem> {
         File file = new File(String.valueOf(Uri.parse(item.getImage())));
 
         //ADD PICTURES IN GRIDVIEW
-        Picasso.with(mContext).load(file).error(R.drawable.cloudoff).into(holder.imageView);
+        Picasso.with(mContext).load(file).resize(500, 500).error(R.drawable.cloudoff).into(holder.imageView);
 
         holder.imageView.setOnClickListener(new View.OnClickListener() {
 
