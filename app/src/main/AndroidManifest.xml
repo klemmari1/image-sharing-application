@@ -60,7 +60,7 @@
         <activity android:name=".MainActivity" />
         <activity android:name=".ImagePreviewActivity" />
         <activity android:name=".ResetPasswordActivity" />
-        <activity android:name=".AlbumsView.AlbumEach.pvtgallery.PrivateGallery" />
+        <activity android:name=".AlbumsView.AlbumEach.pvtgallery.PrivateGalleryActivity" />
         <activity android:name=".GroupStatusActivity" />
         <activity
             android:name=".QrReaderActivity"
@@ -88,8 +88,8 @@
         <service
             android:name=".BackgroundServices.ImageSaveService"
             android:exported="false"/>
-        <activity android:name=".AlbumsView.AlbumEach.model.FullImage" />
-        <activity android:name=".AlbumsView.AlbumEach.AlbumInfo"></activity>
+        <activity android:name=".AlbumsView.AlbumEach.model.FullImageAcitivty" />
+        <activity android:name=".AlbumsView.AlbumEach.AlbumInfoActivity"></activity>
     </application>
 
 </manifest>

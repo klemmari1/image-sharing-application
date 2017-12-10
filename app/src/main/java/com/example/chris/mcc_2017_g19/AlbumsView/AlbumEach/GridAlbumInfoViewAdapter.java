@@ -13,7 +13,7 @@ import android.widget.TextView;
 
 import com.example.chris.mcc_2017_g19.AlbumsView.AlbumEach.model.ImageItem;
 import com.example.chris.mcc_2017_g19.R;
-import com.example.chris.mcc_2017_g19.AlbumsView.AlbumEach.model.FullImage;
+import com.example.chris.mcc_2017_g19.AlbumsView.AlbumEach.model.FullImageAcitivty;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
@@ -77,12 +77,12 @@ public class GridAlbumInfoViewAdapter extends RecyclerView.Adapter<AlbumInfoHold
         //ADD PICTURES IN GRIDVIEW with reasonable resolution
         Picasso.with(mContext).load(imageFile).resize(500, 500).error(R.drawable.cloudoff).into(p);
 
-        //If clicked send to FullImage view
+        //If clicked send to FullImageAcitivty view
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Sending image url to FullImage activity
-                Intent i = new Intent(mContext, FullImage.class);
+                // Sending image url to FullImageAcitivty activity
+                Intent i = new Intent(mContext, FullImageAcitivty.class);
 
                 System.out.println(uri);
                 i.putExtra("image", uri );

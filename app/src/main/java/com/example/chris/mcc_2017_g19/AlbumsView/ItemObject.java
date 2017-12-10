@@ -1,9 +1,9 @@
 package com.example.chris.mcc_2017_g19.AlbumsView;
 
-/**
- * Created by alessiospallino on 08/11/2017.
- */
 
+/*
+Class for storing the images that are showed in the album grid
+ */
 public class ItemObject {
 
     private String title;

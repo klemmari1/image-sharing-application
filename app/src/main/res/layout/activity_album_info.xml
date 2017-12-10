@@ -5,7 +5,7 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:id="@+id/rl"
-    tools:context="com.example.chris.mcc_2017_g19.AlbumsView.AlbumEach.AlbumInfo">
+    tools:context="com.example.chris.mcc_2017_g19.AlbumsView.AlbumEach.AlbumInfoActivity">
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/rec"

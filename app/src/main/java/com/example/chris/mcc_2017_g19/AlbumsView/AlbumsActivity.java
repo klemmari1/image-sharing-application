@@ -10,9 +10,9 @@ import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.Toast;
 
-import com.example.chris.mcc_2017_g19.AlbumsView.AlbumEach.AlbumInfo;
+import com.example.chris.mcc_2017_g19.AlbumsView.AlbumEach.AlbumInfoActivity;
 import com.example.chris.mcc_2017_g19.Utils;
-import com.example.chris.mcc_2017_g19.AlbumsView.AlbumEach.pvtgallery.PrivateGallery;
+import com.example.chris.mcc_2017_g19.AlbumsView.AlbumEach.pvtgallery.PrivateGalleryActivity;
 import com.example.chris.mcc_2017_g19.R;
 
 import java.io.File;
@@ -20,6 +20,9 @@ import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+/*
+This activity is for the main gallery view.
+ */
 public class AlbumsActivity extends AppCompatActivity {
 
     private static final String TAG = "AlbumsActivity";
@@ -30,9 +33,6 @@ public class AlbumsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_albums);
 
         GridView gridview = (GridView) findViewById(R.id.gridview);
-
-
-        //List<ItemObject> allItems = getAllItemObject();
 
 
         final List<ItemObject> allItems = getAllItemObject();
@@ -47,13 +47,13 @@ public class AlbumsActivity extends AppCompatActivity {
 
                 if(allItems.get(position).getWholeName().equals("Private")){
 
-                    Intent intent = new Intent(AlbumsActivity.this, PrivateGallery.class);
+                    Intent intent = new Intent(AlbumsActivity.this, PrivateGalleryActivity.class);
                     startActivity(intent);
 
                 }
                 else{
                     String path = allItems.get(position).getWholeName();
-                    Intent intent = new Intent(AlbumsActivity.this, AlbumInfo.class);
+                    Intent intent = new Intent(AlbumsActivity.this, AlbumInfoActivity.class);
                     intent.putExtra( "PATH", path);
                     startActivity(intent);
                 }

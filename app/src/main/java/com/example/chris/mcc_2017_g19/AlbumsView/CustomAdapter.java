@@ -1,9 +1,6 @@
 package com.example.chris.mcc_2017_g19.AlbumsView;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.net.Uri;
-import android.provider.MediaStore;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,6 +15,9 @@ import com.squareup.picasso.Picasso;
 import java.io.File;
 import java.util.List;
 
+/*
+Adapter for showing the images in the gallery grid
+ */
 public class CustomAdapter extends BaseAdapter {
 
     private LayoutInflater layoutinflater;
@@ -65,6 +65,7 @@ public class CustomAdapter extends BaseAdapter {
         listViewHolder.textInListView.setText(listStorage.get(position).getTitle());
         String albumAndFile = listStorage.get(position).getWholeName() + File.separator + listStorage.get(position).getImageResource();
         File image = new File(Utils.getAlbumsRoot(this.context) + File.separator + albumAndFile);
+        //Scale the image before showing it
         Picasso.with(context).load(image).resize(500, 500).into(listViewHolder.imageInListView);
 
         int imageCloudId = this.context.getResources().getIdentifier(listStorage.get(position).getCloud(), "drawable", this.context.getPackageName());

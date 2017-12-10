@@ -1,9 +1,9 @@
 package com.example.chris.mcc_2017_g19.AlbumsView.AlbumEach.pvtgallery;
 
-/**
- * Created by alessiospallino on 18/11/2017.
- */
 
+/*
+Items in the private gallery
+ */
 public class GridItem {
 
     public String image;

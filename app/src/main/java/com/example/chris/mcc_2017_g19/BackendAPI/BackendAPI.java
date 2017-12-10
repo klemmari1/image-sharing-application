@@ -90,6 +90,9 @@ public class BackendAPI {
         });
     }
 
+    /*
+    Gets the user token to send with the requests
+     */
     private void getIdToken(final HttpCallback cb){
         if(idToken == null){
             try{
@@ -252,7 +255,6 @@ public class BackendAPI {
                         .addFormDataPart("userToken", idToken)
                         .addFormDataPart("deviceToken", device_token)
                         .build();
-
                 try{
                     postRequest(url, requestBody, cb);
                 }

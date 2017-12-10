@@ -13,14 +13,14 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 
-import com.example.chris.mcc_2017_g19.AlbumsView.AlbumEach.model.FullImage;
+import com.example.chris.mcc_2017_g19.AlbumsView.AlbumEach.model.FullImageAcitivty;
 import com.example.chris.mcc_2017_g19.R;
 import com.squareup.picasso.Picasso;
 
-/**
- * Created by alessiospallino on 18/11/2017.
- */
 
+/*
+Adapter for the private gallery grid
+ */
 public class GridViewAdapter extends ArrayAdapter<GridItem> {
 
     private Context mContext;
@@ -65,15 +65,15 @@ public class GridViewAdapter extends ArrayAdapter<GridItem> {
         //ADD PICTURES IN GRIDVIEW with reasonable resolution
         Picasso.with(mContext).load(file).resize(500, 500).error(R.drawable.cloudoff).into(holder.imageView);
 
-        //If clicked send to FullImage view
+        //If clicked send to FullImageAcitivty view
         holder.imageView.setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(View v) {
                 // TODO Auto-generated method stub
 
-                // Sending image url to FullImage activity
-                Intent i = new Intent(mContext, FullImage.class);
+                // Sending image url to FullImageAcitivty activity
+                Intent i = new Intent(mContext, FullImageAcitivty.class);
 
                 String url = String.valueOf(Uri.parse(mGridData.get(position).getImage()));
 
