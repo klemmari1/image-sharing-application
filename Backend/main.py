@@ -142,6 +142,18 @@ def delete_group(group_id):
         database.child("users").child(member_id).child("group").remove()
     database.child("groups").child(group_id).remove()
 
+    ###todo: delete storage folder
+
+    #get image ids from groupID/images/imageID/storageFilename
+    allImageIds = database.child(group_id).child("images")
+    for imageID in allImageIds:
+        print("imageID found: " + imageID)
+    #loop image ids + "Low" "High"
+
+    #if found -- delete
+
+
+
 
 
 def get_uid(id_token):
@@ -225,6 +237,7 @@ userID=<userID>&groupID=<groupID>&filename=<filename>&maxQuality=<low/full/high>
 '''
 @app.route('/upload_image', methods=['POST'])
 def upload_image():
+
     try:
         # Get arguments
         args = request.form
@@ -262,6 +275,8 @@ def upload_image():
 
             data['hasFaces'] = hasFaces
 
+            data['storageFilename'] = filename
+
             token = str(uuid.uuid4())
             database.child("groups").child(groupID).child("images").update({token: data})
 
@@ -274,7 +289,9 @@ def upload_image():
         else:
             return "INVALID USER TOKEN OR USER NOT IN GROUP!"
     except Exception as e:
-        return "Unexpected error: " + str(e)
+        print(str(e))
+        return "error in upload image 18 11 sunday" 
+
 
 
 def image_processing(initialURL, maxQuality,groupID, filename):
@@ -283,8 +300,14 @@ def image_processing(initialURL, maxQuality,groupID, filename):
     if (maxQuality == 'low'):
         URLs.append(initialURL)
     else:
-        r = requests.get(initialURL,verify=False)
-        pilImage = Image.open(BytesIO(r.content))
+        #r = requests.get(initialURL,verify=False)
+        #TODO: download with storage object, open ti pilImage object, REMEMBER TO DELETE downloaded file
+
+        storagePath = groupID + "/" + filename
+        storage.child(storagePath).download(filename)
+
+        #pilImage = Image.open(BytesIO(r.content))
+        pilImage = Image.open(filename)
         #pilImage.mode = 'RGBA'
 
     if (maxQuality == 'high'):
@@ -294,6 +317,8 @@ def image_processing(initialURL, maxQuality,groupID, filename):
         URLs.append(initialURL)
         URLs.append(img_to_high(pilImage, groupID, filename))
         URLs.append(img_to_low(pilImage, groupID, filename))
+
+    os.remove(filename)
 
     if (check_for_faces(initialURL)):
         people = 1
@@ -414,6 +439,32 @@ def notification_upload_image(data):
     #i.e. we can clean up firebase from all of the non-valid ids.
     #valid_registration_ids = push_service.clean_registration_ids(registration_ids)
 
+@app.route('/testDeleteFromStorage', methods=['GET'])
+def testDeleteFromStorage():
+    #storage.delete(path)
+
+    group_id = "-L0-ZUa1ZH3iQTlDxiPw"
+
+    
+
+    #get image ids from groupID/images/imageID/storageFilename
+    allImageIds = database.child("groups").child(group_id).child("images").get()
+    print("type:")
+    print(type(allImageIds))
+    for imageID in allImageIds.each():
+        print(imageID.val().get('storageFilename'))
+    return "test function ok"
+    #loop image ids + "Low" "High"
+
+
+    #if found -- delete
+@app.route('/testStorageRights', methods=['GET'])
+def testStorageRights():
+
+    path = "-L0-ZUa1ZH3iQTlDxiPw/1512911853.jpg"
+    print(storage.child(path).get_url(0))
+
+    return "ok test"
 
 
 if __name__ == '__main__':
