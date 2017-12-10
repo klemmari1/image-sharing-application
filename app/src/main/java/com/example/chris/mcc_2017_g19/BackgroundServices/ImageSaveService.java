@@ -36,6 +36,10 @@ import java.io.File;
 import java.util.Random;
 
 
+/*
+This service handles saving the image from the camera to local storage and firebase storage.
+It also updates the database.
+ */
 public class ImageSaveService extends IntentService {
 
     private FirebaseUser firebaseUser;
@@ -54,7 +58,7 @@ public class ImageSaveService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
-        // Gets data from the incoming Intent
+        // Gets image path of the image captured with the camera
         imagePath = intent.getStringExtra("imagePath");
 
         databaseReference = Utils.getDatabase().getReference();
@@ -105,15 +109,16 @@ public class ImageSaveService extends IntentService {
             SaveImage("Private", fname);
         }
 
-        //return Bitmap.createScaledBitmap(bit, width, height, true);
         if (result == 0) {
-            //It is not showing the toast, I don't know why (But it is entering this :
             Toast.makeText(ImageSaveService.this, "Image is being added to your shared folder!", Toast.LENGTH_LONG).show();
         } else {
             Toast.makeText(ImageSaveService.this, "SENSIBLE DATA! Image is being added to private folder", Toast.LENGTH_LONG).show();
         }
     }
 
+    /*
+    Save image locally
+     */
     private void SaveImage(String folder, String filename) {
         File myDir = new File(Utils.getAlbumsRoot(getApplicationContext()) +  File.separator + folder);
 
@@ -135,6 +140,9 @@ public class ImageSaveService extends IntentService {
         }
     }
 
+    /*
+    Checks for quality settings and then calls the upload function
+     */
     private void CheckSettings() {
         Bitmap FirebaseBitmap = getImageBitmap();
 
@@ -194,10 +202,13 @@ public class ImageSaveService extends IntentService {
                 maxQuality = "full";
             }
         }
-
         uploadImageFirebase(FirebaseBitmap);
     }
 
+    /*
+    Uploads the image to firebase storage and updates the database.
+    Finally saves the image locally to the group folder.
+     */
     public void uploadImageFirebase(Bitmap FirebaseBitmap){
         //Get a reference from our storage:
         FirebaseStorage storage = FirebaseStorage.getInstance();

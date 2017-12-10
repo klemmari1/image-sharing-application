@@ -59,14 +59,19 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                 //receive groupID and filename from received data-notification
                 JSONObject jsonObject = new JSONObject(remoteMessage.getData());
 
+                //If group is deleted
                 if(jsonObject.getString("deleted_group") != null){
                     String deleted_group = jsonObject.getString("deleted_group");
                     sendNotification("Group " + deleted_group + " deleted!");
                 }
+
+                //If an user leaves the group
                 else if(jsonObject.getString("left_user") != null){
                     String left_user = jsonObject.getString("left_user");
                     sendNotification("User " + left_user + " left from the group!");
                 }
+
+                //If a new photo was added to the group
                 else if(jsonObject.getString("photographer") != null){
                     final String photographer = jsonObject.getString("photographer");
 
@@ -85,7 +90,10 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                             //2. get all image ids from groups/groupID/images
 
                             if (groupID != null && !userName.equals(photographer)) {
+                                //Send push notification
                                 sendNotification("New image from " + photographer);
+
+                                //Start sync service
                                 Intent it = new Intent(getApplicationContext(), SyncImagesService.class);
                                 it.putExtra("groupID", groupID);
                                 startService(it);

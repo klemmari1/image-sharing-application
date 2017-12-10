@@ -22,6 +22,9 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 
+/*
+This class is used to call the cloud back end for various group related actions
+ */
 public class BackendAPI {
 
     private OkHttpClient client;

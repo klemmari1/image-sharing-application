@@ -215,7 +215,10 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
+    /*
+    Group management activity shows join or create group when not in a group.
+    It shows group status when in a group
+     */
     private void selectGroupManagementActivity() {
         setButtonStatus(false);
         DatabaseReference userReference = databaseReference.child("users").child(firebaseUser.getUid());
@@ -226,14 +229,13 @@ public class MainActivity extends AppCompatActivity {
                 setButtonStatus(true);
                 UserObject userObject = snapshot.getValue(UserObject.class);
                 if(userObject != null){
+                    //User does not have a group. Query if they want to make a new group or join an existing one
                     if(userObject.getGroup() == null){
-                        //Setup the alert builder
                         AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
                         View customTitle = View.inflate(MainActivity.this, R.layout.dialog_title, null);
                         builder.setCustomTitle(customTitle);
                         builder.setTitle("Choose an action");
 
-                        //Add options
                         List<String> actions = new ArrayList<String>();
                         actions.add("JOIN A GROUP");
                         actions.add("CREATE A GROUP");
@@ -243,7 +245,7 @@ public class MainActivity extends AppCompatActivity {
                             public void onClick(DialogInterface dialog, int which) {
                                 switch (which) {
                                     case 0:
-                                        //Yes button pressed: Join a group
+                                        //"Yes" button pressed: Join a group
                                         if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CAMERA)
                                                 != PackageManager.PERMISSION_GRANTED) {
                                             ActivityCompat.requestPermissions(MainActivity.this,
@@ -254,18 +256,18 @@ public class MainActivity extends AppCompatActivity {
                                         }
                                         break;
                                     case 1:
-                                        //No button pressed: Create group
+                                        //"No" button pressed: Create group
                                         Intent intent = new Intent(MainActivity.this, GroupCreationActivity.class);
                                         startActivityForResult(intent, REQUEST_CREATE_GROUP);
                                         break;
                                 }
                             }
                         });
-                        //Create and show the alert dialog
                         AlertDialog dialog = builder.create();
                         dialog.show();
                     }
                     else{
+                        //If user already in a group, show group status activity
                         Intent intent = new Intent(MainActivity.this, GroupStatusActivity.class);
                         startActivity(intent);
                     }
@@ -278,7 +280,9 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    /*
 
+     */
     private void cameraButtonAction(String group) throws IllegalArgumentException {
         DatabaseReference userGroupReference = databaseReference.child("groups").child(group);
         userGroupReference.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -313,6 +317,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    /*
+    Checking for camera permissions
+     */
     private void TakePictureIntent() {
         if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED || checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA}, MY_PERMISSIONS_REQUEST_CAMERA);
@@ -322,7 +329,9 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
+    /*
+    Starts the camera and gives the image file where to write to
+     */
     private void startCamera() {
         Intent pictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         // Ensure that there's a camera activity to handle the intent
@@ -345,6 +354,10 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
+    /*
+    Create image file where camera saves the image
+     */
     private File createImageFile() throws IOException {
         // Create an image file name
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
@@ -361,6 +374,9 @@ public class MainActivity extends AppCompatActivity {
         return image;
     }
 
+    /*
+    This is used only for the camera's result at the moment.
+     */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
@@ -368,8 +384,6 @@ public class MainActivity extends AppCompatActivity {
                     != PackageManager.PERMISSION_GRANTED) {
                 requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
                         MY_PERMISSIONS_REQUEST_WRITE_EXT_STORAGE);
-                // We check the permission at Runtime
-                //
             } else {
                 Intent it = new Intent(getApplicationContext(), ImagePreviewActivity.class);
                 it.putExtra("imagePath", imagePath);
@@ -378,6 +392,10 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
+    /*
+    Method for requesting camera and storage permissions
+     */
     @Override
     public void onRequestPermissionsResult(int requestCode,
                                            String permissions[],
@@ -414,7 +432,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
+    //Buttons are set disabled so that the activities cannot be accessed many times at a time. Finally enabled when user gets back to the view.
     private void setButtonStatus(boolean status){
         findViewById(R.id.gallery).setEnabled(status);
         findViewById(R.id.photo).setEnabled(status);
