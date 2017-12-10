@@ -313,12 +313,12 @@ def image_processing(initialURL, maxQuality,groupID, filename):
     if (maxQuality == 'high'):
         URLs.append(initialURL)
         URLs.append(img_to_low(pilImage, groupID, filename))
-        check_for_faces(filename)
+        people = check_for_faces(filename)
     if (maxQuality == 'full'):
         URLs.append(initialURL)
         URLs.append(img_to_high(pilImage, groupID, filename))
         URLs.append(img_to_low(pilImage, groupID, filename))
-        check_for_faces(addHighToFileName(filename))
+        people = check_for_faces(addHighToFileName(filename))
 
 
     try:
