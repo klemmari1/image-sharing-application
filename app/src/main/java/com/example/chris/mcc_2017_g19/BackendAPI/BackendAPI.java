@@ -21,6 +21,9 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 
+/*
+This class is used to call the cloud back end for various group related actions
+ */
 public class BackendAPI {
 
     private OkHttpClient client;
@@ -86,6 +89,9 @@ public class BackendAPI {
         });
     }
 
+    /*
+    Gets the user token to send with the requests
+     */
     private void getIdToken(final HttpCallback cb){
         if(idToken == null){
             try{
@@ -248,7 +254,6 @@ public class BackendAPI {
                         .addFormDataPart("userToken", idToken)
                         .addFormDataPart("deviceToken", device_token)
                         .build();
-
                 try{
                     postRequest(url, requestBody, cb);
                 }

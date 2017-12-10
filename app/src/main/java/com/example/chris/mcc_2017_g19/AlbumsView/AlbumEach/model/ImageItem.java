@@ -1,9 +1,9 @@
 package com.example.chris.mcc_2017_g19.AlbumsView.AlbumEach.model;
 
-/**
- * Created by alessiospallino on 06/12/2017.
- */
 
+/*
+Images in the group gallery
+ */
 public abstract class ImageItem {
 
     public static final int HEADER_ITEM_TYPE = 0;

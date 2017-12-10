@@ -1,9 +1,5 @@
 package com.example.chris.mcc_2017_g19.AlbumsView.AlbumEach;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -11,7 +7,6 @@ import java.util.Map;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -19,7 +14,6 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -32,24 +26,20 @@ import com.example.chris.mcc_2017_g19.AlbumsView.AlbumEach.model.ImageItem;
 import com.example.chris.mcc_2017_g19.AlbumsView.AlbumEach.model.Sorting;
 import com.example.chris.mcc_2017_g19.R;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
-
-public class AlbumInfo extends AppCompatActivity {
+/*
+This activity shows the images inside group folders
+ */
+public class AlbumInfoActivity extends AppCompatActivity {
 
     private static final int DEFAULT_SPAN_COUNT = 3;
     private RecyclerView mRecyclerView;
     private GridAlbumInfoViewAdapter mAdapter;
     private Sorting sorting = Sorting.PEOPLE;
 
-    //List where we will put object to insert in the Grid
+    //List where we will put object to insert in the Grid. Includes headers and images.
     private List<ImageItem> mImageItemList;
+    //List of images
     private List<GridImageItem> mGridImageItemList;
     private static final int RC_READ_STORAGE = 5;
     private String path;
@@ -137,15 +127,12 @@ public class AlbumInfo extends AppCompatActivity {
 
 
     private void loadByPeople(){
-        //Get images
-        //Set images inside the adapter and check when user click to one image
+        //Get images sorted by people/no people
         mAdapter.addItem(new HeaderImageItem("People"));
         addPeopleImages("1");
 
         mAdapter.addItem(new HeaderImageItem("No People"));
         addPeopleImages("0");
-
-        //mAdapter.addItem();
     }
 
 
@@ -164,7 +151,7 @@ public class AlbumInfo extends AppCompatActivity {
 
 
     private void loadByPhotographer(){
-        //Get images
+        //Get images sorted by the photographer
         Map<String,ArrayList<GridImageItem>> photographerImages = new HashMap<>();
         for(GridImageItem item: mGridImageItemList){
             String[] nameArray = item.getItemTitle().split("/");
@@ -177,6 +164,7 @@ public class AlbumInfo extends AppCompatActivity {
             }
         }
         for(Map.Entry<String, ArrayList<GridImageItem>> entry : photographerImages.entrySet()){
+            //Add a header for each photographer
             mAdapter.addItem(new HeaderImageItem(entry.getKey()));
             for(ImageItem photo: entry.getValue()){
                 mAdapter.addItem(photo);
