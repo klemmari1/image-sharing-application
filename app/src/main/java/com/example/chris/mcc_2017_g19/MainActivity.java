@@ -70,12 +70,14 @@ public class MainActivity extends AppCompatActivity {
 
         databaseReference = Utils.getDatabase().getReference();
         firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+        DatabaseReference userReference = databaseReference.child("users").child(firebaseUser.getUid());
 
         String device_token = FirebaseInstanceId.getInstance().getToken();
-        databaseReference.child("users").child(firebaseUser.getUid()).child("deviceTokens").child(device_token).setValue(1);
+        if(userReference != null && device_token != null){
+            userReference.child("deviceTokens").child(device_token).setValue(1);
+        }
 
         //Check for new images everytime when loading MainActivity, if user is in a group.
-        DatabaseReference userReference = databaseReference.child("users").child(firebaseUser.getUid());
         userReference.keepSynced(true);
         userReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override

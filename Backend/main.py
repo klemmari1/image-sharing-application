@@ -63,6 +63,7 @@ def homepage():
 
 @app.route('/groups', methods=['POST'])
 def create_group():
+    group_key = ""
     try:
         id_token = request.form['id_token']
         user_id = get_uid(id_token)
@@ -73,13 +74,18 @@ def create_group():
 
         group_reference = database.child("groups").push({"name": group_name, "expiration": group_expiration})
         group_key = group_reference["name"]
+
+        print("Create group user id " + user_id)
+        print("Create group user name " + user_name)
         database.child("groups").child(group_key).child("members").update({user_id: user_name})
+        print("Testing create group")
         database.child("groups").child(group_key).update({"creator": user_id})
         database.child("users").child(user_id).update({"group": group_key})
 
         token = set_new_token(group_key)
         return token
     except Exception as e:
+        database.child("groups").child(group_key).remove()
         return "Unexpected error: " + str(e)
 
 
@@ -139,16 +145,23 @@ def leave_group(group_id):
 
 
 def delete_group(group_id):
+    print("Deletion group id " + group_id)
     notification_group_deleted(group_id)
-    group_members = database.child("groups").child(group_id).child("members").get()
-    for member in group_members.each():
-        member_id = member.key()
-        database.child("users").child(member_id).child("group").remove()
-    database.child("groups").child(group_id).remove()
+    try:
+        group_members = database.child("groups").child(group_id).child("members").get()
+        for member in group_members.each():
+            member_id = member.key()
+            database.child("users").child(member_id).child("group").remove()
+    except Exception as e:
+        creator_id = database.child("groups").child(group_id).child("creator").get.val()
+        database.child("users").child(creator_id).child("group").remove()
+        print("Error occurred " + str(e))
+    finally:
+        database.child("groups").child(group_id).remove()
+
 
     ###todo: delete storage folder
     deleteFromStorage(group_id)
-
 
 
 
