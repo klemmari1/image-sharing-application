@@ -72,15 +72,7 @@ public class MainActivity extends AppCompatActivity {
         firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
 
         String device_token = FirebaseInstanceId.getInstance().getToken();
-        BackendAPI api = new BackendAPI();
-        api.updateDeviceToken(device_token, new BackendAPI.HttpCallback() {
-            @Override
-            public void onFailure(String response, Exception exception) {
-            }
-            @Override
-            public void onSuccess(String response) {
-            }
-        });
+        databaseReference.child("users").child(firebaseUser.getUid()).child("deviceTokens").child(device_token).setValue(1);
 
         //Check for new images everytime when loading MainActivity, if user is in a group.
         DatabaseReference userReference = databaseReference.child("users").child(firebaseUser.getUid());
