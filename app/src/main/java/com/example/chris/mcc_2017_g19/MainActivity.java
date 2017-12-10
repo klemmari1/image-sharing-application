@@ -93,10 +93,12 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
                 userObj = snapshot.getValue(UserObject.class);
-                if(userObj.getGroup() != null){
-                    Intent it = new Intent(getApplicationContext(), SyncImagesService.class);
-                    it.putExtra("groupID", userObj.getGroup());
-                    startService(it);
+                if(userObj != null){
+                    if(userObj.getGroup() != null){
+                        Intent it = new Intent(getApplicationContext(), SyncImagesService.class);
+                        it.putExtra("groupID", userObj.getGroup());
+                        startService(it);
+                    }
                 }
             }
             @Override
@@ -210,48 +212,50 @@ public class MainActivity extends AppCompatActivity {
             public void onDataChange(DataSnapshot snapshot) {
                 setButtonStatus(true);
                 UserObject userObject = snapshot.getValue(UserObject.class);
-                if (userObject.getGroup() == null){
-                    //Setup the alert builder
-                    AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                    View customTitle = View.inflate(MainActivity.this, R.layout.dialog_title, null);
-                    builder.setCustomTitle(customTitle);
-                    builder.setTitle("Choose an action");
+                if(userObject != null){
+                    if(userObject.getGroup() == null){
+                        //Setup the alert builder
+                        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                        View customTitle = View.inflate(MainActivity.this, R.layout.dialog_title, null);
+                        builder.setCustomTitle(customTitle);
+                        builder.setTitle("Choose an action");
 
-                    //Add options
-                    List<String> actions = new ArrayList<String>();
-                    actions.add("JOIN A GROUP");
-                    actions.add("CREATE A GROUP");
-                    DialogAdapter da = new DialogAdapter(MainActivity.this, actions);
-                    builder.setAdapter(da, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            switch (which) {
-                                case 0:
-                                    //Yes button pressed: Join a group
-                                    if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CAMERA)
-                                            != PackageManager.PERMISSION_GRANTED) {
-                                        ActivityCompat.requestPermissions(MainActivity.this,
-                                                new String[]{Manifest.permission.CAMERA}, MY_PERMISSIONS_REQUEST_QR);
-                                    } else {
-                                        Intent intent = new Intent(MainActivity.this, QrReaderActivity.class);
+                        //Add options
+                        List<String> actions = new ArrayList<String>();
+                        actions.add("JOIN A GROUP");
+                        actions.add("CREATE A GROUP");
+                        DialogAdapter da = new DialogAdapter(MainActivity.this, actions);
+                        builder.setAdapter(da, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                switch (which) {
+                                    case 0:
+                                        //Yes button pressed: Join a group
+                                        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CAMERA)
+                                                != PackageManager.PERMISSION_GRANTED) {
+                                            ActivityCompat.requestPermissions(MainActivity.this,
+                                                    new String[]{Manifest.permission.CAMERA}, MY_PERMISSIONS_REQUEST_QR);
+                                        } else {
+                                            Intent intent = new Intent(MainActivity.this, QrReaderActivity.class);
+                                            startActivityForResult(intent, REQUEST_CREATE_GROUP);
+                                        }
+                                        break;
+                                    case 1:
+                                        //No button pressed: Create group
+                                        Intent intent = new Intent(MainActivity.this, GroupCreationActivity.class);
                                         startActivityForResult(intent, REQUEST_CREATE_GROUP);
-                                    }
-                                    break;
-                                case 1:
-                                    //No button pressed: Create group
-                                    Intent intent = new Intent(MainActivity.this, GroupCreationActivity.class);
-                                    startActivityForResult(intent, REQUEST_CREATE_GROUP);
-                                    break;
+                                        break;
+                                }
                             }
-                        }
-                    });
-                    //Create and show the alert dialog
-                    AlertDialog dialog = builder.create();
-                    dialog.show();
-                }
-                else{
-                    Intent intent = new Intent(MainActivity.this, GroupStatusActivity.class);
-                    startActivity(intent);
+                        });
+                        //Create and show the alert dialog
+                        AlertDialog dialog = builder.create();
+                        dialog.show();
+                    }
+                    else{
+                        Intent intent = new Intent(MainActivity.this, GroupStatusActivity.class);
+                        startActivity(intent);
+                    }
                 }
             }
             @Override
