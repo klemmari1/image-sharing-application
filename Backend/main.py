@@ -147,14 +147,8 @@ def delete_group(group_id):
     database.child("groups").child(group_id).remove()
 
     ###todo: delete storage folder
+    deleteFromStorage(group_id)
 
-    #get image ids from groupID/images/imageID/storageFilename
-    allImageIds = database.child(group_id).child("images")
-    for imageID in allImageIds:
-        print("imageID found: " + imageID)
-    #loop image ids + "Low" "High"
-
-    #if found -- delete
 
 
 
@@ -378,7 +372,7 @@ def check_for_faces(path):
     image = types.Image(content=content)
 
     response = client.face_detection(image=image)
-    faces = response.face_annotations
+    faces = response.face_annotations   
     nFaces = 0
     for face in faces:
         nFaces +=1
@@ -469,27 +463,35 @@ def send_notification(groupId, data):
 
 
 @app.route('/testDeleteFromStorage', methods=['GET'])
-def testDeleteFromStorage():
+def deleteFromStorage(group_id):
     #storage.delete(path)
 
-    group_id = "-L0-ZUa1ZH3iQTlDxiPw"
 
+    #group_id = "-L01IUKfTzb0DQ68XJp3"
+    paths = []
     #get image ids from groupID/images/imageID/storageFilename
     allImageIds = database.child("groups").child(group_id).child("images").get()
     #loop through storageFilename entries in Database
     for imageID in allImageIds.each():
         aNewFileName = imageID.val().get('storageFilename')
         
-        paths = []
-        paths.append(groupID + "/" + aNewFileName)
-        paths.append(groupID + "/" + addLowToFileName(aNewFileName))
-        paths.append(groupID + "/" + addHighToFileName(aNewFileName))
+        print("found storagefilename: " + aNewFileName)
+        paths.append(group_id + "/" + aNewFileName)
+        paths.append(group_id + "/" + addLowToFileName(aNewFileName))
+        paths.append(group_id + "/" + addHighToFileName(aNewFileName))
 
-        for path in paths:
-            try:
+    for path in paths:
+        try:
+            print("trying to delete storage path: " + path)
+            print(" TEST TYPE: ")
+            print(type(storage.child(path).get_url(0)))
+            if ("http" in storage.child(path).get_url(0)):
                 storage.delete(path)
-            except Exception as e:
-                return "error in deleting storage files upon destroying a group: " + str(e)
+                print("deletion succesful!")
+            else:
+                print(path + "not found!!!")
+        except Exception as e:
+            print ("error in deleting storage files upon destroying a group: " + path + str(e))
 
 
     return "test function ok"
