@@ -305,7 +305,14 @@ get image, resize, push to STORAGE /<group-id>/images/
 return: url to pushed image
 '''
 def img_to_low(pilImage, groupID, filename):
-    pilImage = pilImage.resize((640, 480))
+
+    width, height = pilImage.size
+
+    #if portrait, flip
+    if (height >= width):
+        pilImage = pilImage.resize((480,640))
+    else:
+        pilImage = pilImage.resize((640, 480))
     fname = addLowToFileName(filename)
     pilImage.save(fname, 'JPEG')
     fbpath = groupID + "/" + fname
@@ -315,7 +322,14 @@ def img_to_low(pilImage, groupID, filename):
     return storage.child(fbpath).get_url(0)
 
 def img_to_high(pilImage, groupID, filename):
-    pilImage = pilImage.resize((1280, 960))
+
+    width, height = pilImage.size
+
+    #if portrait, flip
+    if (height >= width):
+        pilImage = pilImage.resize((960,1280))
+    else:
+        pilImage = pilImage.resize((1280, 960))
     fname = addHighToFileName(filename)
     pilImage.save(fname, 'JPEG')
     fbpath = groupID + "/" + fname
