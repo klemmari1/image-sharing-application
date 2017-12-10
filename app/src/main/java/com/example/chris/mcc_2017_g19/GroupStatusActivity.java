@@ -53,6 +53,7 @@ public class GroupStatusActivity extends AppCompatActivity {
         memberList.setAdapter(memberAdapter);
 
         if(Utils.isNetworkAvailable(getApplicationContext())){
+            //Getting group info from firebase
             DatabaseReference userRef = databaseReference.child("users").child(firebaseUser.getUid());
             userRef.keepSynced(true);
             userRef.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -67,6 +68,7 @@ public class GroupStatusActivity extends AppCompatActivity {
                             public void onDataChange(DataSnapshot dataSnapshot) {
                                 GroupObject groupObj = dataSnapshot.getValue(GroupObject.class);
                                 if(groupObj != null){
+                                    //Update view values
                                     displayGroupName(groupObj.getName());
                                     displayGroupExpiration(groupObj.getExpiration());
                                     if (groupObj.isExpired()) {

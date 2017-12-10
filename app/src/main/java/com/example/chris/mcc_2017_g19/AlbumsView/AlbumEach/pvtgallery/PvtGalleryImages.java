@@ -11,7 +11,7 @@ import java.util.ArrayList;
 /**
  * Created by alessiospallino on 18/11/2017.
  *
- * This class helps to get images from device storage from OrganizeApp folder.
+ * This class helps to get images from device storage to the private folder.
  *
  */
 

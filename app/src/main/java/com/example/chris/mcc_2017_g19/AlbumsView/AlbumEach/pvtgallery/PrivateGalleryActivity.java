@@ -5,8 +5,8 @@ import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.widget.GridView;
 import android.widget.Toast;
 
@@ -15,9 +15,11 @@ import java.util.ArrayList;
 import com.example.chris.mcc_2017_g19.R;
 
 
-
-public class PrivateGallery extends ActionBarActivity {
-    private static final String TAG = "PrivateGallery";
+/*
+This activity shows the private folder images
+ */
+public class PrivateGalleryActivity extends AppCompatActivity {
+    private static final String TAG = "PrivateGalleryActivity";
     private GridView mGridView;
     private GridViewAdapter mGridAdapter;
     private ArrayList<GridItem> mGridData;

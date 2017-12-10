@@ -12,6 +12,10 @@ import android.widget.TextView;
 
 import java.util.List;
 
+
+/*
+This is shown when a user tries to access GroupStatusActivity when not in a group. They have the option to join or create a group
+ */
 public class DialogAdapter extends ArrayAdapter<String> {
     private final Context context;
     private final List<String> members;

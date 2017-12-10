@@ -36,6 +36,10 @@ import java.io.File;
 import java.util.Random;
 
 
+/*
+This service handles saving the image from the camera to local storage and firebase storage.
+It also updates the database.
+ */
 public class ImageSaveService extends IntentService {
 
     private FirebaseUser firebaseUser;
@@ -52,7 +56,7 @@ public class ImageSaveService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
-        // Gets data from the incoming Intent
+        // Gets image path of the image captured with the camera
         imagePath = intent.getStringExtra("imagePath");
 
         databaseReference = Utils.getDatabase().getReference();
@@ -107,6 +111,9 @@ public class ImageSaveService extends IntentService {
         }
     }
 
+    /*
+    Save image locally
+     */
     private void SaveImage(String folder, String filename) {
         File myDir = new File(Utils.getAlbumsRoot(getApplicationContext()) +  File.separator + folder);
 
@@ -128,6 +135,9 @@ public class ImageSaveService extends IntentService {
         }
     }
 
+    /*
+    Checks for quality settings and then calls the upload function
+     */
     private void CheckSettings() {
         Bitmap FirebaseBitmap = getImageBitmap();
 
@@ -188,6 +198,10 @@ public class ImageSaveService extends IntentService {
         uploadImageFirebase(FirebaseBitmap);
     }
 
+    /*
+    Uploads the image to firebase storage and updates the database.
+    Finally saves the image locally to the group folder.
+     */
     public void uploadImageFirebase(Bitmap FirebaseBitmap){
         //Get a reference from our storage:
         FirebaseStorage storage = FirebaseStorage.getInstance();
