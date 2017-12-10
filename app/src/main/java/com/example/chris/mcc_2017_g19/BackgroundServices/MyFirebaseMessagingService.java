@@ -61,13 +61,13 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                 //If group is deleted
                 if(jsonObject.has("deleted_group")){
                     String deleted_group = jsonObject.getString("deleted_group");
-                    sendNotification("Group " + deleted_group + " deleted!");
+                    sendNotification("Group deleted!", "Your group was deleted!");
                 }
 
                 //If an user leaves the group
                 else if(jsonObject.has("left_user")){
                     String left_user = jsonObject.getString("left_user");
-                    sendNotification("User " + left_user + " left from the group!");
+                    sendNotification("User left!", "User " + left_user + " left from the group!");
                 }
 
                 //If a new photo was added to the group
@@ -90,7 +90,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
                             if (groupID != null && !userName.equals(photographer)) {
                                 //Send push notification
-                                sendNotification("New image from " + photographer);
+                                sendNotification("New image!", "New image from " + photographer);
 
                                 //Start sync service
                                 Intent it = new Intent(getApplicationContext(), SyncImagesService.class);
@@ -115,7 +115,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         if (remoteMessage.getNotification() != null) {
             Log.d(TAG, "Message Notification Body: " + remoteMessage.getNotification().getBody());
 
-            sendNotification("Notification payload (this should never happen):  " + remoteMessage.getNotification().getBody());
+            sendNotification("Error", "Notification payload (this should never happen):  " + remoteMessage.getNotification().getBody());
         }
 
         // Also if you intend on generating your own notifications as a result of a received FCM
@@ -134,7 +134,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
      *
      * @param messageBody FCM message body received.
      */
-    private void sendNotification(String messageBody) {
+    private void sendNotification(String title, String messageBody) {
         Intent intent = new Intent(this, MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0 /* Request code */, intent,
@@ -145,7 +145,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         NotificationCompat.Builder notificationBuilder =
                 new NotificationCompat.Builder(this)
                         .setSmallIcon(R.mipmap.ic_launcher_logo)
-                        .setContentTitle("New Image!")
+                        .setContentTitle(title)
                         .setContentText(messageBody)
                         .setAutoCancel(true)
                         .setSound(defaultSoundUri)

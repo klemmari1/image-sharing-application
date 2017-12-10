@@ -423,7 +423,7 @@ def notification_user_left(groupId, userId):
 
 def notification_group_deleted(groupId):
     data = {}
-    data["deleted_group"] = "Group deleted"
+    data["deleted_group"] = groupId
 
     send_notification(groupId, data)
 
