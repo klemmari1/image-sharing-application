@@ -59,35 +59,45 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                 //receive groupID and filename from received data-notification
                 JSONObject jsonObject = new JSONObject(remoteMessage.getData());
 
-                final String photographer = jsonObject.getString("photographer");
+                if(jsonObject.getString("deleted_group") != null){
+                    String deleted_group = jsonObject.getString("deleted_group");
+                    sendNotification("Group " + deleted_group + " deleted!");
+                }
+                else if(jsonObject.getString("left_user") != null){
+                    String left_user = jsonObject.getString("left_user");
+                    sendNotification("User " + left_user + " left from the group!");
+                }
+                else if(jsonObject.getString("photographer") != null){
+                    final String photographer = jsonObject.getString("photographer");
 
-                DatabaseReference databaseReference = Utils.getDatabase().getReference();
-                FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
-                String uid = firebaseUser.getUid();
-                DatabaseReference userReference = databaseReference.child("users").child(uid);
-                userReference.addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot userSnapshot) {
-                        //1. get group id from database: users/<userid>/group
-                        String groupID = (String) userSnapshot.child("group").getValue();
-                        String userName =  (String) userSnapshot.child("name").getValue();
-                        Log.d(TAG,"found groupID in the begining of syncImageFolder(): " + groupID);
+                    DatabaseReference databaseReference = Utils.getDatabase().getReference();
+                    FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
+                    String uid = firebaseUser.getUid();
+                    DatabaseReference userReference = databaseReference.child("users").child(uid);
+                    userReference.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot userSnapshot) {
+                            //1. get group id from database: users/<userid>/group
+                            String groupID = (String) userSnapshot.child("group").getValue();
+                            String userName =  (String) userSnapshot.child("name").getValue();
+                            Log.d(TAG,"found groupID in the begining of syncImageFolder(): " + groupID);
 
-                        //2. get all image ids from groups/groupID/images
+                            //2. get all image ids from groups/groupID/images
 
-                        if (groupID != null && !userName.equals(photographer)) {
-                            sendNotification("New image from " + photographer);
-                            Intent it = new Intent(getApplicationContext(), SyncImagesService.class);
-                            it.putExtra("groupID", groupID);
-                            startService(it);
-                            Log.d(TAG,"Data MSG in. (no new data nessesarily)");
+                            if (groupID != null && !userName.equals(photographer)) {
+                                sendNotification("New image from " + photographer);
+                                Intent it = new Intent(getApplicationContext(), SyncImagesService.class);
+                                it.putExtra("groupID", groupID);
+                                startService(it);
+                                Log.d(TAG,"Data MSG in. (no new data nessesarily)");
+                            }
                         }
-                    }
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
-                        System.out.println("The read failed: " + databaseError.getMessage());
-                    }
-                });
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+                            System.out.println("The read failed: " + databaseError.getMessage());
+                        }
+                    });
+                }
             }
             catch (JSONException e) {
                 Log.d(TAG,"json roblem",e);
