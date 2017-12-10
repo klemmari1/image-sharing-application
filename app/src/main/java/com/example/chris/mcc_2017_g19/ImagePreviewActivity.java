@@ -1,4 +1,5 @@
-package com.example.chris.mcc_2017_g19.AlbumsView.AlbumEach.model;
+package com.example.chris.mcc_2017_g19;
+
 
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -6,30 +7,33 @@ import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.view.View;
 import android.widget.ImageView;
 
-import com.example.chris.mcc_2017_g19.R;
+import com.example.chris.mcc_2017_g19.BackgroundServices.ImageSaveService;
 
 import java.io.File;
 import java.io.InputStream;
 
-public class FullImage extends AppCompatActivity {
+public class ImagePreviewActivity extends AppCompatActivity {
+
+    private String imagePath;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_full_image);
+        setContentView(R.layout.activity_image_preview);
 
         // get intent data
         Intent i = getIntent();
 
-        String photoPath = i.getExtras().getString("image");
-
+        imagePath = i.getExtras().getString("imagePath");
+        System.out.println("JAA" + imagePath);
         //Load image asynchronously
         ImageLoadTask ilt = new ImageLoadTask();
-        ilt.execute(photoPath);
+        ilt.execute(imagePath);
     }
 
 
@@ -64,7 +68,7 @@ public class FullImage extends AppCompatActivity {
 
         protected void onPostExecute(Bitmap finalBitmap) {
             //Load image to ImageView
-            ImageView photoImageView = (ImageView) findViewById(R.id.full_image_view);
+            ImageView photoImageView = (ImageView) findViewById(R.id.previewImage);
             photoImageView.setImageDrawable(new BitmapDrawable(getResources(), finalBitmap));
         }
     }
@@ -90,4 +94,14 @@ public class FullImage extends AppCompatActivity {
         return samplesize;
     }
 
+    public void onYesClick(View v){
+        Intent it = new Intent(getApplicationContext(), ImageSaveService.class);
+        it.putExtra("imagePath", imagePath);
+        startService(it);
+        this.finish();
+    }
+
+    public void onNoClick(View v){
+        this.finish();
+    }
 }

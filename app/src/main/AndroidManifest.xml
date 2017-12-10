@@ -55,6 +55,7 @@
         <activity android:name=".AlbumsView.AlbumsActivity" />
         <activity android:name=".GroupCreationActivity" />
         <activity android:name=".MainActivity" />
+        <activity android:name=".ImagePreviewActivity" />
         <activity android:name=".ResetPasswordActivity" />
         <activity android:name=".AlbumsView.AlbumEach.pvtgallery.PrivateGallery" />
         <activity android:name=".GroupStatusActivity" />

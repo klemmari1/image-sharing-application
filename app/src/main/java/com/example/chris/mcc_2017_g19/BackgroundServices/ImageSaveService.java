@@ -215,7 +215,7 @@ public class ImageSaveService extends IntentService {
         uploadTask.addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception exception) {
-                // Handle unsuccessful uploads
+                Toast.makeText(getApplicationContext(), "Network error", Toast.LENGTH_SHORT).show();
             }
         }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
@@ -226,7 +226,7 @@ public class ImageSaveService extends IntentService {
                 api.uploadImage(userObj.getGroup(), imagename+ ".jpg", maxQuality, new BackendAPI.HttpCallback() {
                     @Override
                     public void onFailure(String response, Exception exception) {
-                        Log.d(TAG, "Error: " + response + " " + exception);
+                        Toast.makeText(getApplicationContext(), "Network error", Toast.LENGTH_SHORT).show();
                     }
                     @Override
                     public void onSuccess(final String response) {
