@@ -73,7 +73,11 @@ def create_group():
 
         group_reference = database.child("groups").push({"name": group_name, "expiration": group_expiration})
         group_key = group_reference["name"]
+
+        print("Create group user id " + user_id)
+        print("Create group user name " + user_name)
         database.child("groups").child(group_key).child("members").update({user_id: user_name})
+        print("Testing create group")
         database.child("groups").child(group_key).update({"creator": user_id})
         database.child("users").child(user_id).update({"group": group_key})
 
@@ -139,6 +143,7 @@ def leave_group(group_id):
 
 
 def delete_group(group_id):
+    print("Deletion group id " + group_id)
     notification_group_deleted(group_id)
     try:
         group_members = database.child("groups").child(group_id).child("members").get()
