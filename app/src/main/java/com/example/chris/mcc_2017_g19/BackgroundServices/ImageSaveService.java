@@ -62,7 +62,7 @@ public class ImageSaveService extends IntentService {
 
         DatabaseReference userReference = databaseReference.child("users").child(firebaseUser.getUid());
         userReference.keepSynced(true);
-        userReference.addValueEventListener(new ValueEventListener() {
+        userReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
                 userObj = snapshot.getValue(UserObject.class);
