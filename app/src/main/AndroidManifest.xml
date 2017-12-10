@@ -53,7 +53,8 @@
                 android:name="com.google.android.gms.vision.DEPENDENCIES"
                 android:value="barcode" />
         </activity>
-        <activity android:name=".SignupActivity" />
+        <activity android:name=".SignupActivity"
+            android:theme="@style/AppTheme.NoActionBar"/>
         <activity android:name=".AlbumsView.AlbumsActivity" />
         <activity android:name=".GroupCreationActivity" />
         <activity android:name=".MainActivity" />
