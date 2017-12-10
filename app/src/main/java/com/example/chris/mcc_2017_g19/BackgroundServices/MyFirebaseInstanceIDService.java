@@ -1,7 +1,8 @@
-package com.example.chris.mcc_2017_g19;
+package com.example.chris.mcc_2017_g19.BackgroundServices;
 
 import android.util.Log;
 
+import com.example.chris.mcc_2017_g19.Utils;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;

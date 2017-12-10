@@ -2,7 +2,6 @@ package com.example.chris.mcc_2017_g19.AlbumsView;
 
 
 import android.content.Intent;
-import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -13,11 +12,10 @@ import android.widget.Toast;
 
 import com.example.chris.mcc_2017_g19.AlbumsView.AlbumEach.AlbumInfo;
 import com.example.chris.mcc_2017_g19.Utils;
-import com.example.chris.mcc_2017_g19.pvtgallery.PrivateGallery;
+import com.example.chris.mcc_2017_g19.AlbumsView.AlbumEach.pvtgallery.PrivateGallery;
 import com.example.chris.mcc_2017_g19.R;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.List;

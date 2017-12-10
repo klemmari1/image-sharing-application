@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.example.chris.mcc_2017_g19.pvtgallery.SquareLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.example.chris.mcc_2017_g19.AlbumsView.AlbumEach.pvtgallery.SquareLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
@@ -11,4 +11,4 @@
         android:scaleType="centerCrop" />
 
 
-</com.example.chris.mcc_2017_g19.pvtgallery.SquareLayout>
+</com.example.chris.mcc_2017_g19.AlbumsView.AlbumEach.pvtgallery.SquareLayout>

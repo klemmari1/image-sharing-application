@@ -1,4 +1,4 @@
-package com.example.chris.mcc_2017_g19.pvtgallery;
+package com.example.chris.mcc_2017_g19.AlbumsView.AlbumEach.pvtgallery;
 
 /**
  * Created by alessiospallino on 18/11/2017.
