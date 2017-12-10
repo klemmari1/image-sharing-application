@@ -54,25 +54,24 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         // Check if message contains a data payload.
         if (remoteMessage.getData().size() > 0) {
             Log.d(TAG, "Message data payload: " + remoteMessage.getData());
-
             try {
                 //receive groupID and filename from received data-notification
                 JSONObject jsonObject = new JSONObject(remoteMessage.getData());
 
                 //If group is deleted
-                if(jsonObject.getString("deleted_group") != null){
+                if(jsonObject.has("deleted_group")){
                     String deleted_group = jsonObject.getString("deleted_group");
                     sendNotification("Group " + deleted_group + " deleted!");
                 }
 
                 //If an user leaves the group
-                else if(jsonObject.getString("left_user") != null){
+                else if(jsonObject.has("left_user")){
                     String left_user = jsonObject.getString("left_user");
                     sendNotification("User " + left_user + " left from the group!");
                 }
 
                 //If a new photo was added to the group
-                else if(jsonObject.getString("photographer") != null){
+                else if(jsonObject.has("photographer")){
                     final String photographer = jsonObject.getString("photographer");
 
                     DatabaseReference databaseReference = Utils.getDatabase().getReference();
