@@ -397,6 +397,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+
     private void setButtonStatus(boolean status){
         findViewById(R.id.gallery).setEnabled(status);
         findViewById(R.id.photo).setEnabled(status);

@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">PhotoOrganizer</string>
+    <string name="app_name">CloudyCloud</string>
     <string name="albums_name">Albums</string>
     <string name="group_status_status">Group Information</string>
     <string name="group_status_name">Name</string>
