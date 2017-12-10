@@ -9,6 +9,7 @@
     <color name="colorPrimaryLogin">#00bcd4</color>
     <color name="colorPrimaryDarkLogin">#0097a7</color>
     <color name="colorAccentLogin">#f2fe71</color>
+    <color name="common_action_bar_splitter">#f2fe71</color>
 
     <color name="primary">#e43f3f</color>
     <color name="primary_dark">#E12929</color>
@@ -25,3 +26,4 @@
     <color name="iron">#CCCCCC</color>
     <color name="white">#FFFFFF</color>
 </resources>
+
