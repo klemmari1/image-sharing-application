@@ -163,10 +163,10 @@ public class MainActivity extends AppCompatActivity {
 
                         if (userGroup == null) {
                             errorToast("Join or create a group to take pictures");
+                            setButtonStatus(true);
                         } else {
                             cameraButtonAction(userGroup);
                         }
-                        setButtonStatus(true);
                     }
                     @Override
                     public void onCancelled(DatabaseError databaseError) {
@@ -269,13 +269,17 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 GroupObject groupObj = dataSnapshot.getValue(GroupObject.class);
-                if (!groupObj.isExpired())
-                    TakePictureIntent();
+                if(groupObj != null) {
+                    if (!groupObj.isExpired()){
+                        TakePictureIntent();
+                    }
+                }
                 else
                     Toast.makeText(getApplicationContext(), "Group expired", Toast.LENGTH_SHORT).show();
             }
             @Override
             public void onCancelled(DatabaseError databaseError) {
+                setButtonStatus(true);
             }
         });
     }
@@ -290,6 +294,7 @@ public class MainActivity extends AppCompatActivity {
             requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA}, MY_PERMISSIONS_REQUEST_CAMERA);
         } else {
             startCamera();
+            setButtonStatus(true);
         }
     }
 
@@ -366,8 +371,10 @@ public class MainActivity extends AppCompatActivity {
             case MY_PERMISSIONS_REQUEST_CAMERA:
                 if (grantResults.length > 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
                     startCamera();
+                    setButtonStatus(true);
                 } else {
                     Toast.makeText(this, "Please grant permissions to use the Camera", Toast.LENGTH_SHORT).show();
+                    setButtonStatus(true);
                 }
                 break;
             case MY_PERMISSIONS_REQUEST_QR:
