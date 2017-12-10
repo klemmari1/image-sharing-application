@@ -3,6 +3,7 @@ import uuid
 import json
 import requests
 import logging
+import io
 from io import BytesIO
 from datetime import datetime
 
@@ -12,6 +13,7 @@ from firebase_admin import credentials
 from firebase_admin import auth
 from flask import Flask, redirect, render_template, request, url_for
 from google.cloud import vision
+from google.cloud.vision import types
 from PIL import Image
 
 from pyfcm import FCMNotification
@@ -319,10 +321,13 @@ def image_processing(initialURL, maxQuality,groupID, filename):
         URLs.append(img_to_high(pilImage, groupID, filename))
         URLs.append(img_to_low(pilImage, groupID, filename))
 
+
+    if (check_for_faces(filename)):
+        people = 1
+
+
     os.remove(filename)
 
-    if (check_for_faces(initialURL)):
-        people = 1
 
     return URLs, people
 
@@ -365,17 +370,22 @@ def img_to_high(pilImage, groupID, filename):
     return storage.child(fbpath).get_url(0)
 
 '''check for faces'''
-def check_for_faces(url):
+def check_for_faces(path):
     client = vision.ImageAnnotatorClient()
-    #url = "gs://mcc-fall-2017-g19.appspot.com/someGroupID/fullQualityWithFaces.jpg"
-    #url = "https://auto.ndtvimg.com/car-images/medium/ferrari/gtc4lusso/ferrari-gtc4lusso.jpg?v=11"
-    request = {
-    'source': {'image_uri': url},
-    }
 
-    response = client.face_detection(request)
+    path = "faces.jpg"
+    with io.open(path, 'rb') as image_file:
+        content = image_file.read()
 
-    if (len(response.face_annotations) > 0):
+    image = types.Image(content=content)
+
+    response = client.face_detection(image=image)
+    faces = response.face_annotations
+    nFaces = 0
+    for face in faces:
+        nFaces +=1
+
+    if (nFaces > 1):
         return 1
     else:
         return 0
@@ -466,23 +476,72 @@ def testDeleteFromStorage():
 
     #get image ids from groupID/images/imageID/storageFilename
     allImageIds = database.child("groups").child(group_id).child("images").get()
-    print("type:")
-    print(type(allImageIds))
+    #loop through storageFilename entries in Database
     for imageID in allImageIds.each():
-        print(imageID.val().get('storageFilename'))
+        aNewFileName = imageID.val().get('storageFilename')
+        
+        paths = []
+        paths.append(groupID + "/" + aNewFileName)
+        paths.append(groupID + "/" + addLowToFileName(aNewFileName))
+        paths.append(groupID + "/" + addHighToFileName(aNewFileName))
+
+        for path in paths:
+            try:
+                storage.delete(path)
+            except Exception as e:
+                return "error in deleting storage files upon destroying a group: " + str(e)
+
+
     return "test function ok"
     #loop image ids + "Low" "High"
 
 
     #if found -- delete
-@app.route('/testStorageRights', methods=['GET'])
-def testStorageRights():
+@app.route('/testFaces', methods=['GET'])
+def testFaces():
+    # Instantiates a client
+    client = vision.ImageAnnotatorClient()
 
-    path = "-L0-ZUa1ZH3iQTlDxiPw/1512911853.jpg"
-    print(storage.child(path).get_url(0))
+    fname = "faces.jpg"
+    # The name of the image file to annotate
+    file_name = os.path.join(
+        os.path.dirname(__file__),
+        fname)
 
-    return "ok test"
+    # Loads the image into memory
+    with io.open(file_name, 'rb') as image_file:
+        content = image_file.read()
 
+    image = types.Image(content=content)
+
+    # Performs label detection on the image file
+    #response = client.label_detection(image=image)
+    response = client.face_detection(image=image)
+    if (len(response.face_annotations) > 0):
+        return 1
+    else:
+        return 0
+@app.route('/detect_faces',methods=['GET'])
+def detect_faces():
+    """Detects faces in an image."""
+    client = vision.ImageAnnotatorClient()
+
+    path = "faces.jpg"
+    with io.open(path, 'rb') as image_file:
+        content = image_file.read()
+
+    image = types.Image(content=content)
+
+    response = client.face_detection(image=image)
+    faces = response.face_annotations
+    nFaces = 0
+    for face in faces:
+        nFaces +=1
+
+    if (nFaces > 1):
+        return "1"
+    else:
+        return "0"
 
 if __name__ == '__main__':
     # This is used when running locally. Gunicorn is used to run the
