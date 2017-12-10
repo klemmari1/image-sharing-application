@@ -1,5 +1,8 @@
 #!/bin/bash
 
+echo Set up gradle version
+./gradlew wrapper --gradle-version 3.3
+
 echo Building a debug APK ...
 ./gradlew assembleDebug
 
