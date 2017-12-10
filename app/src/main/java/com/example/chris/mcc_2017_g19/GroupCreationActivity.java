@@ -57,6 +57,7 @@ public class GroupCreationActivity extends AppCompatActivity {
 
         findViewById(R.id.buttonCreateGroup).setEnabled(false);
 
+        //Request to the backend to create the group
         if(Utils.isNetworkAvailable(getApplicationContext())){
             BackendAPI api = new BackendAPI();
             api.createGroup(groupName, expirationTimestamp, new BackendAPI.HttpCallback() {
@@ -69,6 +70,7 @@ public class GroupCreationActivity extends AppCompatActivity {
                 public void onSuccess(String response) {
                     try {
                         if(!response.contains("error")){
+                            //Start GroupStatusActivity with the new group
                             Intent groupStatus = new Intent(GroupCreationActivity.this, GroupStatusActivity.class);
                             startActivity(groupStatus);
                             GroupCreationActivity.this.finish();

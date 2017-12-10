@@ -3,6 +3,7 @@ import uuid
 import json
 import requests
 import logging
+import io
 from io import BytesIO
 from datetime import datetime
 
@@ -12,6 +13,7 @@ from firebase_admin import credentials
 from firebase_admin import auth
 from flask import Flask, redirect, render_template, request, url_for
 from google.cloud import vision
+from google.cloud.vision import types
 from PIL import Image
 
 from pyfcm import FCMNotification
@@ -127,6 +129,7 @@ def leave_group(group_id):
         if validate_user_in_group(user_id, group_id):
             database.child("groups").child(group_id).child("members").child(user_id).remove()
             database.child("users").child(user_id).child("group").remove()
+            notification_user_left(group_id, user_id)
             return "LEFT GROUP"
         else:
             return "INVALID USER TOKEN OR USER NOT IN GROUP!"
@@ -136,6 +139,7 @@ def leave_group(group_id):
 
 
 def delete_group(group_id):
+    notification_group_deleted(group_id)
     group_members = database.child("groups").child(group_id).child("members").get()
     for member in group_members.each():
         member_id = member.key()
@@ -151,7 +155,6 @@ def delete_group(group_id):
     #loop image ids + "Low" "High"
 
     #if found -- delete
-
 
 
 
@@ -318,10 +321,13 @@ def image_processing(initialURL, maxQuality,groupID, filename):
         URLs.append(img_to_high(pilImage, groupID, filename))
         URLs.append(img_to_low(pilImage, groupID, filename))
 
+
+    if (check_for_faces(filename)):
+        people = 1
+
+
     os.remove(filename)
 
-    if (check_for_faces(initialURL)):
-        people = 1
 
     return URLs, people
 
@@ -364,17 +370,22 @@ def img_to_high(pilImage, groupID, filename):
     return storage.child(fbpath).get_url(0)
 
 '''check for faces'''
-def check_for_faces(url):
+def check_for_faces(path):
     client = vision.ImageAnnotatorClient()
-    #url = "gs://mcc-fall-2017-g19.appspot.com/someGroupID/fullQualityWithFaces.jpg"
-    #url = "https://auto.ndtvimg.com/car-images/medium/ferrari/gtc4lusso/ferrari-gtc4lusso.jpg?v=11"
-    request = {
-    'source': {'image_uri': url},
-    }
 
-    response = client.face_detection(request)
+    path = "faces.jpg"
+    with io.open(path, 'rb') as image_file:
+        content = image_file.read()
 
-    if (len(response.face_annotations) > 0):
+    image = types.Image(content=content)
+
+    response = client.face_detection(image=image)
+    faces = response.face_annotations
+    nFaces = 0
+    for face in faces:
+        nFaces +=1
+
+    if (nFaces > 1):
         return 1
     else:
         return 0
@@ -389,35 +400,6 @@ def addHighToFileName(filename):
 
 
 def notification_upload_image(data):
-    #for each user in groupID
-
-    all_users = database.child("groups").child(data['groupID']).child("members").get()
-    registration_ids = []
-
-    try:
-        for user in all_users.each():
-            print("found user key: ",user.key())
-            print("found user val: ",user.val())
-            
-            #get device tokens for each user from firebase /users/<uid>/deviceTokens
-            tempTokens = database.child("users").child(user.key()).child("deviceTokens").get()
-            
-            if (tempTokens is None):
-                print("tempTokens = None!!!!!!!!")
-
-            try: 
-                for token in tempTokens.each():
-                    print("found user token: ",token.key())
-                    registration_ids.append(token.key())
-            except Exception as e:
-                print("Unexpected error in for token in tempTokens.each(): " + str(e)) 
-    except Exception as e:
-        print("no members found from groups/", data['groupID'],"members")
-        print(str(e))
-
-    #send data notification to registration_ids. 
-    #add the following data: groupID, finalFileName
-    
     timestamp = datetime.now().strftime('%d%B%Y%I:%M:%S%p')
     filename = str(data['userID']) + "_" + str(data['hasFaces']) + "_" + str(timestamp)
 
@@ -425,13 +407,59 @@ def notification_upload_image(data):
     photographer = database.child("users").child(data['userID']).child("name").get()
     data["photographer"] = photographer.val()
 
+    send_notification(data["groupID"])
+    #todo: with this function we can get valid tokens,
+    #i.e. we can clean up firebase from all of the non-valid ids.
+    #valid_registration_ids = push_service.clean_registration_ids(registration_ids)
 
+
+def notification_user_left(groupId, userId):
+    data = {}
+    left_user = database.child("users").child(userId).child("name").get().val()
+    data["left_user"] = left_user
+
+    send_notification(groupId, data)
+
+
+def notification_group_deleted(groupId):
+    data = {}
+    data["deleted_group"] = "Group deleted"
+
+    send_notification(groupId, data)
+
+
+def send_notification(groupId, data):
+    all_users = database.child("groups").child(groupId).child("members").get()
+    registration_ids = []
+
+    try:
+        for user in all_users.each():
+            print("found user key: ",user.key())
+            print("found user val: ",user.val())
+
+            #get device tokens for each user from firebase /users/<uid>/deviceTokens
+            tempTokens = database.child("users").child(user.key()).child("deviceTokens").get()
+
+            if (tempTokens is None):
+                print("tempTokens = None!!!!!!!!")
+
+            try:
+                for token in tempTokens.each():
+                    print("found user token: ",token.key())
+                    registration_ids.append(token.key())
+            except Exception as e:
+                print("Unexpected error in for token in tempTokens.each(): " + str(e))
+    except Exception as e:
+        print("no members found from groups/", groupId, "members")
+        print(str(e))
+
+    #send data notification to registration_ids.
+    #add the following data: groupID, finalFileName
     for item in registration_ids:
         print("pushing to notification to following devices:", item)
 
     # message_body = "this is message body string. also data in this message!"
     # message_title = "noti"
-
 
     result = push_service.multiple_devices_data_message(registration_ids=registration_ids, data_message=data)
 
@@ -439,33 +467,81 @@ def notification_upload_image(data):
     #i.e. we can clean up firebase from all of the non-valid ids.
     #valid_registration_ids = push_service.clean_registration_ids(registration_ids)
 
+
 @app.route('/testDeleteFromStorage', methods=['GET'])
 def testDeleteFromStorage():
     #storage.delete(path)
 
     group_id = "-L0-ZUa1ZH3iQTlDxiPw"
 
-    
-
     #get image ids from groupID/images/imageID/storageFilename
     allImageIds = database.child("groups").child(group_id).child("images").get()
-    print("type:")
-    print(type(allImageIds))
+    #loop through storageFilename entries in Database
     for imageID in allImageIds.each():
-        print(imageID.val().get('storageFilename'))
+        aNewFileName = imageID.val().get('storageFilename')
+        
+        paths = []
+        paths.append(groupID + "/" + aNewFileName)
+        paths.append(groupID + "/" + addLowToFileName(aNewFileName))
+        paths.append(groupID + "/" + addHighToFileName(aNewFileName))
+
+        for path in paths:
+            try:
+                storage.delete(path)
+            except Exception as e:
+                return "error in deleting storage files upon destroying a group: " + str(e)
+
+
     return "test function ok"
     #loop image ids + "Low" "High"
 
 
     #if found -- delete
-@app.route('/testStorageRights', methods=['GET'])
-def testStorageRights():
+@app.route('/testFaces', methods=['GET'])
+def testFaces():
+    # Instantiates a client
+    client = vision.ImageAnnotatorClient()
 
-    path = "-L0-ZUa1ZH3iQTlDxiPw/1512911853.jpg"
-    print(storage.child(path).get_url(0))
+    fname = "faces.jpg"
+    # The name of the image file to annotate
+    file_name = os.path.join(
+        os.path.dirname(__file__),
+        fname)
 
-    return "ok test"
+    # Loads the image into memory
+    with io.open(file_name, 'rb') as image_file:
+        content = image_file.read()
 
+    image = types.Image(content=content)
+
+    # Performs label detection on the image file
+    #response = client.label_detection(image=image)
+    response = client.face_detection(image=image)
+    if (len(response.face_annotations) > 0):
+        return 1
+    else:
+        return 0
+@app.route('/detect_faces',methods=['GET'])
+def detect_faces():
+    """Detects faces in an image."""
+    client = vision.ImageAnnotatorClient()
+
+    path = "faces.jpg"
+    with io.open(path, 'rb') as image_file:
+        content = image_file.read()
+
+    image = types.Image(content=content)
+
+    response = client.face_detection(image=image)
+    faces = response.face_annotations
+    nFaces = 0
+    for face in faces:
+        nFaces +=1
+
+    if (nFaces > 1):
+        return "1"
+    else:
+        return "0"
 
 if __name__ == '__main__':
     # This is used when running locally. Gunicorn is used to run the

@@ -1,9 +1,9 @@
 package com.example.chris.mcc_2017_g19.AlbumsView.AlbumEach.model;
 
-/**
- * Created by alessiospallino on 06/12/2017.
- */
 
+/*
+Items in the group gallery view
+ */
 public class GridImageItem extends ImageItem{
 
     private String mSubTitle;

@@ -34,13 +34,13 @@ public class QrReaderActivity extends AppCompatActivity implements ZXingScannerV
         try{
             if(Utils.isNetworkAvailable(getApplicationContext())){
                 String token = rawResult.getText();
+                //Send token to back end for validity check and handling the joining
                 BackendAPI api = new BackendAPI();
                 api.joinGroup(token, new BackendAPI.HttpCallback() {
                     @Override
                     public void onFailure(String response, Exception exception) {
                         Toast.makeText(getApplicationContext(), exception.toString(), Toast.LENGTH_SHORT).show();
                     }
-
                     @Override
                     public void onSuccess(String response) {
                         if(!response.contains("INVALID")){

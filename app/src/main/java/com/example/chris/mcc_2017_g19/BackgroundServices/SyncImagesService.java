@@ -38,7 +38,7 @@ public class SyncImagesService extends IntentService {
         syncImageFolder(groupID);
     }
 
-
+    //Syncing images to gallery with the quality specified in the settings
     public void syncImageFolder(final String groupID) {
         final DatabaseReference databaseReference = Utils.getDatabase().getReference();
         DatabaseReference imagesReference = databaseReference.child("groups").child(groupID);

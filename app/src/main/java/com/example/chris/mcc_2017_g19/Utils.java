@@ -22,6 +22,7 @@ public class Utils {
         return firebaseDatabase;
     }
 
+    //Returns the root of the group image albums
     public static String getAlbumsRoot(Context context) {
         Resources resources = context.getResources();
         String appName = resources.getString(R.string.app_name);
@@ -38,7 +39,7 @@ public class Utils {
         return path;
     }
 
-
+    //Checking if the application has network connectivity
     public static boolean isNetworkAvailable(Context context) {
         ConnectivityManager connectivityManager
                 = (ConnectivityManager) context.getSystemService(context.CONNECTIVITY_SERVICE);

@@ -33,6 +33,7 @@ public class GroupQRActivity extends AppCompatActivity {
         final DatabaseReference databaseReference = Utils.getDatabase().getReference();
 
         if(Utils.isNetworkAvailable(getApplicationContext())){
+            //Query for the QR code from the group object in firebase database
             DatabaseReference userRef = databaseReference.child("users").child(firebaseUser.getUid());
             userRef.keepSynced(true);
             userRef.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -50,6 +51,7 @@ public class GroupQRActivity extends AppCompatActivity {
                                     String token = groupObj.getToken();
                                     System.out.println(groupObj);
                                     try{
+                                        //Display the token in the view actively
                                         ImageView imageView = (ImageView) findViewById(R.id.qr_image);
                                         Bitmap bitmap = getBitmap(token, 750);
                                         imageView.setImageBitmap(bitmap);
