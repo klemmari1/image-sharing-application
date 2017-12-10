@@ -33,7 +33,8 @@
 
         <activity
             android:name=".LoginActivity"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/AppTheme.NoActionBar"
+            android:windowSoftInputMode="stateHidden">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -54,12 +55,15 @@
                 android:value="barcode" />
         </activity>
         <activity android:name=".SignupActivity"
-            android:theme="@style/AppTheme.NoActionBar"/>
+            android:theme="@style/AppTheme.NoActionBar"
+            android:windowSoftInputMode="stateHidden"/>
         <activity android:name=".AlbumsView.AlbumsActivity" />
         <activity android:name=".GroupCreationActivity" />
         <activity android:name=".MainActivity" />
         <activity android:name=".ImagePreviewActivity" />
-        <activity android:name=".ResetPasswordActivity" />
+        <activity android:name=".ResetPasswordActivity"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:windowSoftInputMode="stateHidden"/>
         <activity android:name=".AlbumsView.AlbumEach.pvtgallery.PrivateGallery" />
         <activity android:name=".GroupStatusActivity" />
         <activity
