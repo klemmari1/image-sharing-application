@@ -114,7 +114,7 @@ public class BackendAPI {
         getIdToken(new BackendAPI.HttpCallback() {
             @Override
             public void onFailure(String response, Exception exception) {
-                Log.d(TAG, "Error: " + response + " " + exception);
+                cb.onFailure(response, exception);
             }
 
             @Override
@@ -138,7 +138,7 @@ public class BackendAPI {
         getIdToken(new BackendAPI.HttpCallback() {
             @Override
             public void onFailure(String response, Exception exception) {
-                Log.d(TAG, "Error: " + response + " " + exception);
+                cb.onFailure(response, exception);
             }
 
             @Override
@@ -163,7 +163,7 @@ public class BackendAPI {
         getIdToken(new BackendAPI.HttpCallback() {
             @Override
             public void onFailure(String response, Exception exception) {
-                Log.d(TAG, "Error: " + response + " " + exception);
+                cb.onFailure(response, exception);
             }
 
             @Override
@@ -187,7 +187,7 @@ public class BackendAPI {
         getIdToken(new BackendAPI.HttpCallback() {
             @Override
             public void onFailure(String response, Exception exception) {
-                Log.d(TAG, "Error: " + response + " " + exception);
+                cb.onFailure(response, exception);
             }
 
             @Override
@@ -211,7 +211,7 @@ public class BackendAPI {
         getIdToken(new BackendAPI.HttpCallback() {
             @Override
             public void onFailure(String response, Exception exception) {
-                Log.d(TAG, "Error: " + response + " " + exception);
+                cb.onFailure(response, exception);
             }
 
             @Override
@@ -239,8 +239,7 @@ public class BackendAPI {
 
             @Override
             public void onFailure(String response, Exception exception) {
-                Log.d(TAG, "Error: " + response + " " + exception);
-
+                cb.onFailure(response, exception);
             }
             @Override
             public void onSuccess(String response) {

@@ -105,22 +105,16 @@ public class Settings extends Activity implements AdapterView.OnItemSelectedList
         prefEditor.putString("LTEpicturevalue", spinner.getSelectedItem().toString());
         prefEditor.putString("WIFIpicturevalue", spinnerwifi.getSelectedItem().toString());
 
-        prefEditor.commit();
+        prefEditor.apply();
     }
 
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-        String item = parent.getItemAtPosition(position).toString();
-        // Showing selected spinner item
-        Toast.makeText(parent.getContext(), "Selected: " + item, Toast.LENGTH_SHORT).show();
-
-
         SharedPreferences.Editor prefEditor = prefs.edit();
         prefEditor.putString("LTEpicturevalue", spinner.getSelectedItem().toString());
         prefEditor.putString("WIFIpicturevalue", spinnerwifi.getSelectedItem().toString());
 
-
-        prefEditor.commit();
+        prefEditor.apply();
 
     }
 

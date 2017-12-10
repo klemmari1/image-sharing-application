@@ -63,7 +63,7 @@ public class GroupCreationActivity extends AppCompatActivity {
         api.createGroup(groupName, expirationTimestamp, new BackendAPI.HttpCallback() {
             @Override
             public void onFailure(String response, Exception exception) {
-                Log.d(TAG, "Error: " + response + " " + exception);
+                Toast.makeText(getApplicationContext(), "Network error", Toast.LENGTH_SHORT).show();
             }
 
             @Override
