@@ -6,8 +6,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Environment;
@@ -51,7 +49,6 @@ import com.google.firebase.storage.UploadTask;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.io.IOException;
@@ -113,8 +110,11 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
                 userObj = snapshot.getValue(UserObject.class);
-                MyFirebaseMessagingService newClassObjectForSync = new MyFirebaseMessagingService();
-                newClassObjectForSync.syncImageFolder(userObj.getGroup());
+                if(userObj.getGroup() != null){
+                    Intent it = new Intent(getApplicationContext(), SyncImagesService.class);
+                    it.putExtra("groupID", userObj.getGroup());
+                    startService(it);
+                }
             }
             @Override
             public void onCancelled(DatabaseError databaseError) {
