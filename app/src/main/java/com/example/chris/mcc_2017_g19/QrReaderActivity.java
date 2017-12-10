@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.widget.Toast;
 
 import com.example.chris.mcc_2017_g19.BackendAPI.BackendAPI;
+import com.example.chris.mcc_2017_g19.BackgroundServices.SyncImagesService;
 import com.google.zxing.Result;
 import me.dm7.barcodescanner.zxing.ZXingScannerView;
 
@@ -33,7 +34,7 @@ public class QrReaderActivity extends AppCompatActivity implements ZXingScannerV
     public void handleResult(Result rawResult) {
         try{
             if(Utils.isNetworkAvailable(getApplicationContext())){
-                String token = rawResult.getText();
+                final String token = rawResult.getText();
                 //Send token to back end for validity check and handling the joining
                 BackendAPI api = new BackendAPI();
                 api.joinGroup(token, new BackendAPI.HttpCallback() {
@@ -45,6 +46,10 @@ public class QrReaderActivity extends AppCompatActivity implements ZXingScannerV
                     public void onSuccess(String response) {
                         if(!response.contains("INVALID")){
                             try {
+                                Intent it = new Intent(getApplicationContext(), SyncImagesService.class);
+                                it.putExtra("groupID", token.split(":")[0]);
+                                startService(it);
+
                                 Intent groupStatus = new Intent(QrReaderActivity.this, GroupStatusActivity.class);
                                 startActivity(groupStatus);
                                 QrReaderActivity.this.finish();

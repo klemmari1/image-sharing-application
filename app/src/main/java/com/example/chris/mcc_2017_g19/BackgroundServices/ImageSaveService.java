@@ -236,7 +236,7 @@ public class ImageSaveService extends IntentService {
                     @Override
                     public void onSuccess(final String response) {
                         try {
-                            if(!response.contains("error")){
+                            if(!response.toLowerCase().contains("error")){
                                 DatabaseReference userGroupReference = databaseReference.child("groups").child(userObj.getGroup());
                                 userGroupReference.addListenerForSingleValueEvent(new ValueEventListener() {
                                     @Override
