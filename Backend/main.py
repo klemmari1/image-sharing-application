@@ -65,7 +65,8 @@ def homepage():
 def create_group():
     try:
         id_token = request.form['id_token']
-        user_id = get_uid(id_token)
+        #user_id = get_uid(id_token)
+        user_id = request.form['user_id']
         group_name = request.form['group_name']
         group_expiration = request.form['group_expiration']
 

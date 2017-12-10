@@ -60,7 +60,7 @@ public class GroupCreationActivity extends AppCompatActivity {
         //Request to the backend to create the group
         if(Utils.isNetworkAvailable(getApplicationContext())){
             BackendAPI api = new BackendAPI();
-            api.createGroup(groupName, expirationTimestamp, new BackendAPI.HttpCallback() {
+            api.createGroup(user.getUid(), groupName, expirationTimestamp, new BackendAPI.HttpCallback() {
                 @Override
                 public void onFailure(String response, Exception exception) {
                     Toast.makeText(getApplicationContext(), exception.toString(), Toast.LENGTH_SHORT).show();
