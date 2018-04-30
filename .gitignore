@@ -38,3 +38,5 @@ output.json #Since Android Studio 3.0
 #NDK
 obj/
 .externalNativeBuild
+
+./Backend/mcc-fall-2017-g19-firebase-adminsdk-pzipw-d092116b07.json
