@@ -3,7 +3,7 @@ Running the app from command line:
 Clone the git repository:  
 git clone git@github.com:klemmari1/image-sharing-application.git
 
-Navigate to the project folder: cd mcc-2017-g19
+Navigate to the project folder: cd image-sharing-application
 
 
 Run build script: ./deploy.sh
